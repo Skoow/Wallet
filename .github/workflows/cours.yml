@@ -1,7 +1,7 @@
 name: Cours
 on:
   schedule:
-    - cron: '*/15 13-21 * * 1-5'   # en séance (heure UTC) : cours du moment -> data/live.json
+    - cron: '*/5 13-21 * * 1-5'    # en séance (heure UTC), toutes les 5 min (le minimum de GitHub) -> data/live.json
     - cron: '45 22 * * 1-5'        # le soir : clôtures -> prix, hebdo, changes
   workflow_dispatch:
     inputs:

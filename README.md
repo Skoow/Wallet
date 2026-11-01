@@ -12,8 +12,8 @@ Application web installable (PWA) pour suivre le portefeuille : 10 actions + l'o
 - Tes choix de lignes et tes transactions restent **dans ton navigateur** (localStorage). Onglet Transactions → *Sauvegarde* pour exporter / importer un fichier.
 
 ## Cours en direct
-- **Sans réglage** : GitHub Actions (`.github/workflows/cours.yml`) relève les cours toutes les 15 minutes pendant la séance américaine (`data/live.json`), et les clôtures chaque soir (`prix.json`, `hebdo.json`, `fx.json`). La page relit `live.json` chaque minute.
-- **À la seconde** : entrer une clé gratuite [Finnhub](https://finnhub.io/register) dans l'onglet Transactions → *Cours en direct*. Les actions américaines, l'or (GLD) et les indices se mettent alors à jour à chaque transaction, via WebSocket. La clé reste dans le navigateur. Toronto (Loblaw, Dollarama) reste sur le relevé des 15 minutes : le plan gratuit de Finnhub ne couvre pas la bourse de Toronto.
+- **Sans réglage** : GitHub Actions (`.github/workflows/cours.yml`) relève les cours toutes les 5 minutes pendant la séance (le plus fréquent permis par GitHub) américaine (`data/live.json`), et les clôtures chaque soir (`prix.json`, `hebdo.json`, `fx.json`). La page relit `live.json` chaque minute.
+- **À la seconde** : entrer une clé gratuite [Finnhub](https://finnhub.io/register) dans l'onglet Transactions → *Cours en direct*. Les actions américaines, l'or (GLD) et les indices se mettent alors à jour à chaque transaction, via WebSocket. La clé reste dans le navigateur. Toronto (Loblaw, Dollarama) reste sur le relevé des 5 minutes : le plan gratuit de Finnhub ne couvre pas la bourse de Toronto.
 - Les chiffres des sociétés (notes, croissance, marges…) sont vérifiés à la main sur 3 à 5 sources et mis à jour à chaque publication de résultats.
 
 ## Fichiers
