@@ -1,0 +1,39 @@
+name: Cours
+on:
+  schedule:
+    - cron: '*/15 13-21 * * 1-5'   # en séance (heure UTC) : cours du moment -> data/live.json
+    - cron: '45 22 * * 1-5'        # le soir : clôtures -> prix, hebdo, changes
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'live ou close'
+        default: 'live'
+permissions:
+  contents: write
+concurrency:
+  group: cours
+  cancel-in-progress: false
+jobs:
+  maj:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Mise à jour
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ -z "$MODE" ]; then
+            if [ "${{ github.event.schedule }}" = "45 22 * * 1-5" ]; then MODE=close; else MODE=live; fi
+          fi
+          python tools/maj.py "$MODE"
+      - name: Enregistrer
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then echo "rien de neuf"; exit 0; fi
+          git commit -m "Cours $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase origin main
+          git push origin main

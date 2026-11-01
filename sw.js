@@ -1,5 +1,5 @@
 // Hors ligne : la page et d3 en cache ; les données d'abord depuis le réseau, sinon depuis le cache.
-const V='pf-v1';
+const V='pf-v2';
 const CORE=['./','index.html','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
