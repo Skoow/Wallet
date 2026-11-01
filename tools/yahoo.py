@@ -1,7 +1,7 @@
 """Accès Yahoo Finance partagé par les scripts (cours, historiques, chiffres)."""
 import json, time, http.cookiejar, urllib.request, urllib.parse
 
-UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+UA = 'Mozilla/5.0 (portefeuille web app)'  # un faux navigateur Chrome reçoit 429 de Yahoo
 _cj = http.cookiejar.CookieJar()
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))
 _crumb = None
