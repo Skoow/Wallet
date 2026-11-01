@@ -1201,19 +1201,19 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
   // ---------- recherche de tickers (USA + Toronto) ----------
   function tkDL(){let dl=document.getElementById('tk-list');if(!dl){dl=document.createElement('datalist');dl.id='tk-list';document.body.appendChild(dl);}return dl;}
   const tkAll=()=>{const d=dash.data('tickers');return d&&d.status==='ok'&&Array.isArray(d.data)?d.data:[];};
-  const tkNorm=q=>{q=String(q||'').trim().toUpperCase();const tsx=/\.TO$|^TSX:|:TSX$/.test(q);q=q.replace(/\.TO$/,'').replace(/^(TSX|NYSE|NASDAQ|AMEX|NYSEARCA):/,'').replace(/:TSX$/,'').split(/\s/)[0];return {q,tsx};};
+  const tkNorm=q=>{q=String(q||'').trim().toUpperCase().split(' · ')[0];const tsx=/\.TO$|^TSX:|:TSX$/.test(q);q=q.replace(/\.TO$/,'').replace(/^(TSX|NYSE|NASDAQ|AMEX|NYSEARCA):/,'').replace(/:TSX$/,'').split(/\s/)[0];return {q,tsx};};
   function tkFill(v){const dl=tkDL();dl.textContent='';const raw=String(v||'').trim().toUpperCase();if(!raw)return;const {q}=tkNorm(raw);const A=tkAll();const out=[],seen=new Set();
     const push=t=>{const val=t[2]==='TSX'?t[0]+'.TO':t[0];if(seen.has(val)||out.length>=30)return;seen.add(val);out.push([val,t[1]+' · '+(t[2]==='TSX'?'Toronto':'États-Unis')+(t[4]?' · '+fr(String(t[4]>=10?Math.round(t[4]):t[4]))+' Md$':'')]);};
     A.forEach(t=>{if(t[0]===q)push(t);});A.forEach(t=>{if(t[0].startsWith(q))push(t);});if(q.length>=2)A.forEach(t=>{if(String(t[1]).toUpperCase().includes(raw))push(t);});
     out.forEach(([val,lab])=>{const o=document.createElement('option');o.value=val;o.label=lab;o.textContent=lab;dl.appendChild(o);});}
   function tkFind(U,raw){const {q,tsx}=tkNorm(raw);if(!q)return {q};
     let f=U.find(x=>!isMetal(x)&&!x.pair&&!x.provisoire&&(String(x.ticker||'').toUpperCase()===q||x.cle.split(/[\/-]/).pop().toUpperCase()===q)&&(!tsx||String(x.cle).startsWith('a/tsx')));
-    if(f)return {q,f};const A=tkAll();const t=A.find(t=>t[0]===q&&(tsx?t[2]==='TSX':t[2]==='US'))||(!tsx&&A.find(t=>t[0]===q));if(!t)return {q,miss:!A.length?'load':'unknown'};
+    if(f)return {q,f};const A=tkAll();const R0=String(raw).trim().toUpperCase();const t=A.find(t=>t[0]===q&&(tsx?t[2]==='TSX':t[2]==='US'))||(!tsx&&A.find(t=>t[0]===q))||(R0.length>=3?(A.find(t=>String(t[1]).toUpperCase().startsWith(R0))||A.find(t=>String(t[1]).toUpperCase().includes(R0))):null);if(!t)return {q,miss:!A.length?'load':'unknown'};if(t[0]!==q){const c2=(t[2]==='TSX'?'a/tsx-':'s/')+t[0].toLowerCase().replace(/\./g,'-');const ex2=U.find(x=>x.cle===c2);if(ex2)return {q,f:ex2};}
     const cle=(t[2]==='TSX'?'a/tsx-':'s/')+t[0].toLowerCase().replace(/\./g,'-');const ex=U.find(x=>x.cle===cle);if(ex)return {q,f:ex};
     const P=dash.params();const e={ticker:t[0],nom:t[1],pays:t[2]==='TSX'?'Canada':'États-Unis',devise:t[2]==='TSX'?'CAD':'USD',capi_mds:t[4],secteur:t[3]||'',cours:t[5],ajoute:new Date().toISOString().slice(0,10)};
     return {q,f:{cle,nom:t[1],ticker:t[0]},reg:{extra:{...(P.extra||{}),[cle]:e}},nouv:true};}
   const tkMsg=(q,r)=>r.miss==='load'?'Liste des tickers en cours de chargement, réessaie dans une seconde.':q+' introuvable aux États-Unis et à Toronto.';
-  let TKMSG=null;const tkNew=f=>{TKMSG={t:f.nom+' ajoutée. Cours, graphique et chiffres vérifiés arrivent demain matin.',until:Date.now()+15000};};
+  let TKMSG=null;const tkNew=f=>{TKMSG={t:f.nom+' ajoutée.',until:Date.now()+15000};};
   function pfEmpty(U){const v=document.getElementById('v-suivre');if(!v)return;{const t=document.getElementById('tab-suivre');if(t&&t.getAttribute('aria-selected')!=='true')t.click();}const a=document.getElementById('asof');if(a)a.textContent='Aucune action pour l’instant';if(document.getElementById('pf-empty'))return;
     const s=el('section','');s.id='pf-empty';s.appendChild(el('h2','','Ton portefeuille est vide'));s.appendChild(el('p','','Ajoute ta première action : tape son ticker ou son nom (États-Unis ou Toronto).'));
     const f=el('div','invb chg addl');const ti=document.createElement('input');ti.type='text';ti.placeholder='ticker ou nom';ti.setAttribute('list','tk-list');ti.autocapitalize='characters';ti.spellcheck=false;tkDL();const go=el('button','go','Ajouter');go.type='button';const msg=el('span','mu','');f.append(ti,go,msg);s.appendChild(f);
@@ -1256,26 +1256,31 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
    + clé Finnhub facultative : cours à la seconde des actions américaines par WebSocket. */
 (function(){
   const LSg=k=>{try{return localStorage.getItem(k);}catch(e){return null;}},LSs=(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k);}catch(e){}};
-  const PX={},FX={};let AT=null,SRC='',dirty=false,ws=null,wsOK=false;
+  const PX={},FX={},REF={},REFP={};let AT=null,SRC='',dirty=false,ws=null,wsOK=false;
   const ETF={'e/gld':'GLD','e/spy':'SPY','e/qqq':'QQQ','e/urth':'URTH','e/ezu':'EZU','e/fxe':'FXE','e/fxf':'FXF','e/fxc':'FXC','e/slv':'SLV'};
   const fhSym=c=>ETF[c]||(c.startsWith('s/')?c.slice(2).toUpperCase().replace(/-/g,'.'):null);
   const mi=d=>{const [y,m]=d.split('-').map(Number);return y*12+m-1;};
   function suivis(){const p=dash.params();const ch=Array.isArray(p.choix)?p.choix:[];return [...new Set(ch.concat(['e/gld','e/spy','e/urth','e/qqq','e/fxe','e/fxc','e/fxf']))];}
   function apply(){const pr=dash.data('prix'),hb=dash.data('hebdo'),fx=dash.data('fx');if(!pr||pr.status!=='ok')return false;
     const now=new Date(),cm=now.getUTCFullYear()*12+now.getUTCMonth();const mon=new Date(now);mon.setUTCDate(now.getUTCDate()-((now.getUTCDay()+6)%7));const wk=mon.toISOString().slice(0,10);
-    let ch=false;pr.data.forEach(r=>{const v=PX[r.cle];if(!(v>0))return;if(mi(r.debut)+r.prix.length-1!==cm)return;if(r.prix[r.prix.length-1]!==v){r.prix[r.prix.length-1]=v;ch=true;}});
+    pr.data.forEach(r=>{if(REFP[r.cle]==null)REFP[r.cle]=r.prix[r.prix.length-1];});let ch=false;pr.data.forEach(r=>{const v=PX[r.cle];if(!(v>0))return;if(mi(r.debut)+r.prix.length-1!==cm)return;if(r.prix[r.prix.length-1]!==v){r.prix[r.prix.length-1]=v;ch=true;}});
     if(hb&&hb.status==='ok')hb.data.forEach(r=>{const v=PX[r.cle];if(!(v>0))return;const lw=new Date(r.debut+'T00:00:00Z');lw.setUTCDate(lw.getUTCDate()+7*(r.prix.length-1));if(lw.toISOString().slice(0,10)!==wk)return;if(r.prix[r.prix.length-1]!==v){r.prix[r.prix.length-1]=v;ch=true;}});
     if(fx&&fx.status==='ok')fx.data.forEach(r=>{if(FX[r.paire]>0&&r.taux!==FX[r.paire]){r.taux=FX[r.paire];ch=true;}});
+    const un=dash.data('univers');if(un&&un.status==='ok')un.data.forEach(u=>{const v=PX[u.cle];if(!(v>0))return;if(!REF[u.cle]){const r0=pr.data.find(r=>r.cle===u.cle);if(!r0)return;REF[u.cle]={p:REFP[u.cle]||r0.prix[r0.prix.length-1],capi:u.capi_mds,per:u.per_prevu,rc:u.rendement_cash};}const b=REF[u.cle],k=v/b.p;if(!(k>0))return;const c=b.capi!=null?Math.round(b.capi*k*100)/100:null;if(c!==u.capi_mds){u.capi_mds=c;if(b.per!=null)u.per_prevu=Math.round(b.per*k*10)/10;if(b.rc!=null)u.rendement_cash=Math.round(b.rc/k*10)/10;ch=true;}});
     return ch;}
+  const HREQ={};function ensureHist(){const pr=dash.data('prix'),hb=dash.data('hebdo');if(!pr||pr.status!=='ok')return;const p=dash.params();(Array.isArray(p.choix)?p.choix:[]).forEach(c=>{if(!c||HREQ[c]||pr.data.some(r=>r.cle===c))return;HREQ[c]=1;fetch('data/h/'+c.replace('/','_')+'.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!Array.isArray(j.prix))return;if(!pr.data.some(r=>r.cle===c))pr.data.push({cle:c,debut:j.debut,prix:j.prix});if(hb&&hb.status==='ok'&&Array.isArray(j.hebdo)&&!hb.data.some(r=>r.cle===c)){const n=hb.data[0].prix.length,off=Math.round((new Date(hb.data[0].debut)-new Date(j.hdebut||hb.data[0].debut))/6048e5);let w=j.hebdo.slice(Math.max(0,off));while(w.length<n)w.push(w[w.length-1]);w=w.slice(0,n).map((x,i,a)=>x==null?(a.slice(0,i).reverse().find(y=>y!=null)??a.find(y=>y!=null)):x);hb.data.push({cle:c,debut:hb.data[0].debut,prix:w});}const m=window.__pfMemo;if(m)for(const k in m)delete m[k];dash._emit();}).catch(()=>{});});}
   function busy(){const a=document.activeElement;return a&&(/INPUT|SELECT|TEXTAREA/.test(a.tagName)||(a.closest&&a.closest('.txf')));}
   function label(){const e=document.getElementById('asof');if(!e||!AT)return;const t=new Date(AT);const h=t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});const d=t.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
     const pre=(SRC==='direct'?'En direct · '+h:'Cours du '+d+' à '+h.slice(0,5));e.textContent=e.textContent.replace(/^(Derniers cours : [^·]*|En direct · [^·]*|Cours du [^·]*)/,pre+' ');}
   function tick(){if(!dirty)return label();if(busy())return;dirty=false;if(apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];dash._emit();}label();}
   setInterval(tick,1000);
-  dash.onData(()=>{if(Object.keys(PX).length&&apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];setTimeout(()=>{dash._emit();label();},0);}else setTimeout(label,0);});
-  async function poll(){try{const r=await fetch('data/live.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();
+  dash.onData(()=>{ensureHist();if(Object.keys(PX).length&&apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];setTimeout(()=>{dash._emit();label();},0);}else setTimeout(label,0);});
+  const REPO=(()=>{const h=location.hostname.match(/^([^.]+)\.github\.io$/);const p=location.pathname.split('/').filter(Boolean)[0];return h&&p?h[1]+'/'+p:'Skoow/Wallet';})();
+  async function getLive(){try{const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data/live.json?ref=main&t='+Date.now(),{headers:{Accept:'application/vnd.github.raw+json'},cache:'no-store'});if(r.ok)return await r.json();}catch(e){}const r=await fetch('data/live.json?t='+Date.now(),{cache:'no-store'});return r.ok?await r.json():null;}
+  async function poll(){try{const j=await getLive();if(!j)return;
       if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}}catch(e){}}
-  poll();setInterval(poll,60000);
+  poll();setInterval(poll,65000);
+  fetch('data/h/derniers.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.px)return;Object.entries(j.px).forEach(([k,v])=>{if(!(k in PX)&&Array.isArray(v)&&v[0]>0)PX[k]=v[0];});dirty=true;}).catch(()=>{});
   // ---- Finnhub (facultatif) ----
   const KEY=()=>LSg('pf-finnhub')||'';const BYSYM={};dash.onData(()=>{if(!ws||ws.readyState!==1)return;suivis().forEach(c=>{const s=fhSym(c);if(s&&!BYSYM[s]&&Object.keys(BYSYM).length<48){BYSYM[s]=c;ws.send(JSON.stringify({type:'subscribe',symbol:s}));}});});window.PFKEY={get:KEY,set:v=>{LSs('pf-finnhub',v);try{ws&&ws.close();}catch(e){}wsOK=false;fhStart();}};
   async function fhStart(){const k=KEY();if(!k)return;const syms=suivis().map(c=>[c,fhSym(c)]).filter(x=>x[1]).slice(0,45);

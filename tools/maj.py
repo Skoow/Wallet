@@ -5,7 +5,9 @@
 
 Source : Yahoo Finance (graphique v8) ; changes BCE via frankfurter.app. En cas d'échec, l'ancienne valeur est gardée.
 """
-import json, sys, time, datetime as dt, urllib.request, urllib.parse
+import json, os, sys, time, subprocess, datetime as dt, urllib.request, urllib.parse
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import yahoo
 
 D = 'data/'
 UA = {'User-Agent': 'Mozilla/5.0 (portefeuille web app)'}
@@ -40,19 +42,16 @@ def get(url, tries=3):
 
 def quote(s):
     """(dernier cours, date de séance AAAA-MM-JJ, heure ISO) ou None."""
-    q = urllib.parse.quote(s)
-    for host in ('query1', 'query2'):
-        try:
-            j = get(f'https://{host}.finance.yahoo.com/v8/finance/chart/{q}?range=5d&interval=1d')
-            m = j['chart']['result'][0]['meta']
-            p, t = m.get('regularMarketPrice'), m.get('regularMarketTime')
-            if p and t:
-                tz = dt.timezone(dt.timedelta(seconds=m.get('gmtoffset', 0)))
-                d = dt.datetime.fromtimestamp(t, tz)
-                return round(float(p), 4), d.date().isoformat(), dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat()
-        except Exception:
-            continue
-    return None
+    r = yahoo.chart(s)
+    if not r:
+        return None
+    m = r['meta']
+    p, t = m.get('regularMarketPrice'), m.get('regularMarketTime')
+    if not (p and t):
+        return None
+    tz = dt.timezone(dt.timedelta(seconds=m.get('gmtoffset', 0)))
+    d = dt.datetime.fromtimestamp(t, tz)
+    return round(float(p), 4), d.date().isoformat(), dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat()
 
 
 def load(f):
@@ -70,19 +69,23 @@ def suivis():
     return list(dict.fromkeys(ch + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/fxe', 'e/fxc', 'e/fxf'] + tout))
 
 
-def live():
+def live(cles=None):
     P, H = load('prix.json'), load('hebdo.json')
     _, sh = roll(P, H, dt.date.today())
     ln = [len(r['prix']) for r in P]
     if sh or ln != [len(r['prix']) for r in load('prix.json')]:
         save('prix.json', P); save('hebdo.json', H); print('nouveau mois / nouvelle semaine')
-    px, at = {}, {}
-    for c in suivis():
+    try:
+        old = load('live.json')
+    except Exception:
+        old = {}
+    px, at = dict(old.get('px', {})), dict(old.get('heure', {}))
+    for c in (cles or suivis()):
         s = sym(c)
         r = quote(s) if s else None
         if r:
             px[c], at[c] = r[0], r[2]
-    fx = {}
+    fx = dict(old.get('fx', {}))
     for pair, s in (('EURUSD', 'EURUSD=X'), ('EURCAD', 'EURCAD=X')):
         r = quote(s)
         if r:
@@ -155,5 +158,33 @@ def close():
     live()
 
 
+def git_push(msg, paths):
+    subprocess.run(['git', 'add'] + paths, check=False)
+    if subprocess.run(['git', 'diff', '--cached', '--quiet']).returncode == 0:
+        return
+    subprocess.run(['git', 'commit', '-q', '-m', msg], check=False)
+    for _ in range(3):
+        subprocess.run(['git', 'pull', '-q', '--rebase', 'origin', 'main'], check=False)
+        if subprocess.run(['git', 'push', '-q', 'origin', 'main']).returncode == 0:
+            return
+        time.sleep(3)
+
+
+def boucle(minutes=350, pas=60):
+    """En séance : cours des lignes de base, indices et changes chaque minute ; toutes les actions toutes les 5 min."""
+    fin = time.time() + minutes * 60
+    base = list(dict.fromkeys(load('params.json').get('choix', []) + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/fxe', 'e/fxc', 'e/fxf']))
+    i = 0
+    while time.time() < fin:
+        t0 = time.time()
+        h = dt.datetime.now(dt.timezone.utc)
+        if h.hour * 60 + h.minute > 21 * 60 + 20:
+            break
+        live(None if i % 5 == 0 else base)
+        git_push('Cours ' + h.strftime('%H:%M'), ['data/live.json', 'data/prix.json', 'data/hebdo.json'])
+        i += 1
+        time.sleep(max(5, pas - (time.time() - t0)))
+
+
 if __name__ == '__main__':
-    {'live': live, 'close': close}[sys.argv[1]]()
+    {'live': live, 'close': close, 'boucle': boucle}[sys.argv[1]]()

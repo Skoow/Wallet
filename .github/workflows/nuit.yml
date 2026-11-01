@@ -1,0 +1,45 @@
+name: Nuit
+on:
+  schedule:
+    - cron: '20 23 * * 1-5'   # chaque soir : chiffres des sociétés + dernier cours de toutes les actions
+    - cron: '0 3 1-7 * 0'     # 1er dimanche du mois : liste des tickers + historiques complets
+  workflow_dispatch:
+    inputs:
+      quoi:
+        description: 'soir ou mois'
+        default: 'soir'
+permissions:
+  contents: write
+concurrency:
+  group: cours
+  cancel-in-progress: false
+jobs:
+  nuit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Travaux
+        run: |
+          Q="${{ github.event.inputs.quoi }}"
+          if [ -z "$Q" ]; then
+            if [ "${{ github.event.schedule }}" = "0 3 1-7 * 0" ]; then Q=mois; else Q=soir; fi
+          fi
+          if [ "$Q" = "mois" ]; then
+            python tools/nuit.py tickers
+            python tools/nuit.py histo
+          fi
+          python tools/nuit.py chiffres
+          if [ -d data/h ]; then python tools/nuit.py derniers; fi
+      - name: Enregistrer
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then echo "rien de neuf"; exit 0; fi
+          git commit -q -m "Nuit $(date -u +%Y-%m-%d)"
+          git pull --rebase origin main
+          git push origin main

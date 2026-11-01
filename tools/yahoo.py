@@ -1,0 +1,68 @@
+"""Accès Yahoo Finance partagé par les scripts (cours, historiques, chiffres)."""
+import json, time, http.cookiejar, urllib.request, urllib.parse
+
+UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36'
+_cj = http.cookiejar.CookieJar()
+_op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))
+_crumb = None
+
+
+def _open(url, timeout=20):
+    return _op.open(urllib.request.Request(url, headers={'User-Agent': UA, 'Accept': '*/*'}), timeout=timeout)
+
+
+def get(url, tries=3):
+    err = None
+    for i in range(tries):
+        try:
+            with _open(url) as r:
+                return json.load(r)
+        except Exception as e:
+            err = e
+            time.sleep(1.5 * (i + 1))
+    raise err
+
+
+def chart(sym, rng='5d', interval='1d'):
+    q = urllib.parse.quote(sym)
+    for host in ('query1', 'query2'):
+        try:
+            j = get(f'https://{host}.finance.yahoo.com/v8/finance/chart/{q}?range={rng}&interval={interval}&events=split')
+            return j['chart']['result'][0]
+        except Exception:
+            continue
+    return None
+
+
+def crumb():
+    global _crumb
+    if _crumb:
+        return _crumb
+    try:
+        _open('https://fc.yahoo.com', 10).read()
+    except Exception:
+        pass  # le cookie arrive même avec une erreur 404
+    for host in ('query1', 'query2'):
+        try:
+            with _open(f'https://{host}.finance.yahoo.com/v1/test/getcrumb') as r:
+                c = r.read().decode().strip()
+                if c and '<' not in c:
+                    _crumb = c
+                    return c
+        except Exception:
+            continue
+    return None
+
+
+def summary(sym, modules='financialData,defaultKeyStatistics,summaryDetail,calendarEvents,price'):
+    c = crumb()
+    if not c:
+        return None
+    q = urllib.parse.quote(sym)
+    for host in ('query1', 'query2'):
+        try:
+            j = get(f'https://{host}.finance.yahoo.com/v10/finance/quoteSummary/{q}?modules={modules}&crumb={urllib.parse.quote(c)}')
+            return j['quoteSummary']['result'][0]
+        except Exception:
+            continue
+    return None
