@@ -1231,7 +1231,7 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
   setInterval(tick,1000);
   dash.onData(()=>{if(Object.keys(PX).length&&apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];setTimeout(()=>{dash._emit();label();},0);}else setTimeout(label,0);});
   async function poll(){try{const r=await fetch('data/live.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();
-      if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){AT=j.at;SRC='live';}dirty=true;}}catch(e){}}
+      if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}}catch(e){}}
   poll();setInterval(poll,60000);
   // ---- Finnhub (facultatif) ----
   const KEY=()=>LSg('pf-finnhub')||'';
