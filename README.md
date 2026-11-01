@@ -9,7 +9,8 @@ Application web installable (PWA) pour suivre le portefeuille : 10 actions + l'o
 
 ## Données
 - `data/*.json` : cours mensuels et hebdomadaires, fiches des sociétés, lignes, ventes par pays, taux de change, liste des tickers (États-Unis + Toronto).
-- Tes choix de lignes et tes transactions restent **dans ton navigateur** (localStorage). Onglet Transactions → *Sauvegarde* pour exporter / importer un fichier.
+- **Profils** : à la première visite, chacun choisit un pseudo. Chaque pseudo a son propre portefeuille, vide au départ (bouton « Partir du portefeuille conseillé » pour reprendre les 10 actions + l'or).
+- Tout reste **sur le téléphone** (localStorage) : personne d'autre ne voit tes lignes ni tes transactions, rien n'est envoyé sur GitHub. Onglet Transactions → *Sauvegarde* pour exporter / importer un fichier.
 
 ## Cours en direct
 - **Sans réglage** : GitHub Actions (`.github/workflows/cours.yml`) relève les cours toutes les 5 minutes pendant la séance (le plus fréquent permis par GitHub) américaine (`data/live.json`), et les clôtures chaque soir (`prix.json`, `hebdo.json`, `fx.json`). La page relit `live.json` chaque minute.

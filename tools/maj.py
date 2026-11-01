@@ -64,8 +64,10 @@ def save(f, o):
 
 
 def suivis():
+    # toutes les actions proposées dans l'appli (chaque profil choisit les siennes), indices et changes
     ch = load('params.json').get('choix', [])
-    return list(dict.fromkeys(ch + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/fxe', 'e/fxc', 'e/fxf']))
+    tout = [r['cle'] for r in load('prix.json')]
+    return list(dict.fromkeys(ch + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/fxe', 'e/fxc', 'e/fxf'] + tout))
 
 
 def live():
