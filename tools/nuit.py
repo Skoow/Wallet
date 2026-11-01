@@ -143,6 +143,12 @@ def chiffres():
         if ed and isinstance(ed[0], dict) and ed[0].get('raw'):
             ch['prochains_resultats'] = dt.datetime.utcfromtimestamp(ed[0]['raw']).date().isoformat()
         passe = u.get('prochains_resultats') and str(u['prochains_resultats'])[:10] <= today
+        try:  # chiffre vérifié à la main sur 3 à 5 sources depuis moins de 100 jours : on n'y touche pas
+            jj, mm_, aa = map(int, str(u.get('verifie', '')).split('/'))
+            if (dt.date.today() - dt.date(aa, mm_, jj)).days < 100:
+                passe = False
+        except Exception:
+            pass
         if passe:  # résultats publiés : on reprend les chiffres de l'exercice
             fd = r.get('financialData') or {}
             for k, src, f in (('marge_brute', 'grossMargins', 100), ('marge_nette', 'profitMargins', 100), ('roe', 'returnOnEquity', 100)):
