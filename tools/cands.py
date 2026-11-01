@@ -10,7 +10,7 @@ for t in sys.argv[1].split(','):
     mm = {}
     for ts, c in zip(m['timestamp'], m['indicators']['quote'][0]['close']):
         if c is None: continue
-        d = dt.datetime.utcfromtimestamp(ts + m['meta'].get('gmtoffset', 0))
+        d = dt.datetime.utcfromtimestamp(ts + 43200)
         if d.year >= 2006: mm[f'{d.year}-{d.month}'] = round(c, 4)
     out[t] = mm
 os.makedirs('data/analyse', exist_ok=True)

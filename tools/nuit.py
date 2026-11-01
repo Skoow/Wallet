@@ -85,7 +85,7 @@ def histo(limite=None):
             mm = {}
             for ts, c in zip(m['timestamp'], m['indicators']['quote'][0]['close']):
                 if c is None: continue
-                d = dt.datetime.utcfromtimestamp(ts + m['meta'].get('gmtoffset', 0))
+                d = dt.datetime.utcfromtimestamp(ts + 43200)
                 if d.year >= 2006: mm[d.year * 12 + d.month - 1] = round(c, 4)
             last = m['meta'].get('regularMarketPrice')
             if mm and last:
@@ -98,7 +98,7 @@ def histo(limite=None):
             if w and w.get('timestamp'):
                 for ts, c in zip(w['timestamp'], w['indicators']['quote'][0]['close']):
                     if c is None: continue
-                    d = dt.datetime.utcfromtimestamp(ts + w['meta'].get('gmtoffset', 0)).date()
+                    d = dt.datetime.utcfromtimestamp(ts + 43200).date()
                     wk[d - dt.timedelta(days=d.weekday())] = round(c, 4)
                 if last: wk[weeks[-1]] = round(float(last), 4) if max(wk) <= weeks[-1] else wk[max(wk)]
             hb = []; prev = None
