@@ -1,0 +1,25 @@
+name: Analyse
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: 'tickers Yahoo séparés par des virgules'
+        required: true
+permissions:
+  contents: write
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tools/cands.py "${{ github.event.inputs.tickers }}"
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/analyse
+          git commit -m "Analyse candidates" || exit 0
+          git pull --rebase origin main
+          git push origin main
