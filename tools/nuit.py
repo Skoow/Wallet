@@ -78,7 +78,7 @@ def histo(limite=None):
     for t, nom, ex, *_ in todo:
         cle = cle_of(t, ex)
         try:
-            m = yahoo.chart(ysym(t, ex), 'max', '1mo')
+            m = yahoo.chart(ysym(t, ex), 'depuis2006', '1mo')
             w = yahoo.chart(ysym(t, ex), '2y', '1wk')
             if not m or not m.get('timestamp'):
                 continue

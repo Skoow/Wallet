@@ -24,10 +24,12 @@ def get(url, tries=3):
 
 
 def chart(sym, rng='5d', interval='1d'):
+    """rng = '5d', '2y'... ou 'depuis2006' (dates explicites : avec range=max Yahoo espace les points)."""
     q = urllib.parse.quote(sym)
+    per = f'period1=1136073600&period2={int(time.time())}' if rng == 'depuis2006' else f'range={rng}'
     for host in ('query1', 'query2'):
         try:
-            j = get(f'https://{host}.finance.yahoo.com/v8/finance/chart/{q}?range={rng}&interval={interval}&events=split')
+            j = get(f'https://{host}.finance.yahoo.com/v8/finance/chart/{q}?{per}&interval={interval}&events=split')
             return j['chart']['result'][0]
         except Exception:
             continue

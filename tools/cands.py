@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import yahoo
 out = {}
 for t in sys.argv[1].split(','):
-    m = yahoo.chart(t, 'max', '1mo')
+    m = yahoo.chart(t, 'depuis2006', '1mo')
     if not m or not m.get('timestamp'):
         print(t, 'rien'); continue
     mm = {}
