@@ -1,0 +1,38 @@
+"""Ajoute des actions aux séries de cours : python tools/ajout.py "s/pg,s/ko,a/tsx-wcn"
+   -> data/prix.json (mensuel depuis 2006) et data/hebdo.json (mêmes semaines que les autres séries)."""
+import json, os, sys, datetime as dt
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import yahoo, maj
+
+P, H = maj.load('prix.json'), maj.load('hebdo.json')
+d0 = dt.date.fromisoformat(H[0]['debut']); n = len(H[0]['prix'])
+weeks = [d0 + dt.timedelta(weeks=i) for i in range(n)]
+for cle in [c.strip() for c in sys.argv[1].split(',') if c.strip()]:
+    s = maj.sym(cle)
+    m = yahoo.chart(s, 'depuis2006', '1mo'); w = yahoo.chart(s, '2y', '1wk')
+    if not m or not m.get('timestamp'):
+        print(cle, 'introuvable'); continue
+    last = m['meta'].get('regularMarketPrice')
+    mm = {}
+    for ts, c in zip(m['timestamp'], m['indicators']['quote'][0]['close']):
+        if c is None: continue
+        d = dt.datetime.utcfromtimestamp(ts + 43200); mm[d.year * 12 + d.month - 1] = round(c, 4)
+    cm = dt.date.today().year * 12 + dt.date.today().month - 1
+    if last: mm[cm] = round(float(last), 4)
+    k0 = min(mm); pr = []; prev = None
+    for k in range(k0, cm + 1):
+        prev = mm.get(k, prev); pr.append(prev)
+    P = [r for r in P if r['cle'] != cle] + [{'cle': cle, 'debut': f'{k0 // 12}-{k0 % 12 + 1}', 'prix': pr}]
+    wk = {}
+    if w and w.get('timestamp'):
+        for ts, c in zip(w['timestamp'], w['indicators']['quote'][0]['close']):
+            if c is None: continue
+            d = dt.datetime.utcfromtimestamp(ts + 43200).date(); wk[d - dt.timedelta(days=d.weekday())] = round(c, 4)
+    if last: wk[weeks[-1]] = round(float(last), 4)
+    hb = []; prev = None
+    for d in weeks:
+        prev = wk.get(d, prev); hb.append(prev)
+    first = next((x for x in hb if x is not None), None); hb = [first if x is None else x for x in hb]
+    H = [r for r in H if r['cle'] != cle] + [{'cle': cle, 'debut': H[0]['debut'], 'prix': hb}]
+    print(cle, len(pr), 'mois', pr[-1], '| semaine', hb[-1])
+maj.save('prix.json', P); maj.save('hebdo.json', H)
