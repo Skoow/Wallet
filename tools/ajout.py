@@ -11,7 +11,8 @@ LISTE = 'data/a_ajouter.txt'
 arg = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1].strip() else (open(LISTE).read() if os.path.exists(LISTE) else '')
 if os.path.exists(LISTE):
     open(LISTE, 'w').write('')
-for cle in [c.strip() for c in arg.replace('\n', ',').split(',') if c.strip() and not c.strip().startswith('#')]:
+arg = ','.join(l for l in arg.splitlines() if not l.strip().startswith('#'))
+for cle in [c.strip() for c in arg.split(',') if '/' in c]:
     s = maj.sym(cle)
     m = yahoo.chart(s, 'depuis2006', '1mo'); w = yahoo.chart(s, '2y', '1wk')
     if not m or not m.get('timestamp'):

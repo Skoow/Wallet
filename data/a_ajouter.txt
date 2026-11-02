@@ -1,4 +1,4 @@
-# Une clé par ligne (s/aapl, a/tsx-ry, c/btc) : ajoutée aux cours suivis chaque minute, puis la liste est vidée.
+# Une clé par ligne (exemples : s/aapl a/tsx-ry c/btc). Ajoutée aux cours suivis chaque minute, puis la liste est vidée.
 c/btc
 c/eth
 c/sol
