@@ -1492,6 +1492,11 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
   async function poll(){try{const j=await getLive();if(!j)return;
       if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}}catch(e){}}
   poll();setInterval(poll,65000);
+  /* Dès que le portefeuille change (ligne ajoutée / retirée, achat, vente) ou qu'on revient sur l'app : cours relus tout de suite. */
+  {let last=0;const now=()=>{dirty=true;if(Date.now()-last<8000)return;last=Date.now();poll();};
+    const sp=dash.setParams;dash.setParams=function(o){const r=sp.apply(this,arguments);if(o&&('choix' in o))setTimeout(now,0);return r;};
+    if(window.PF&&PF.add){const a0=PF.add,d0=PF.del;PF.add=function(){const p=a0.apply(this,arguments);Promise.resolve(p).then(now,()=>{});return p;};PF.del=function(){const p=d0.apply(this,arguments);Promise.resolve(p).then(now,()=>{});return p;};}
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)now();});addEventListener('focus',now);addEventListener('online',now);}
   fetch('data/h/derniers.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.px)return;Object.entries(j.px).forEach(([k,v])=>{if(!(k in PX)&&Array.isArray(v)&&v[0]>0)PX[k]=v[0];});dirty=true;}).catch(()=>{});
   // ---- Finnhub (facultatif) ----
   const KEY=()=>LSg('pf-finnhub')||'';const BYSYM={};dash.onData(()=>{if(!ws||ws.readyState!==1)return;suivis().forEach(c=>{const s=fhSym(c);if(s&&!BYSYM[s]&&Object.keys(BYSYM).length<48){BYSYM[s]=c;ws.send(JSON.stringify({type:'subscribe',symbol:s}));}});});window.PFKEY={get:KEY,set:v=>{LSs('pf-finnhub',v);try{ws&&ws.close();}catch(e){}wsOK=false;fhStart();}};

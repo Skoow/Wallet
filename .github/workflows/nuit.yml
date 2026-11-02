@@ -11,7 +11,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: cours
+  group: nuit   # travaux longs à part : ne bloquent pas les cours
   cancel-in-progress: false
 jobs:
   nuit:

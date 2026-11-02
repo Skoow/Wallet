@@ -8,7 +8,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: cours
+  group: live   # cours en séance et ajouts : jamais bloqués par la nuit
   cancel-in-progress: false
 jobs:
   a:
