@@ -828,7 +828,7 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
     panel('Monnaies','cotation',grp(x=>isMetal(x.u)?'Or (suit le dollar)':x.u.devise==='USD'?'Dollar US':x.u.devise==='CAD'?'Dollar canadien':x.u.devise));
     // 6 tailles
     {const T={'Méga cap':'Géantes (plus de 200 Md$)','Large cap':'Grandes (10 à 200 Md$)','Mid cap':'Moyennes (2 à 10 Md$)','Small cap':'Petites (moins de 2 Md$)','Micro cap':'Petites (moins de 2 Md$)'};const rows=grp(x=>T[taille(x.u.capi_mds)]||'Inconnue',st);
-      panel('Tailles',st.length+' actions',rows,{note:'Visé : 2 ou 3 moyennes pour la croissance, aucune petite.'});}
+      panel('Tailles',st.length+' actions',rows,{note:'Visé : au moins 1 moyenne, aucune petite.'});}
     // 7 rôle
     panel('Croissance ou défensive',N+' lignes',grp(x=>x.l.role==='Défensive'?'Défensives':'Croissance'));
     // secteurs : tableau complet
@@ -847,7 +847,7 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
     const TH=["Pouvoir d'achat",'Défense','IA et data centers','Robotique','Or et minerais','Climat','Eau'];const cov={};TH.forEach(t=>cov[t]=[]);it.forEach(x=>{const e=EX[x.u.cle];(e&&Array.isArray(e.themes)?e.themes:[]).forEach(t=>{(cov[t]=cov[t]||[]).push(nm(x.u.nom));});});
     const gaps=[];Object.entries(cov).forEach(([t,a])=>{const tr=document.createElement('tr');td(tr,t);td(tr,a.join(', ')||'—');const e=td(tr,'');e.appendChild(el('span','pill '+(a.length?'ok':'warn'),a.length?a.length+' ligne'+(a.length>1?'s':''):'manque'));if(!a.length)gaps.push(t);if(th)th.appendChild(tr);});
     // ce qui manque
-    if(mq){const items=[];const mid=st.filter(x=>taille(x.u.capi_mds)==='Mid cap');if(mid.length<2)items.push(['warn','Moyennes capitalisations',(2-mid.length)+' à ajouter (2 à 10 Md$) : aujourd’hui '+(mid.length?mid.map(x=>nm(x.u.nom)).join(', '):'aucune')+'.']);
+    if(mq){const items=[];const mid=st.filter(x=>taille(x.u.capi_mds)==='Mid cap');if(mid.length<1)items.push(['warn','Moyennes capitalisations','1 à ajouter (2 à 10 Md$).']);
       if(gaps.length)items.push(['warn','Thèmes non couverts',gaps.join(', ')+'.']);
       {const ab=free.filter(x=>x[1]===0).map(x=>x[0]);if(ab.length)items.push(['info','Secteurs absents',ab.join(', ')+'.']);}
       const ge={};let gn=0;st.forEach(x=>{const e=EX[x.u.cle];if(e&&e.geo){gn++;Object.entries(e.geo).forEach(([k,v])=>ge[k]=(ge[k]||0)+(+v||0));}});if(gn){const as=Math.round((ge['Asie']||0)/gn),eu=Math.round((ge['Europe']||0)/gn),na=Math.round(((ge['États-Unis']||0)+(ge['Canada']||0))/gn);{const us=Math.round((ge['États-Unis']||0)/gn),ot=Math.round((ge['Autres']||0)/gn);const T=[['États-Unis',us,50,1],['Europe',eu,15,0],['Asie',as,15,0],['Amérique latine, Afrique, Moyen-Orient',ot,10,0]];const gap=T.filter(([n,v,c,e])=>e?v>c+8:v<c-3);items.push([gap.length?'warn':'ok','Ventes dans le monde',T.map(([n,v,c,e])=>n+' '+v+' % (visé '+(e?'≈ ':'')+c+' %)').join(' · ')+(gap.length?'. À chaque remplacement, à qualité égale, prendre la société qui vend le plus hors des États-Unis.':'.')+(gn<st.length?' Données de ventes manquantes pour '+(st.length-gn)+' ligne'+(st.length-gn>1?'s':'')+'.':'')]);}}
@@ -867,7 +867,7 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
     const def=st.filter(x=>x.l.role==='Défensive');add(def.length>4?'warn':'ok','4 actions défensives au plus',def.length+' : '+(lst(def)||'aucune')+(it.some(x=>isMetal(x.u))?', plus l’or qui amortit les baisses.':'.'));
     const tl=t=>st.filter(x=>{const q=taille(x.u.capi_mds);return t==='S'?(q==='Small cap'||q==='Micro cap'):q===t;});const sm=tl('S'),mid=tl('Mid cap');
     add(sm.length?'warn':'ok','Aucune petite capitalisation',sm.length?'Moins de 2 Md$ : '+lst(sm)+'.':'Aucune société sous 2 Md$.');
-    add(mid.length>=2?'ok':'warn','2 ou 3 moyennes capitalisations',mid.length+' entre 2 et 10 Md$'+(mid.length?' ('+lst(mid)+')':'')+(mid.length<2?' : il en manque '+(2-mid.length)+'. Les moyennes apportent de la croissance que les géantes n’ont plus.':'.'));
+    add(mid.length>=1?'ok':'warn','Au moins 1 moyenne capitalisation',mid.length+' entre 2 et 10 Md$'+(mid.length?' ('+lst(mid)+').':' : il en manque 1.'));
     const dil=st.filter(x=>+x.u.actions_an>0.5),rb=st.filter(x=>+x.u.actions_an<=-0.5);add(dil.length?'warn':'ok','Rachète ses actions',dil.length?'Émet des actions : '+dil.map(x=>nm(x.u.nom)+' (+'+fr(String(+x.u.actions_an))+' %/an)').join(', ')+'.':rb.length+' sur '+st.length+' rachètent leurs actions, aucune n’en émet.');
     const ns=st.map(x=>nOf(x.u)).filter(v=>v!=null);const low=st.filter(x=>{const n=nOf(x.u);return n!=null&&n<70;});add(low.length?'warn':'ok','Note de 70/100 au moins',low.length?'Sous 70 : '+low.map(x=>nm(x.u.nom)+' '+nOf(x.u)).join(', ')+'.':'Toutes au-dessus'+(ns.length?' (la plus basse : '+Math.min(...ns)+')':'')+'.');
     const vr=st.filter(x=>x.u.verdict&&x.u.verdict!=='propre');const vrr=vr.filter(x=>x.u.verdict==='drapeau rouge'),vrw=vr.filter(x=>x.u.verdict!=='drapeau rouge');add(vrr.length?'warn':vrw.length?'info':'ok','Actualité des sociétés',vr.length?(vrr.length?'Alerte : '+lst(vrr)+'. ':'')+(vrw.length?'À surveiller : '+lst(vrw)+' (raison détaillée dans chaque ligne ; aucune n’est une alerte).':''):'Rien à signaler sur les '+st.length+' sociétés.');
