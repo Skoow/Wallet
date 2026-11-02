@@ -1149,11 +1149,6 @@ html.tk-lock,html.tk-lock body{overflow:hidden}
     wmap();
     panel('Secteurs',N+' lignes',grp(x=>isMetal(x.u)?'Or (métal)':x.l.secteur));
     // 2 pays du siège
-    panel('Pays des sociétés','où est le siège',grp(x=>isMetal(x.u)?'Or (monde)':x.u.pays));
-    // 3 où elles vendent
-    {const o={},miss=[];const B=['États-Unis','Canada','Europe','Asie','Autres'];B.forEach(b=>o[b]={nom:b,v:0,who:[]});st.forEach(x=>{const e=EX[x.u.cle];if(!e||!e.geo){miss.push(nm(x.u.nom));return;}B.forEach(b=>{const v=+e.geo[b]||0;o[b].v+=v/100;if(v>=25)o[b].who.push(nm(x.u.nom)+' '+v+'\u00a0%');});});
-      const rows=Object.values(o);if(miss.length)rows.push({nom:'Données à venir',v:miss.length,who:miss,last:true});
-      panel('Où elles vendent','part des ventes, moyenne des '+st.length+' actions',rows,{note:'Plus parlant que le pays du siège : une société américaine peut faire la moitié de ses ventes à l’étranger. Sous chaque zone : les sociétés qui y font au moins 25 % de leurs ventes.'});}
     // 4 qui paie
     {const o={},miss=[];const B=['Particuliers','Entreprises','États'];B.forEach(b=>o[b]={nom:b,v:0,who:[]});st.forEach(x=>{const e=EX[x.u.cle];if(!e||!e.clients){miss.push(nm(x.u.nom));return;}B.forEach(b=>{const v=+e.clients[b]||0;o[b].v+=v/100;if(v>=50)o[b].who.push(nm(x.u.nom));});});
       const rows=Object.values(o);if(miss.length)rows.push({nom:'Données à venir',v:miss.length,who:miss,last:true});
