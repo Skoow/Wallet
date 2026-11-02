@@ -89,3 +89,34 @@ def quotes(syms):
                 out[r['symbol']] = (float(r['regularMarketPrice']), int(r['regularMarketTime']))
         time.sleep(0.3)
     return out
+
+
+def timeseries(sym, types, years=6):
+    """Séries fondamentales/valorisation Yahoo (trimestrielles ou annuelles) : {type: [(date, valeur), ...]}."""
+    c = crumb()
+    q = urllib.parse.quote(sym)
+    p1 = int(time.time()) - years * 365 * 86400
+    url = (f'/ws/fundamentals-timeseries/v1/finance/timeseries/{q}?symbol={q}&type={",".join(types)}'
+           f'&period1={p1}&period2={int(time.time())}&merge=false&padTimeSeries=false'
+           + (f'&crumb={urllib.parse.quote(c)}' if c else ''))
+    out = {}
+    for host in ('query2', 'query1'):
+        try:
+            j = get(f'https://{host}.finance.yahoo.com' + url)
+            for r in (j.get('timeseries') or {}).get('result') or []:
+                for t in (r.get('meta') or {}).get('type') or []:
+                    rows = r.get(t) or []
+                    vals = []
+                    for x in rows:
+                        if not x:
+                            continue
+                        v = (x.get('reportedValue') or {}).get('raw')
+                        if v is None:
+                            continue
+                        vals.append((x.get('asOfDate'), v))
+                    if vals:
+                        out[t] = sorted(vals)
+            return out
+        except Exception:
+            continue
+    return out

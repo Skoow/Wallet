@@ -1,0 +1,37 @@
+name: Pro
+on:
+  push:
+    branches: [main]
+    paths: ['data/lancer_pro.txt']
+  schedule:
+    - cron: '40 0 * * 2-6'   # après la nuit : valorisation, comptes, révisions, dirigeants
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pro
+  cancel-in-progress: false
+jobs:
+  pro:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tools/nuit.py pro
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp data/pro.json "$RUNNER_TEMP/pro.json"
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            cp "$RUNNER_TEMP/pro.json" data/pro.json
+            git add data/pro.json
+            if git diff --cached --quiet; then echo "rien de neuf"; exit 0; fi
+            git commit -q -m "Pro $(date -u +%Y-%m-%d)"
+            if git push -q origin main; then exit 0; fi
+            sleep $((i * 7))
+          done
+          exit 1

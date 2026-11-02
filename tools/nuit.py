@@ -201,6 +201,103 @@ def derniers():
               open(D + 'h/derniers.json', 'w', encoding='utf-8'), separators=(',', ':'))
     print(len(out), 'derniers cours sur', len(sy))
 
+VALO = ['quarterlyPeRatio', 'quarterlyForwardPeRatio', 'quarterlyPsRatio', 'quarterlyPbRatio', 'quarterlyPegRatio',
+        'quarterlyEnterprisesValueEBITDARatio', 'quarterlyMarketCap']
+FOND = ['annualTotalRevenue', 'annualNetIncome', 'annualGrossProfit', 'annualOperatingIncome', 'annualEBIT', 'annualInterestExpense',
+        'annualDilutedEPS', 'annualFreeCashFlow', 'annualOperatingCashFlow', 'annualCapitalExpenditure', 'annualStockBasedCompensation',
+        'annualRepurchaseOfCapitalStock', 'annualTotalDebt', 'annualCashAndCashEquivalents', 'annualDilutedAverageShares']
+
+
+def _med(a):
+    a = sorted(x for x in a if x is not None and x > 0)
+    if not a: return None
+    m = len(a) // 2
+    return a[m] if len(a) % 2 else (a[m - 1] + a[m]) / 2
+
+
+def pro(limite=None):
+    """Données « pro » par société -> data/pro.json : historique de valorisation (PER sur 5 ans), tendance des comptes,
+       révisions des analystes, achats/ventes des dirigeants. Ne touche pas univers.json."""
+    import maj
+    U = json.load(open(D + 'univers.json', encoding='utf-8'))
+    try: OUT = json.load(open(D + 'pro.json', encoding='utf-8'))
+    except Exception: OUT = {}
+    today = dt.date.today().isoformat(); n = 0
+    for u in U:
+        s = maj.sym(u['cle'])
+        if not s or u['cle'].startswith('e/') or u.get('metal'):
+            continue
+        if limite and n >= limite: break
+        try:
+            o = {'maj': today}
+            v = yahoo.timeseries(s, VALO)
+            pe = [x for d, x in v.get('quarterlyPeRatio', []) if 0 < x < 200]
+            if pe:
+                o['per'] = {'actuel': round(pe[-1], 1), 'mediane5a': round(_med(pe), 1), 'min5a': round(min(pe), 1), 'max5a': round(max(pe), 1), 'n': len(pe),
+                            'serie': [[d, round(x, 1)] for d, x in v.get('quarterlyPeRatio', []) if 0 < x < 200]}
+            fpe = [x for d, x in v.get('quarterlyForwardPeRatio', []) if 0 < x < 200]
+            if fpe: o['per_prevu_mediane5a'] = round(_med(fpe), 1)
+            ps = [x for d, x in v.get('quarterlyPsRatio', []) if 0 < x < 100]
+            if ps: o['ps'] = {'actuel': round(ps[-1], 2), 'mediane5a': round(_med(ps), 2)}
+            ev = [x for d, x in v.get('quarterlyEnterprisesValueEBITDARatio', []) if 0 < x < 300]
+            if ev: o['ev_ebitda'] = {'actuel': round(ev[-1], 1), 'mediane5a': round(_med(ev), 1)}
+            peg = [x for d, x in v.get('quarterlyPegRatio', []) if 0 < x < 20]
+            if peg: o['peg'] = round(peg[-1], 2)
+            f = yahoo.timeseries(s, FOND)
+            yrs = {}
+            for t, rows in f.items():
+                for d, x in rows:
+                    yrs.setdefault(d[:4], {})[t] = x
+            comptes = []
+            for y in sorted(yrs)[-5:]:
+                r = yrs[y]; ca = r.get('annualTotalRevenue')
+                if not ca: continue
+                c = {'annee': y, 'ca_mds': round(ca / 1e9, 2)}
+                def pc(k):
+                    x = r.get(k); return round(x / ca * 100, 1) if x is not None else None
+                c['marge_brute'] = pc('annualGrossProfit'); c['marge_op'] = pc('annualOperatingIncome'); c['marge_nette'] = pc('annualNetIncome')
+                c['cash_libre'] = pc('annualFreeCashFlow'); c['capex'] = pc('annualCapitalExpenditure'); c['sbc'] = pc('annualStockBasedCompensation')
+                if c['capex'] is not None: c['capex'] = abs(c['capex'])
+                rb = r.get('annualRepurchaseOfCapitalStock'); c['rachats'] = round(abs(rb) / ca * 100, 1) if rb is not None else None
+                eb, ie = r.get('annualEBIT'), r.get('annualInterestExpense')
+                c['couverture_interets'] = round(eb / ie, 1) if eb and ie and ie > 0 else None
+                de, ch = r.get('annualTotalDebt'), r.get('annualCashAndCashEquivalents')
+                c['dette_nette_mds'] = round((de - (ch or 0)) / 1e9, 2) if de is not None else None
+                c['bpa'] = r.get('annualDilutedEPS'); sh = r.get('annualDilutedAverageShares'); c['actions_m'] = round(sh / 1e6, 1) if sh else None
+                comptes.append(c)
+            if comptes: o['comptes'] = comptes
+            q = yahoo.summary(s, 'earningsTrend,financialData,recommendationTrend,netSharePurchaseActivity,insiderTransactions,defaultKeyStatistics')
+            if q:
+                et = (q.get('earningsTrend') or {}).get('trend') or []
+                cur = next((t for t in et if t.get('period') == '0y'), None); nxt = next((t for t in et if t.get('period') == '+1y'), None)
+                rev = {}
+                for lab, t in (('an', cur), ('an_suivant', nxt)):
+                    if not t: continue
+                    e = t.get('epsTrend') or {}; r_ = t.get('epsRevisions') or {}
+                    now_, m3 = v(e, 'current'), v(e, '90daysAgo')
+                    rev[lab] = {'bpa': now_, 'bpa_90j': m3, 'revision_90j_pct': round((now_ / m3 - 1) * 100, 1) if now_ and m3 else None,
+                                'hausses_30j': v(r_, 'upLast30days'), 'baisses_30j': v(r_, 'downLast30days'),
+                                'croissance': round(v(t, 'growth') * 100, 1) if v(t, 'growth') is not None else None}
+                if rev: o['revisions'] = rev
+                fd = q.get('financialData') or {}
+                o['analystes'] = {'n': v(fd, 'numberOfAnalystOpinions'), 'cible_moyenne': v(fd, 'targetMeanPrice'), 'cible_basse': v(fd, 'targetLowPrice'),
+                                  'cible_haute': v(fd, 'targetHighPrice'), 'avis': fd.get('recommendationKey'), 'cours': v(fd, 'currentPrice')}
+                ns = q.get('netSharePurchaseActivity') or {}
+                if ns: o['inities'] = {'periode': ns.get('period'), 'achats': v(ns, 'buyInfoShares'), 'ventes': v(ns, 'sellInfoShares'),
+                                       'net': v(ns, 'netInfoShares'), 'net_pct': round(v(ns, 'netPercentInsiderShares') * 100, 2) if v(ns, 'netPercentInsiderShares') is not None else None,
+                                       'part_inities_pct': round(v(ns, 'totalInsiderShares') / v(q.get('defaultKeyStatistics') or {}, 'sharesOutstanding') * 100, 2) if v(ns, 'totalInsiderShares') and v(q.get('defaultKeyStatistics') or {}, 'sharesOutstanding') else None}
+                ks = q.get('defaultKeyStatistics') or {}
+                o['bpa_12m'] = v(ks, 'trailingEps'); o['bpa_prevu'] = v(ks, 'forwardEps'); o['peg_yahoo'] = v(ks, 'pegRatio')
+                o['short_pct'] = round(v(ks, 'shortPercentOfFloat') * 100, 1) if v(ks, 'shortPercentOfFloat') is not None else None
+            if len(o) > 1:
+                OUT[u['cle']] = o; n += 1
+        except Exception as e:
+            print(u['cle'], 'pro', e)
+        time.sleep(0.4)
+    json.dump(OUT, open(D + 'pro.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    print(n, 'sociétés pro')
+
+
 if __name__ == '__main__':
     a = sys.argv[1]
     if a == 'tickers': tickers()
@@ -208,3 +305,4 @@ if __name__ == '__main__':
     elif a == 'chiffres': chiffres()
     elif a == 'derniers': derniers()
     elif a == 'appliquer': appliquer()
+    elif a == 'pro': pro(int(sys.argv[2]) if len(sys.argv) > 2 else None)
