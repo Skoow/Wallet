@@ -453,6 +453,37 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
   .pf .an-strip small{font-size:.68rem}
 }
 @media (max-width:380px){.pf .an-strip>div{padding:0 5px}.pf .an-strip small{font-size:.6rem;letter-spacing:-.02em;overflow:visible;text-overflow:clip}}
+
+/* ===== Encadré du jour plus compact ===== */
+.pf .day{gap:10px 28px;align-items:start}
+.pf .coef{display:flex;align-items:baseline;gap:8px;min-width:0;flex-wrap:wrap}
+.pf .coef .k{display:none}
+.pf .coef .v{font-size:1.9rem}
+.pf .coef .s{font-size:.9rem}
+.pf .todo{gap:3px}
+.pf .todo li{grid-template-columns:6.2rem minmax(0,1fr);gap:10px;font-size:.88rem;line-height:1.5}
+.pf .todo .x{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pf .todo.full .x{white-space:normal;overflow:visible}
+.pf .todo-more{justify-self:start;margin-top:4px;font:inherit;font-size:.8rem;font-weight:600;padding:3px 12px;border-radius:999px;border:1px solid color-mix(in srgb,#fff 35%,transparent);background:transparent;color:#fff;cursor:pointer}
+.pf .todo-more:hover{background:color-mix(in srgb,#fff 12%,transparent)}
+.pf .day .todo-more{grid-column:2}
+@media (max-width:720px){.pf .day .todo-more{grid-column:1}}
+/* ===== Retirer une ligne : dans le détail, à côté d'Acheter / Vendre ===== */
+.pf .rh .rx{display:none!important}
+.pf .txq .rx{display:inline-flex!important;align-items:center;margin-left:auto;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid transparent;background:transparent;color:var(--muted);font-size:.85rem;font-weight:600;opacity:1;cursor:pointer;width:auto;height:auto}
+.pf .txq .rx:hover,.pf .txq .rx:focus-visible{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 35%,transparent);background:color-mix(in srgb,var(--bad) 7%,transparent)}
+.pf .txq .rx.arm{color:#fff;background:var(--bad);border-color:var(--bad)}
+@media (max-width:480px){
+  .pf .day{gap:6px}
+  .pf .coef .v{font-size:1.6rem}
+  .pf .todo li{grid-template-columns:5.4rem minmax(0,1fr);gap:8px;font-size:.84rem}
+  .pf .todo .t{font-size:.76rem}
+  /* gain : texte coloré compact, sans pavé */
+  .pf .rh .mob .ig{width:auto;min-width:3.3rem;padding:0;background:transparent!important;border:0;justify-content:flex-end}
+  .pf .rh .mob .ig small{font-size:.82rem;font-variant-numeric:tabular-nums}
+  .pf .rh{grid-template-columns:minmax(0,1fr) 46px 1.7rem 1rem}
+  .pf .txq .rx{margin-left:0}
+}
 </style>
 
 <div class="pf">
@@ -774,7 +805,7 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
       hd.appendChild(spark(u?u.cle:null,ki.ecart,ki.entree,true));
       const st=el('span','st');if(u){st.appendChild(el('span','mom '+(ki.entree==='Bon moment'?'low':ki.entree==='Attendre un repli'?'high':ki.entree==='En 2–3 fois'?'mid':''),ki.entree));}hd.appendChild(st);
       const n=u&&!met?nOf(u):null;const sc=el('span','sc '+(met?'':nlvl(n)));if(met){sc.appendChild(el('small','','métal'));}else{sc.appendChild(el('b','',n==null?'—':String(n)));sc.appendChild(el('small','','/100'));if(n!=null){const G=U.filter(x=>+x.ligne===+u.ligne&&!isMetal(x)&&nOf(x)!=null).sort((a,b)=>nOf(b)-nOf(a));const rk=G.findIndex(x=>x.cle===u.cle)+1;if(G.length>1&&rk>0){const r=el('small','rk',rk+(rk===1?'re':'e')+' sur '+G.length);r.title='Rang face à ses concurrents directs (même métier)';sc.appendChild(r);}}}hd.appendChild(sc);
-      {const xb=el('span','rx','✕');xb.setAttribute('role','button');xb.tabIndex=0;xb.title='Retirer cette ligne';xb.setAttribute('aria-label','Retirer '+(u?u.nom:'cette ligne'));let arm=false;const go=ev=>{ev.stopPropagation();ev.preventDefault();if(!arm){arm=true;xb.classList.add('arm');xb.textContent='Retirer ?';setTimeout(()=>{arm=false;xb.classList.remove('arm');xb.textContent='✕';},4000);return;}const c2=R.map(x=>x?x.cle:'');c2.splice(i,1);OPEN.clear();dash.setParams({choix:c2});};xb.addEventListener('click',go);xb.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' ')go(ev);});hd.appendChild(xb);}
+      {const xb=el('span','rx','Retirer la ligne');xb.setAttribute('role','button');xb.tabIndex=0;xb.title='Retirer cette ligne';xb.setAttribute('aria-label','Retirer '+(u?u.nom:'cette ligne'));let arm=false;const go=ev=>{ev.stopPropagation();ev.preventDefault();if(!arm){arm=true;xb.classList.add('arm');xb.textContent='Confirmer le retrait ?';setTimeout(()=>{arm=false;xb.classList.remove('arm');xb.textContent='Retirer la ligne';},4000);return;}const c2=R.map(x=>x?x.cle:'');c2.splice(i,1);OPEN.clear();dash.setParams({choix:c2});};xb.addEventListener('click',go);xb.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' ')go(ev);});hd.appendChild(xb);setTimeout(()=>{const q=row.querySelector('.txq');if(q)q.appendChild(xb);},0);}
       const ch=el('span','ch');ch.appendChild(icon('chev'));hd.appendChild(ch);row.appendChild(hd);
       const dt=el('div','rd');dt.id=did;dt.hidden=!open;dt.appendChild(el('p','sect',l.secteur+' · '+l.sous_secteur+(met?'':' · '+l.pays)));if(u){const PP=POS[u.cle];const p1=eurPx(u.cle);if(PP&&PP.tx.length){const ib=el('div','pos2');if(PP.qty>1e-9){const vv=p1?PP.qty*p1:PP.cost,gg=vv-PP.cost;const sg=gg>=0?'+':'−';ib.append(el('span','pv',eur(vv)),el('span','pg '+(gg>=0?'ok':'bad'),sg+eur(Math.abs(gg))+' ('+sg+fr(String(Math.abs(Math.round(gg/PP.cost*1000)/10)))+'\u00a0%)'),el('span','mu',fq(PP.qty)+' '+(met?'parts':'actions')+' · investi '+eur(PP.cost)+' · prix moyen '+eur2(PP.cost/PP.qty)));}else ib.appendChild(el('span','mu','Ligne entièrement vendue'));if(Math.abs(PP.real)>0.5)ib.appendChild(el('span',PP.real>=0?'ok':'bad','déjà encaissé : '+(PP.real>=0?'+':'−')+eur(Math.abs(PP.real))));dt.appendChild(ib);const tl=el('ul','txl');PP.tx.slice().reverse().forEach(t=>{tl.appendChild(el('li','',fdate(t.date)+(t.heure?' '+t.heure:'')+' · '+(t.sens==='vente'?'Vente':t.sens==='dividende'?'Dividende':'Achat')+' '+fq(+t.quantite)+' × '+fnum(+(t.prix_affiche||t.prix))+' '+cur$(t.devise_affiche||t.devise)+' = '+eur(+t.montant_eur)));});dt.appendChild(tl);}}
       hd.addEventListener('click',(ev)=>{if(ev.target.closest&&ev.target.closest('a.tv')){ev.stopPropagation();return;}const o=hd.getAttribute('aria-expanded')!=='true';hd.setAttribute('aria-expanded',o);dt.hidden=!o;if(o)OPEN.add(l.n);else OPEN.delete(l.n);});
@@ -1489,6 +1520,14 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
   const sync=()=>{map.forEach(([a,b])=>{const s=document.getElementById(a),d=document.getElementById(b);if(!s||!d)return;const t=s.textContent.trim()||'—';if(d.textContent!==t)d.textContent=t;const c=s.className||'';if(d.className!==c)d.className=c;});
     {const g=document.getElementById('as-g'),gp=document.getElementById('as-gp');const m=g&&g.textContent.match(/^(.*?)\s*\((.*)\)\s*$/);if(m){g.textContent=m[1];if(gp&&gp.textContent!==m[2])gp.textContent=m[2];}}const sp=document.getElementById('k2'),o=document.getElementById('as-sp');if(sp&&o){const t=sp.textContent.trim();const v=t&&t!=='—'?(innerWidth<=480?'S&P ':'S&P 500 : ')+t:'';if(o.textContent!==v)o.textContent=v;}};
   const go=()=>{sync();const mo=new MutationObserver(sync);map.concat([['k2']]).forEach(([a])=>{const e=document.getElementById(a);if(e)mo.observe(e,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['class']});});};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
+</script>
+<script>
+/* Résumé du jour : une ligne par point, « Tout voir » pour déplier. */
+(function(){const go=()=>{const ul=document.getElementById('today');if(!ul)return;const b=document.createElement('button');b.type='button';b.className='todo-more';b.hidden=true;ul.after(b);
+  const lab=()=>{b.textContent=ul.classList.contains('full')?'Réduire':'Tout voir';b.setAttribute('aria-expanded',String(ul.classList.contains('full')));};
+  const chk=()=>{if(ul.classList.contains('full')){b.hidden=false;return;}b.hidden=![...ul.querySelectorAll('.x')].some(x=>x.scrollWidth>x.clientWidth+1);};
+  b.onclick=()=>{ul.classList.toggle('full');lab();chk();};lab();new MutationObserver(()=>setTimeout(chk,0)).observe(ul,{childList:true,subtree:true,characterData:true});addEventListener('resize',chk);setTimeout(chk,0);};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
 </script>
 </body>
