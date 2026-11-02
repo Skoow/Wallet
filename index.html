@@ -482,6 +482,7 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
 }
 
 /* décompte de mise à jour à côté de l'heure des cours */
+.pf #asof:empty{display:none}
 .pf .asof-cd{display:inline-flex;align-items:center;gap:5px;margin:0 6px 0 0;padding:1px 9px;border-radius:999px;font-size:.78rem;font-variant-numeric:tabular-nums;color:color-mix(in srgb,#fff 85%,transparent);background:color-mix(in srgb,#fff 10%,transparent);vertical-align:1px;white-space:nowrap}
 .pf .asof-cd::before{content:"";width:6px;height:6px;border-radius:50%;background:#5fd39a;animation:pfpulse 2s ease-in-out infinite}
 @keyframes pfpulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -1501,16 +1502,9 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
   setInterval(tick,1000);
   dash.onData(()=>{ensureHist();if(Object.keys(PX).length&&apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];setTimeout(()=>{dash._emit();label();},0);}else setTimeout(label,0);});
   const REPO=(()=>{const h=location.hostname.match(/^([^.]+)\.github\.io$/);const p=location.pathname.split('/').filter(Boolean)[0];return h&&p?h[1]+'/'+p:'Skoow/Wallet';})();
-  /* Source des cours : l'API GitHub (à jour à la minute, 60 lectures / heure par connexion) tant qu'il reste du quota,
-     sinon raw.githubusercontent.com (sans limite, copie de 5 min au plus), en dernier recours la copie du site. */
-  let APIOFF=0;
-  async function getLive(){
-    if(Date.now()>APIOFF){try{const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data/live.json?ref=main&t='+Date.now(),{headers:{Accept:'application/vnd.github.raw+json'},cache:'no-store'});
-      const rem=+r.headers.get('x-ratelimit-remaining'),rst=+r.headers.get('x-ratelimit-reset');
-      if(r.status===403||r.status===429||(r.headers.has('x-ratelimit-remaining')&&rem<=8))APIOFF=rst>0?rst*1000:Date.now()+15*60000;
-      if(r.ok)return await r.json();}catch(e){}}
-    try{const r=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/data/live.json',{cache:'no-store'});if(r.ok)return await r.json();}catch(e){}
-    const r=await fetch('data/live.json?t='+Date.now(),{cache:'no-store'});return r.ok?await r.json():null;}
+  /* Source unique des cours : raw.githubusercontent.com (fichiers du dépôt, gratuit, sans limite de lectures, accepté par les navigateurs).
+     GitHub y garde une copie 5 min au plus ; en cas d'échec (hors ligne), les derniers cours affichés sont conservés. */
+  async function getLive(){try{const r=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/data/live.json',{cache:'no-store'});return r.ok?await r.json():null;}catch(e){return null;}}
   let PT=null,NEXT=0,LIVEAT=null;const PAS=65000;function sched(){clearTimeout(PT);NEXT=Date.now()+PAS;PT=setTimeout(poll,PAS);}
   async function poll(){sched();if(document.hidden)return;try{const j=await getLive();if(!j)return;if(j.at)LIVEAT=j.at;
       if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}}catch(e){}}
