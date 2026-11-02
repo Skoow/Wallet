@@ -664,6 +664,18 @@ html.tk-lock,html.tk-lock body{overflow:hidden}
 .pf .an-strip dd{display:flex!important;justify-content:center;overflow:visible!important}
 @media (max-width:480px){.pf .an-strip{grid-template-columns:1.3fr 1fr 1fr 1fr!important}.pf .an-strip>div{padding:0 4px!important}.pf .an-strip dd{font-size:clamp(.8rem,3.7vw,1.02rem)!important;letter-spacing:-.02em}}
 #sec-live #live-s{display:none!important}
+
+/* v60 : vue simple */
+.pf .sh-v{position:relative}
+.pf .seg.vue{position:absolute;right:0;top:0;margin:0}
+.pf .seg.vue button{padding:4px 12px;font-size:.8rem;min-height:30px}
+html.pf-simple .pf .hd .day,
+html.pf-simple #v-suivre>section:not(#sec-live):not(#sec-plan),
+html.pf-simple #achat1,html.pf-simple #addl,html.pf-simple #sec-plan .legend-note,html.pf-simple #sec-plan .th,html.pf-simple #b-reset,html.pf-simple #savebar{display:none!important}
+html.pf-simple .pf .rh .tide,html.pf-simple .pf .rh .st,html.pf-simple .pf .rh .sc,html.pf-simple .pf .rh .nm .ok-i,html.pf-simple .pf .rh .nm .warn-i{display:none!important}
+html.pf-simple .pf .rh{grid-template-columns:minmax(0,1fr) auto!important}
+html.pf-simple .pf .rh .ch{grid-column:auto!important}
+html.pf-simple .pf .rh .nm .ig,html.pf-simple .pf .rh .mob .ig{font-size:.9rem!important}
 </style>
 
 <div class="pf">
@@ -686,7 +698,7 @@ html.tk-lock,html.tk-lock body{overflow:hidden}
 
   <div class="view" id="v-suivre" role="tabpanel" aria-labelledby="tab-suivre">
     <section id="sec-live" data-source="prix">
-      <div class="sh"><h2>Mon portefeuille</h2><p class="mu" id="live-s">—</p></div>
+      <div class="sh sh-v"><h2>Mon portefeuille</h2><div class="seg vue" id="vue-seg" role="group" aria-label="Affichage"><button type="button" data-v="simple">Simple</button><button type="button" data-v="detail">Détail</button></div><p class="mu" id="live-s">—</p></div>
       <dl class="kpis live-k"><div><dt>Investi</dt><dd id="lv1">—</dd></div><div><dt>Valeur</dt><dd id="lv2">—</dd></div><div><dt>Gain</dt><dd id="lv3">—</dd></div></dl><div class="seg rng" id="rng-live" role="group" aria-label="Période"></div>
       <div class="chart live" id="c-live"></div>
     </section>
@@ -1038,6 +1050,7 @@ html.tk-lock,html.tk-lock body{overflow:hidden}
         a1.appendChild(ul);
         if(R.some(u=>u&&(isMetal(u)||isCr(u))))a1.appendChild(el('p','mu a1m',(R.some(u=>u&&isMetal(u))?'L’or':'Les cryptos')+(R.some(u=>u&&isMetal(u))&&R.some(u=>u&&isCr(u))?' et les cryptos':'')+' : au montant que tu veux, pas à l’unité.'));
         a1.appendChild(el('p','mu a1m','Prix d’aujourd’hui pour 1 action, converti en euros.'));}else a1.remove();}
+    {const allH=R.filter(Boolean).length>0&&R.filter(Boolean).every(u=>POS[u.cle]&&POS[u.cle].qty>1e-9);let pv=null;try{pv=localStorage.getItem('pf-vue');}catch(_){}const v=pv||(allH?'simple':'detail');document.documentElement.classList.toggle('pf-simple',v==='simple');const sg=document.getElementById('vue-seg');if(sg){sg.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.v===v));if(!b._vu){b._vu=1;b.addEventListener('click',()=>{try{localStorage.setItem('pf-vue',b.dataset.v);}catch(_){}document.documentElement.classList.toggle('pf-simple',b.dataset.v==='simple');sg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});}});}}
     {let s=document.getElementById('invt');if(!s){s=el('p','invt');s.id='invt';box.before(s);}s.textContent='';s.hidden=false;if(TOT>0){s.append(el('b','','Investi : '+eur(TOT)),NF<LG.length?' · '+NF+' ligne'+(NF>1?'s':'')+' sur '+LG.length+' remplie'+(NF>1?'s':''):' · parts égales = '+eur(TOT/LG.length)+' par ligne');}else s.hidden=true;}
     const tf=document.querySelector('#t-fond tbody');if(tf){tf.textContent='';
     R.filter(u=>u&&!isMetal(u)).forEach(r=>{const tr=document.createElement('tr');td(tr,r.ticker+' · '+r.nom);td(tr,num(r.capi_mds),'n');td(tr,pct(r.croissance_ca_5a),'n');td(tr,pct(r.marge_nette,false),'n');td(tr,pct(r.cash_libre,false),'n');td(tr,pct(r.roic,false),'n');td(tr,r.dette_ebitda==null?'—':num(r.dette_ebitda)+'×','n');td(tr,num(r.per_prevu),'n');td(tr,pct(r.actions_an),'n');td(tr,pct(r.marge_brute,false),'n');td(tr,pct(r.croissance_ca_1a),'n');td(tr,pct(r.croissance_bpa_5a),'n');td(tr,pct(r.roe,false),'n');td(tr,pct(r.rendement_cash,false),'n');tf.appendChild(tr);});}
