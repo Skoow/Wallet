@@ -1464,7 +1464,7 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
   setInterval(mk,1000);})();
 </script>
 <script>
-/* Cours en direct (web app) : data/live.json (mis à jour par GitHub toutes les 15 min en séance)
+/* Cours en direct (web app) : data/live.json (mis à jour par GitHub chaque minute, de l’ouverture de Paris à la clôture américaine)
    + clé Finnhub facultative : cours à la seconde des actions américaines par WebSocket. */
 (function(){
   const LSg=k=>{try{return localStorage.getItem(k);}catch(e){return null;}},LSs=(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k);}catch(e){}};

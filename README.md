@@ -15,7 +15,7 @@ Application web installable (PWA) pour suivre le portefeuille : 10 actions + l'o
 ## Mises à jour automatiques (sans clé)
 | Quoi | Quand |
 |---|---|
-| Cours des lignes de base, de l'or, des indices et des changes | **chaque minute** pendant la séance américaine (`data/live.json`, lu directement par la page) |
+| Cours des lignes de base, de l'or, des indices (dont le CAC 40) et des changes | **chaque minute** du lundi au vendredi, de l'ouverture de Paris à la clôture américaine (`data/live.json`, lu directement par la page) |
 | Cours de toutes les autres actions proposées | toutes les 5 minutes en séance |
 | Gains et pertes, valeur du portefeuille, capitalisation, PER, rendement du cash | à chaque nouveau cours (calculés dans la page) |
 | Clôtures, nouveau mois / nouvelle semaine, euro/dollar | chaque soir |

@@ -1,6 +1,7 @@
 """Mise à jour des cours pour la web app (lancé par GitHub Actions).
 
-  python tools/maj.py live   -> data/live.json : dernier cours des lignes, indices et changes (toutes les 15 min en séance)
+  python tools/maj.py boucle -> data/live.json chaque minute, de l'ouverture de Paris à la clôture américaine
+  python tools/maj.py live   -> data/live.json : dernier cours des lignes, indices et changes (une fois)
   python tools/maj.py close  -> data/prix.json, data/hebdo.json, data/fx.json : clôture du jour (le soir)
 
 Source : Yahoo Finance (graphique v8) ; changes BCE via frankfurter.app. En cas d'échec, l'ancienne valeur est gardée.
@@ -66,7 +67,7 @@ def suivis():
     # toutes les actions proposées dans l'appli (chaque profil choisit les siennes), indices et changes
     ch = load('params.json').get('choix', [])
     tout = [r['cle'] for r in load('prix.json')]
-    return list(dict.fromkeys(ch + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/fxe', 'e/fxc', 'e/fxf'] + tout))
+    return list(dict.fromkeys(ch + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/cac', 'e/fxe', 'e/fxc', 'e/fxf'] + tout))
 
 
 def live(cles=None):
@@ -173,7 +174,7 @@ def git_push(msg, paths):
 def boucle(minutes=350, pas=60):
     """En séance : cours des lignes de base, indices et changes chaque minute ; toutes les actions toutes les 5 min."""
     fin = time.time() + minutes * 60
-    base = list(dict.fromkeys(load('params.json').get('choix', []) + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/fxe', 'e/fxc', 'e/fxf']))
+    base = list(dict.fromkeys(load('params.json').get('choix', []) + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/cac', 'e/fxe', 'e/fxc', 'e/fxf']))
     i = 0
     while time.time() < fin:
         t0 = time.time()

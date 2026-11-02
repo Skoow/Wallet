@@ -1,8 +1,10 @@
 name: Cours
 on:
   schedule:
-    - cron: '25 13 * * 1-5'   # 14h25 Paris : boucle « chaque minute » pendant la séance (jusqu'à 19h15 UTC)
-    - cron: '10 19 * * 1-5'   # relais jusqu'à la clôture (21h20 UTC)
+    # Boucle « chaque minute » toute la journée de bourse, en 3 relais de ~6 h (une tâche GitHub dure 6 h au plus) :
+    - cron: '50 6 * * 1-5'    # 06h50 UTC : avant l'ouverture de Paris (9h l'hiver, 9h l'été = 7h UTC) -> ~12h40 UTC
+    - cron: '35 12 * * 1-5'   # 12h35 UTC : Europe l'après-midi + ouverture américaine -> ~18h25 UTC
+    - cron: '20 18 * * 1-5'   # 18h20 UTC : jusqu'à la clôture américaine (arrêt à 21h20 UTC)
     - cron: '45 22 * * 1-5'   # le soir : clôtures -> prix, hebdo, changes
   workflow_dispatch:
     inputs:
