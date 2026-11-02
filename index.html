@@ -45,12 +45,15 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
     const now=new Date(),base='data/users/'+uidOf(p),st={};st[base+'/choix']={choix,cmp:1,extra:{},at:now.toISOString()};
     const dOf=(m,d)=>Math.floor(m/12)+'-'+pad(m%12+1)+'-'+pad(d);let n=0;
     const put=t=>{st[base+'/profil/tx/'+Date.now().toString(36)+(n++).toString(36)+Math.random().toString(36).slice(2,6)]=t;};
-    choix.forEach(c=>{const u=U.find(x=>x&&x.cle===c);if(!u)return;const dev=u.devise||'USD',fx=rate(dev);if(!fx)return;
-      const ms=new Set();const nb=1+Math.floor(Math.random()*3);for(let i=0;i<nb;i++)ms.add(L-12+Math.floor(Math.random()*11));
-      let qty=0,last=0;[...ms].sort((a,b)=>a-b).forEach(m=>{const pr=at(c,m);if(!pr)return;const eur=Math.round(rnd(200,1500));const q=Math.round(eur/(pr/fx)*1e6)/1e6;qty+=q;last=m;
-        put({date:dOf(m,1+Math.floor(Math.random()*27)),heure:pad(9+Math.floor(Math.random()*8))+':'+pad(Math.floor(Math.random()*60)),sens:'achat',cle:c,ticker:u.ticker,nom:u.nom,quantite:q,prix:pr,devise:dev,montant_eur:eur,frais_eur:0,cree:now.toISOString(),test:true});});
-      if(qty>0&&last<L-1&&Math.random()<0.3){const m=last+1+Math.floor(Math.random()*(L-1-last));const pr=at(c,m);if(pr){const q=Math.round(qty*rnd(0.3,0.5)*1e6)/1e6;
-        put({date:dOf(m,1+Math.floor(Math.random()*27)),heure:'15:30',sens:'vente',cle:c,ticker:u.ticker,nom:u.nom,quantite:q,prix:pr,devise:dev,montant_eur:Math.round(q*pr/fx*100)/100,frais_eur:0,cree:now.toISOString(),test:true});}}});
+    // Achats étalés : une première prise de chaque ligne sur les 3 premiers mois, puis 2 à 3 renforts par mois.
+    // Quantités entières tirées au hasard, pour une ligne « investi » qui monte régulièrement avec la valeur.
+    const L0=L-12,rint=n=>Math.floor(Math.random()*n),info=[],bought={};
+    choix.forEach(c=>{const u=U.find(x=>x&&x.cle===c);if(!u)return;const dev=u.devise||'USD',fx=rate(dev);if(fx)info.push({c,u,dev,fx});});
+    const tx=(x,m,sens,q,pr)=>put({date:dOf(m,1+rint(27)),heure:pad(9+rint(8))+':'+pad(rint(60)),sens,cle:x.c,ticker:x.u.ticker,nom:x.u.nom,quantite:q,prix:pr,devise:x.dev,montant_eur:Math.round(q*pr/x.fx*100)/100,frais_eur:0,cree:now.toISOString(),test:true});
+    const buy=(x,m,eur)=>{const pr=at(x.c,m);if(!pr)return;const q=Math.max(1,Math.round(eur/(pr/x.fx)*(0.7+Math.random()*0.6)));(bought[x.c]=bought[x.c]||[]).push([m,q]);tx(x,m,'achat',q,pr);};
+    info.forEach(x=>buy(x,L0+rint(3),rnd(300,1200)));
+    for(let m=L0+3;m<=L-1;m++){const pick=info.slice().sort(()=>Math.random()-.5).slice(0,2+rint(2));pick.forEach(x=>buy(x,m,rnd(120,600)));}
+    info.slice().sort(()=>Math.random()-.5).slice(0,2).forEach(x=>{const m=L-1-rint(3),own=(bought[x.c]||[]).filter(b=>b[0]<m).reduce((a,b)=>a+b[1],0),q=Math.floor(own*rnd(0.2,0.4)),pr=at(x.c,m);if(q>=1&&pr)tx(x,m,'vente',q,pr);});
     return st;}
   // ancienne sauvegarde sans pseudo : reprise dans le premier profil créé
   function choisir(p){p=norm(p);if(!p)return false;const L=profils();if(!L.some(x=>x.toLowerCase()===p.toLowerCase())){L.push(p);LS.s('pf-profils',JSON.stringify(L));const old=LS.g('pf-local-db');if(old&&!LS.g(kOf(p))){LS.s(kOf(p),old.split('data/users/local/').join('data/users/'+uidOf(p)+'/'));LS.d('pf-local-db');}else if(!LS.g(kOf(p))){const o={};o['data/users/'+uidOf(p)+'/choix']={choix:[],cmp:1,extra:{},at:new Date().toISOString()};LS.s(kOf(p),JSON.stringify(o));}}LS.s('pf-pseudo',p);return true;}
@@ -352,7 +355,7 @@ body{font-family:var(--font-anthropic-sans,system-ui,-apple-system,"Segoe UI",Ro
   #pf-empty .addl{display:flex;gap:8px}#pf-empty .addl input{flex:1;min-width:0}
   #t-journal th:nth-child(6),#t-journal td:nth-child(6){display:none}
   /* une action = une seule ligne : nom · état · gain % · note · › */
-  .pf .rh{grid-template-columns:minmax(0,1fr) auto auto 1rem;gap:8px;padding:10px 2px;min-height:52px}
+  .pf .rh{grid-template-columns:minmax(0,1fr) 46px 1.7rem 1rem;gap:7px;padding:10px 2px;min-height:52px}
   .pf .rh .rt{display:flex;align-items:center;gap:8px;min-width:0}
   .pf .rh .nm{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:4px;font-size:.95rem;white-space:nowrap}
   .pf .rh .nm a.tv{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
@@ -365,9 +368,11 @@ body{font-family:var(--font-anthropic-sans,system-ui,-apple-system,"Segoe UI",Ro
   .pf .rh .mob .ig{font-size:0;padding:2px 7px;border-radius:999px;min-width:3.9rem;text-align:right;box-sizing:border-box}
   .pf .rh .nm .tk{display:none}
   .pf .rh .mob .ig small{font-size:.8rem;font-weight:700;margin:0}
-  .pf .rh .tide,.pf .rh .st,.pf .rh .sc small{display:none}
+  .pf .rh .st,.pf .rh .sc small,.pf .rh .tide .lb{display:none}
+  .pf .rh .tide{display:block;width:46px;height:26px}.pf .rh .tide svg{width:46px;height:26px;display:block}
   .pf .rh .sc b{font-size:1.05rem}
   .pf .rh .rx{display:none}
+  .pf .rh .ch{grid-column:4}
   .pf .row.open .rh .rx,.pf .rh[aria-expanded="true"] .rx{display:flex}
   #lignes>.row{margin-left:0}
   #t-journal th:nth-child(2),#t-journal td:nth-child(2){display:none}
