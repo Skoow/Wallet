@@ -480,6 +480,13 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
   .pf .rh{grid-template-columns:minmax(0,1fr) 46px 1.7rem 1rem}
   .pf .txq .rx{margin-left:0}
 }
+
+/* décompte de mise à jour à côté de l'heure des cours */
+.pf .asof-cd{display:inline-flex;align-items:center;gap:5px;margin:0 6px 0 0;padding:1px 9px;border-radius:999px;font-size:.78rem;font-variant-numeric:tabular-nums;color:color-mix(in srgb,#fff 85%,transparent);background:color-mix(in srgb,#fff 10%,transparent);vertical-align:1px;white-space:nowrap}
+.pf .asof-cd::before{content:"";width:6px;height:6px;border-radius:50%;background:#5fd39a;animation:pfpulse 2s ease-in-out infinite}
+@keyframes pfpulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.pf .asof-cd::before{animation:none}}
+@media (max-width:480px){.pf .asof-cd{font-size:.72rem;padding:1px 7px}}
 </style>
 
 <div class="pf">
@@ -1483,15 +1490,20 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
   const HREQ={};function ensureHist(){const pr=dash.data('prix'),hb=dash.data('hebdo');if(!pr||pr.status!=='ok')return;const p=dash.params();(Array.isArray(p.choix)?p.choix:[]).forEach(c=>{if(!c||HREQ[c]||pr.data.some(r=>r.cle===c))return;HREQ[c]=1;fetch('data/h/'+c.replace('/','_')+'.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!Array.isArray(j.prix))return;if(!pr.data.some(r=>r.cle===c))pr.data.push({cle:c,debut:j.debut,prix:j.prix});if(hb&&hb.status==='ok'&&Array.isArray(j.hebdo)&&!hb.data.some(r=>r.cle===c)){const n=hb.data[0].prix.length,off=Math.round((new Date(hb.data[0].debut)-new Date(j.hdebut||hb.data[0].debut))/6048e5);let w=j.hebdo.slice(Math.max(0,off));while(w.length<n)w.push(w[w.length-1]);w=w.slice(0,n).map((x,i,a)=>x==null?(a.slice(0,i).reverse().find(y=>y!=null)??a.find(y=>y!=null)):x);hb.data.push({cle:c,debut:hb.data[0].debut,prix:w});}const m=window.__pfMemo;if(m)for(const k in m)delete m[k];dash._emit();}).catch(()=>{});});}
   function busy(){const a=document.activeElement;return a&&(/INPUT|SELECT|TEXTAREA/.test(a.tagName)||(a.closest&&a.closest('.txf')));}
   function label(){const e=document.getElementById('asof');if(!e||!AT)return;const t=new Date(AT);const h=t.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});const d=t.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-    const pre=(SRC==='direct'?'En direct · '+h:'Cours du '+d+' à '+h.slice(0,5));e.textContent=e.textContent.replace(/^(Derniers cours : [^·]*|En direct · [^·]*|Cours du [^·]*)/,pre+' ');}
+    const pre=(SRC==='direct'?'En direct · '+h:'Cours du '+d+' à '+h.slice(0,5));e.textContent=e.textContent.replace(/^(Derniers cours : [^·]*|En direct · [^·]*|Cours du [^·]*)/,pre+' ');
+    /* décompte jusqu'à la prochaine mise à jour, seulement quand les cours bougent (relevé GitHub de moins de 5 min) */
+    let cd=document.getElementById('asof-cd');if(!cd){cd=document.createElement('span');cd.id='asof-cd';cd.className='asof-cd';cd.setAttribute('aria-live','off');e.after(cd);}
+    const frais=LIVEAT&&Date.now()-new Date(LIVEAT).getTime()<5*60000;const r=Math.max(0,Math.ceil((NEXT-Date.now())/1000));
+    cd.hidden=!(SRC!=='direct'&&frais&&NEXT);if(!cd.hidden){const pc=innerWidth>480;cd.textContent=(pc?'Mise à jour dans ':'Màj dans ')+(r>=60?'1:'+String(r-60).padStart(2,'0'):r+' s');cd.title='Les cours sont relus automatiquement toutes les minutes environ';}}
   function tick(){if(!dirty)return label();if(busy())return;dirty=false;if(apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];dash._emit();}label();}
   setInterval(tick,1000);
   dash.onData(()=>{ensureHist();if(Object.keys(PX).length&&apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];setTimeout(()=>{dash._emit();label();},0);}else setTimeout(label,0);});
   const REPO=(()=>{const h=location.hostname.match(/^([^.]+)\.github\.io$/);const p=location.pathname.split('/').filter(Boolean)[0];return h&&p?h[1]+'/'+p:'Skoow/Wallet';})();
   async function getLive(){try{const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data/live.json?ref=main&t='+Date.now(),{headers:{Accept:'application/vnd.github.raw+json'},cache:'no-store'});if(r.ok)return await r.json();}catch(e){}const r=await fetch('data/live.json?t='+Date.now(),{cache:'no-store'});return r.ok?await r.json():null;}
-  async function poll(){try{const j=await getLive();if(!j)return;
+  let PT=null,NEXT=0,LIVEAT=null;const PAS=65000;function sched(){clearTimeout(PT);NEXT=Date.now()+PAS;PT=setTimeout(poll,PAS);}
+  async function poll(){sched();try{const j=await getLive();if(!j)return;if(j.at)LIVEAT=j.at;
       if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}}catch(e){}}
-  poll();setInterval(poll,65000);
+  poll();
   /* Dès que le portefeuille change (ligne ajoutée / retirée, achat, vente) ou qu'on revient sur l'app : cours relus tout de suite. */
   {let last=0;const now=()=>{dirty=true;if(Date.now()-last<8000)return;last=Date.now();poll();};
     const sp=dash.setParams;dash.setParams=function(o){const r=sp.apply(this,arguments);if(o&&('choix' in o))setTimeout(now,0);return r;};
