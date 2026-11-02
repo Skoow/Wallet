@@ -434,6 +434,25 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
   .pf #t-fisc th{white-space:normal}
   .pf #t-fisc th,.pf #t-fisc td{padding:6px 4px;font-size:.78rem}
 }
+
+/* ===== Analyse : résumé en une ligne ===== */
+.pf #takeaway,.pf #sec-courbe>.kpis{display:none}
+.pf .an-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0 0 6px;padding:14px 4px;border-radius:14px;background:var(--color-panel);border:1px solid var(--rule)}
+.pf .an-strip>div{min-width:0;padding:0 14px;border-left:1px solid var(--rule);display:flex;flex-direction:column;gap:3px}
+.pf .an-strip>div:first-child{border-left:0}
+.pf .an-strip dt{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.pf .an-strip dd{margin:0;font-size:1.55rem;font-weight:700;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
+.pf .an-strip dd.ok{color:var(--ok)}.pf .an-strip dd.bad{color:var(--bad)}
+.pf .an-strip small{font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf #sec-courbe .cvcap{margin:2px 0 6px}
+@media (max-width:480px){
+  .pf .an-strip{grid-template-columns:1.2fr 1.1fr 1fr 1fr;padding:10px 0;border-radius:12px}
+  .pf .an-strip>div{padding:0 7px;gap:1px}
+  .pf .an-strip dt{font-size:.72rem}
+  .pf .an-strip dd{font-size:clamp(.82rem,3.9vw,1rem);letter-spacing:-.02em;overflow:visible;text-overflow:clip}
+  .pf .an-strip small{font-size:.68rem}
+}
+@media (max-width:380px){.pf .an-strip>div{padding:0 5px}.pf .an-strip small{font-size:.6rem;letter-spacing:-.02em;overflow:visible;text-overflow:clip}}
 </style>
 
 <div class="pf">
@@ -473,6 +492,7 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
     
 
     <section id="sec-courbe" data-source="prix">
+      <dl class="an-strip" id="an-strip" aria-label="Résumé du portefeuille"><div><dt>Valeur</dt><dd id="as-v">—</dd></div><div><dt>Gain</dt><dd id="as-g">—</dd><small id="as-gp"></small></div><div><dt>Par an</dt><dd id="as-r">—</dd><small id="as-sp"></small></div><div><dt>Pire baisse</dt><dd id="as-b">—</dd></div></dl>
       <div class="sh"><h2>Ce que ce portefeuille aurait donné</h2><p class="mu" id="periode">—</p></div>
       <p id="takeaway"></p>
       <dl class="kpis">
@@ -483,7 +503,7 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
         <div><dt>Lien entre les lignes (plus bas = mieux)</dt><dd id="k5">—</dd></div>
       </dl>
       <div class="leg" id="leg"></div>
-      <p class="mu cvcap">Chaque courbe = <b>1 000 € placés au début de la période</b> (ton portefeuille et chaque indice). Le chiffre au bout est ce qu’ils valent aujourd’hui : au-dessus de 1 000 € c’est un gain, en dessous une perte. Simulation des lignes actuelles : elle se recalcule dès qu’une ligne change.</p><div class="seg rng" id="rng-courbe" role="group" aria-label="Période"></div><div class="chart" id="c-courbe"></div>
+      <p class="mu cvcap">Chaque courbe = 1 000 € placés au début de la période.</p><div class="seg rng" id="rng-courbe" role="group" aria-label="Période"></div><div class="chart" id="c-courbe"></div>
     </section>
 
     <div class="grid2" id="g-risque">
@@ -1462,6 +1482,14 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
     s.querySelector('#pf-fks').onclick=()=>{LSs('pf-finnhub',i.value.trim());m.textContent=i.value.trim()?'Enregistrée.':'Clé retirée.';try{ws&&ws.close();}catch(e){}wsOK=false;fhStart();};}
   
 })();
+</script>
+<script>
+/* Résumé en une ligne en haut de l'Analyse : recopie la valeur, le gain, le rendement et la pire baisse déjà calculés ailleurs. */
+(function(){const map=[['lv2','as-v'],['lv3','as-g'],['k1','as-r'],['k3','as-b']];
+  const sync=()=>{map.forEach(([a,b])=>{const s=document.getElementById(a),d=document.getElementById(b);if(!s||!d)return;const t=s.textContent.trim()||'—';if(d.textContent!==t)d.textContent=t;const c=s.className||'';if(d.className!==c)d.className=c;});
+    {const g=document.getElementById('as-g'),gp=document.getElementById('as-gp');const m=g&&g.textContent.match(/^(.*?)\s*\((.*)\)\s*$/);if(m){g.textContent=m[1];if(gp&&gp.textContent!==m[2])gp.textContent=m[2];}}const sp=document.getElementById('k2'),o=document.getElementById('as-sp');if(sp&&o){const t=sp.textContent.trim();const v=t&&t!=='—'?(innerWidth<=480?'S&P ':'S&P 500 : ')+t:'';if(o.textContent!==v)o.textContent=v;}};
+  const go=()=>{sync();const mo=new MutationObserver(sync);map.concat([['k2']]).forEach(([a])=>{const e=document.getElementById(a);if(e)mo.observe(e,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['class']});});};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
 </script>
 </body>
 </html>
