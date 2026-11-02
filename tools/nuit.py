@@ -230,18 +230,18 @@ def pro(limite=None):
         if limite and n >= limite: break
         try:
             o = {'maj': today}
-            v = yahoo.timeseries(s, VALO)
-            pe = [x for d, x in v.get('quarterlyPeRatio', []) if 0 < x < 200]
+            TS = yahoo.timeseries(s, VALO)
+            pe = [x for d, x in TS.get('quarterlyPeRatio', []) if 0 < x < 200]
             if pe:
                 o['per'] = {'actuel': round(pe[-1], 1), 'mediane5a': round(_med(pe), 1), 'min5a': round(min(pe), 1), 'max5a': round(max(pe), 1), 'n': len(pe),
-                            'serie': [[d, round(x, 1)] for d, x in v.get('quarterlyPeRatio', []) if 0 < x < 200]}
-            fpe = [x for d, x in v.get('quarterlyForwardPeRatio', []) if 0 < x < 200]
+                            'serie': [[d, round(x, 1)] for d, x in TS.get('quarterlyPeRatio', []) if 0 < x < 200]}
+            fpe = [x for d, x in TS.get('quarterlyForwardPeRatio', []) if 0 < x < 200]
             if fpe: o['per_prevu_mediane5a'] = round(_med(fpe), 1)
-            ps = [x for d, x in v.get('quarterlyPsRatio', []) if 0 < x < 100]
+            ps = [x for d, x in TS.get('quarterlyPsRatio', []) if 0 < x < 100]
             if ps: o['ps'] = {'actuel': round(ps[-1], 2), 'mediane5a': round(_med(ps), 2)}
-            ev = [x for d, x in v.get('quarterlyEnterprisesValueEBITDARatio', []) if 0 < x < 300]
+            ev = [x for d, x in TS.get('quarterlyEnterprisesValueEBITDARatio', []) if 0 < x < 300]
             if ev: o['ev_ebitda'] = {'actuel': round(ev[-1], 1), 'mediane5a': round(_med(ev), 1)}
-            peg = [x for d, x in v.get('quarterlyPegRatio', []) if 0 < x < 20]
+            peg = [x for d, x in TS.get('quarterlyPegRatio', []) if 0 < x < 20]
             if peg: o['peg'] = round(peg[-1], 2)
             f = yahoo.timeseries(s, FOND)
             yrs = {}
