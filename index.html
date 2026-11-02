@@ -516,6 +516,7 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
 @media (max-width:720px){#pf-tabwrap{width:100%;align-self:stretch}#pf-tabwrap .tabs{width:100%;box-sizing:border-box}}
 .pf .rh[aria-expanded="true"] .sc .rx{display:block!important;margin:6px 0 0 auto;text-align:center;width:max-content;min-height:0;height:auto;padding:3px 10px;border-radius:999px;font-size:.74rem;font-weight:600;opacity:1;color:var(--color-bad);background:color-mix(in srgb,var(--color-bad) 10%,transparent);border:0;white-space:nowrap}
 .pf .rh[aria-expanded="true"] .sc .rx.arm{background:var(--color-bad);color:#fff}
+.pf .nm .lg:not(.ok):not(.none):not(.lg-met){background:transparent}.pf .nm .lg:not(.ok):not(.none):not(.lg-met)::before{content:none}
 </style>
 
 <div class="pf">
@@ -1480,10 +1481,10 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
     const tsx=String(u.cle).startsWith('a/tsx-');let h=0;for(const ch of t)h=(h*31+ch.charCodeAt(0))%997;w.style.setProperty('--lgc',LOGOCOL[h%LOGOCOL.length]);w.setAttribute('data-i',ini);
     const srcs=['https://financialmodelingprep.com/image-stock/'+encodeURIComponent(tsx?t+'.TO':t)+'.png','https://eodhd.com/img/logos/'+(tsx?'TO':'US')+'/'+encodeURIComponent(t.replace('.','-'))+'.png'];
     const k=(tsx?'TO:':'US:')+t;
-    if(LOGO[k]===''){return w;}
+    if(LOGO[k]===''){w.classList.add('none');return w;}
     const im=document.createElement('img');im.alt='';im.decoding='async';im.referrerPolicy='no-referrer';
     if(LOGO[k]){im.src=LOGO[k];w.classList.add('ok');w.appendChild(im);return w;}
-    let n=0;const next=()=>{if(n>=srcs.length){LOGO[k]='';im.remove();w.classList.remove('ok');return;}im.src=srcs[n++];};
+    let n=0;const next=()=>{if(n>=srcs.length){LOGO[k]='';im.remove();w.classList.remove('ok');w.classList.add('none');return;}im.src=srcs[n++];};
     im.onload=()=>{if(im.naturalWidth>8&&im.naturalHeight>8){LOGO[k]=im.src;w.classList.add('ok');document.querySelectorAll('.lg[data-k="'+k+'"]').forEach(x=>{if(!x.classList.contains('ok')&&x!==w){x.textContent='';const c=document.createElement('img');c.alt='';c.src=im.src;x.appendChild(c);x.classList.add('ok');}});}else next();};
     im.onerror=next;w.setAttribute('data-k',k);w.appendChild(im);next();return w;}
   dash.onData(()=>{dash.data('tickers');
