@@ -565,7 +565,8 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
 /* v54 : % plus petit, gain sur une ligne */
 .pf .nm .ig,.pf .mob .ig{font-size:.7rem!important;padding:1px 7px}
 @media (max-width:720px){.pf .rh .mob .ig{font-size:.7rem!important;font-weight:600}}
-#lv3,#as-g{white-space:nowrap;font-size:clamp(.74rem,3.4vw,.98rem)}
+#lv3,#as-g{white-space:nowrap;font-size:clamp(.72rem,3.2vw,.98rem);letter-spacing:-.01em}
+@media (max-width:520px){.pf .live-k{grid-template-columns:minmax(0,.9fr) minmax(0,1fr) minmax(0,1.3fr)!important}}
 </style>
 
 <div class="pf">
@@ -589,7 +590,7 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
   <div class="view" id="v-suivre" role="tabpanel" aria-labelledby="tab-suivre">
     <section id="sec-live" data-source="prix">
       <div class="sh"><h2>Mon portefeuille</h2><p class="mu" id="live-s">—</p></div>
-      <dl class="kpis live-k"><div><dt>Investi</dt><dd id="lv1">—</dd></div><div><dt>Valeur aujourd’hui</dt><dd id="lv2">—</dd></div><div><dt>Gain</dt><dd id="lv3">—</dd></div></dl><div class="seg rng" id="rng-live" role="group" aria-label="Période"></div>
+      <dl class="kpis live-k"><div><dt>Investi</dt><dd id="lv1">—</dd></div><div><dt>Valeur</dt><dd id="lv2">—</dd></div><div><dt>Gain</dt><dd id="lv3">—</dd></div></dl><div class="seg rng" id="rng-live" role="group" aria-label="Période"></div>
       <div class="chart live" id="c-live"></div>
     </section>
     <section id="sec-plan" data-source="prix univers lignes">
