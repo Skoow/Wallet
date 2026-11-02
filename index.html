@@ -1470,10 +1470,18 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
 
   // logo de la société devant son nom (image publique par ticker ; sinon pastille avec l'initiale)
   const LOGOCOL=['#2f7fb8','#d1693f','#3d9a6e','#8e5bb8','#c29a2e','#3aa1b5','#c2507a','#6f7f8f'];
+  const LOGO={};// ticker -> url qui marche ('' = aucune) ; évite de recharger (et de faire clignoter) à chaque mise à jour
   function logoEl(u){const w=el('span','lg');const t=String(u.ticker||'').toUpperCase();const ini=(String(u.nom||t).replace(/^The /,'')[0]||'?').toUpperCase();
     if(isMetal(u)){w.classList.add('lg-met');return w;}
-    const sym=String(u.cle).startsWith('a/tsx-')?t+'.TO':t;let h=0;for(const ch of t)h=(h*31+ch.charCodeAt(0))%997;w.style.setProperty('--lgc',LOGOCOL[h%LOGOCOL.length]);w.setAttribute('data-i',ini);
-    const im=new Image();im.alt='';im.decoding='async';im.loading='lazy';im.referrerPolicy='no-referrer';im.onload=()=>{if(im.naturalWidth>4)w.classList.add('ok');};im.onerror=()=>im.remove();im.src='https://financialmodelingprep.com/image-stock/'+encodeURIComponent(sym)+'.png';w.appendChild(im);return w;}
+    const tsx=String(u.cle).startsWith('a/tsx-');let h=0;for(const ch of t)h=(h*31+ch.charCodeAt(0))%997;w.style.setProperty('--lgc',LOGOCOL[h%LOGOCOL.length]);w.setAttribute('data-i',ini);
+    const srcs=['https://financialmodelingprep.com/image-stock/'+encodeURIComponent(tsx?t+'.TO':t)+'.png','https://eodhd.com/img/logos/'+(tsx?'TO':'US')+'/'+encodeURIComponent(t.replace('.','-'))+'.png'];
+    const k=(tsx?'TO:':'US:')+t;
+    if(LOGO[k]===''){return w;}
+    const im=document.createElement('img');im.alt='';im.decoding='async';im.referrerPolicy='no-referrer';
+    if(LOGO[k]){im.src=LOGO[k];w.classList.add('ok');w.appendChild(im);return w;}
+    let n=0;const next=()=>{if(n>=srcs.length){LOGO[k]='';im.remove();w.classList.remove('ok');return;}im.src=srcs[n++];};
+    im.onload=()=>{if(im.naturalWidth>8&&im.naturalHeight>8){LOGO[k]=im.src;w.classList.add('ok');document.querySelectorAll('.lg[data-k="'+k+'"]').forEach(x=>{if(!x.classList.contains('ok')&&x!==w){x.textContent='';const c=document.createElement('img');c.alt='';c.src=im.src;x.appendChild(c);x.classList.add('ok');}});}else next();};
+    im.onerror=next;w.setAttribute('data-k',k);w.appendChild(im);next();return w;}
   dash.onData(()=>{dash.data('tickers');
     const ds=['prix','univers','lignes','cibles'].map(id=>dash.data(id));const ms=dash.data('ma_selection');
     
