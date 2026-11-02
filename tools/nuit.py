@@ -72,7 +72,7 @@ def histo(limite=None):
     d0 = dt.date.fromisoformat(H0[0]['debut']); n = len(H0[0]['prix'])
     weeks = [d0 + dt.timedelta(weeks=i) for i in range(n)]
     deja = {r['cle'] for r in json.load(open(D + 'prix.json', encoding='utf-8'))}
-    todo = [r for r in L if (r[2] == 'TSX' or (r[4] or 0) >= 2) and cle_of(r[0], r[2]) not in deja]
+    todo = [r for r in L if (r[2] == 'TSX' or (r[4] or 0) >= 0.05 or r[5]) and cle_of(r[0], r[2]) not in deja]
     if limite: todo = todo[:limite]
     ok = 0
     for t, nom, ex, *_ in todo:
@@ -123,7 +123,11 @@ def v(d, *ks):
     return d
 
 
+PATCHF = os.environ.get('RUNNER_TEMP', '/tmp') + '/chiffres.json'
+
+
 def chiffres():
+    PATCH = {}
     U = json.load(open(D + 'univers.json', encoding='utf-8'))
     import maj
     today = dt.date.today().isoformat(); nb = 0
@@ -160,28 +164,42 @@ def chiffres():
             de, ca, eb = v(fd, 'totalDebt'), v(fd, 'totalCash'), v(fd, 'ebitda')
             if de is not None and ca is not None and eb and eb > 0: ch['dette_ebitda'] = round((de - ca) / eb, 2)
         if ch:
-            u.update(ch); u['maj_auto'] = today; nb += 1
+            ch['maj_auto'] = today; PATCH[u['cle']] = ch; nb += 1
         time.sleep(0.2)
+    json.dump(PATCH, open(PATCHF, 'w', encoding='utf-8'), ensure_ascii=False)
+    print(nb, 'sociétés à mettre à jour (appliqué à l\'enregistrement)')
+
+
+def appliquer():
+    """Applique les chiffres du soir sur la version la plus récente de univers.json (évite d'écraser les modifications du jour)."""
+    if not os.path.exists(PATCHF):
+        return
+    PATCH = json.load(open(PATCHF, encoding='utf-8'))
+    U = json.load(open(D + 'univers.json', encoding='utf-8'))
+    for u in U:
+        if u['cle'] in PATCH: u.update(PATCH[u['cle']])
     json.dump(U, open(D + 'univers.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-    print(nb, 'sociétés mises à jour')
+    print(len(PATCH), 'sociétés mises à jour')
 
 
 def derniers():
-    """Dernier cours de chaque action qui a un historique dans data/h (chaque soir) -> data/h/derniers.json."""
+    """Dernier cours de chaque action qui a un historique dans data/h (chaque soir, par lots) -> data/h/derniers.json."""
     import maj
+    cles = [f[:-5].replace('_', '/', 1) for f in sorted(os.listdir(D + 'h')) if f.endswith('.json') and f != 'derniers.json']
+    sy = {maj.sym(c): c for c in cles if maj.sym(c)}
+    q = yahoo.quotes(list(sy))
     out = {}
-    for f in sorted(os.listdir(D + 'h')):
-        if not f.endswith('.json') or f == 'derniers.json':
-            continue
-        cle = f[:-5].replace('_', '/', 1)
-        q = maj.quote(maj.sym(cle) or '')
-        if q:
-            out[cle] = [q[0], q[1]]
+    for s_, (p, t) in q.items():
+        if s_ in sy:
+            out[sy[s_]] = [round(p, 4), dt.datetime.utcfromtimestamp(t).date().isoformat()]
+    for s_, c in sy.items():  # repli un par un pour ceux que le lot n'a pas rendus
+        if c in out: continue
+        r = maj.quote(s_)
+        if r: out[c] = [r[0], r[1]]
         time.sleep(0.1)
     json.dump({'at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'px': out},
               open(D + 'h/derniers.json', 'w', encoding='utf-8'), separators=(',', ':'))
-    print(len(out), 'derniers cours')
-
+    print(len(out), 'derniers cours sur', len(sy))
 
 if __name__ == '__main__':
     a = sys.argv[1]
@@ -189,3 +207,4 @@ if __name__ == '__main__':
     elif a == 'histo': histo(int(sys.argv[2]) if len(sys.argv) > 2 else None)
     elif a == 'chiffres': chiffres()
     elif a == 'derniers': derniers()
+    elif a == 'appliquer': appliquer()

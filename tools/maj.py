@@ -21,6 +21,8 @@ def sym(cle):
     if cle in ETF:
         return ETF[cle]
     k, rest = cle.split('/', 1)
+    if k == 'c':  # cryptomonnaie, cotée en dollars
+        return rest.upper() + '-USD'
     if k == 's':
         return rest.upper().replace('.', '-')
     if k == 'a' and '-' in rest:

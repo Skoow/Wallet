@@ -1,14 +1,17 @@
 name: Ajout
 on:
+  push:
+    branches: [main]
+    paths: ['data/a_ajouter.txt']   # une clé par ligne : ajoutée aux cours puis la liste est vidée
   workflow_dispatch:
     inputs:
       cles:
         description: 'clés séparées par des virgules (ex. s/pg,s/ko,a/tsx-wcn)'
-        required: true
+        required: false
 permissions:
   contents: write
 concurrency:
-  group: live   # cours en séance et ajouts : jamais bloqués par la nuit
+  group: ajout   # à part : la boucle des cours dure des heures
   cancel-in-progress: false
 jobs:
   a:
@@ -23,6 +26,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data
-          git commit -m "Ajout ${{ github.event.inputs.cles }}" || exit 0
+          git commit -m "Ajout de cours" || exit 0
           git pull --rebase origin main
           git push origin main

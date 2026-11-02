@@ -2,7 +2,10 @@ name: Nuit
 on:
   schedule:
     - cron: '20 23 * * 1-5'   # chaque soir : chiffres des sociétés + dernier cours de toutes les actions
-    - cron: '0 3 1-7 * 0'     # 1er dimanche du mois : liste des tickers + historiques complets
+    - cron: '0 3 * * 0'       # le dimanche ; seulement le 1er du mois : liste des tickers + historiques complets
+  push:
+    branches: [main]
+    paths: ['data/lancer_nuit.txt']   # modifier ce fichier relance tout de suite les historiques complets
   workflow_dispatch:
     inputs:
       quoi:
@@ -25,8 +28,11 @@ jobs:
       - name: Travaux
         run: |
           Q="${{ github.event.inputs.quoi }}"
+          if [ "${{ github.event_name }}" = "push" ]; then Q=mois; fi
           if [ -z "$Q" ]; then
-            if [ "${{ github.event.schedule }}" = "0 3 1-7 * 0" ]; then Q=mois; else Q=soir; fi
+            if [ "${{ github.event.schedule }}" = "0 3 * * 0" ]; then
+              if [ "$(date -u +%d)" -le 7 ]; then Q=mois; else echo "pas le 1er dimanche"; exit 0; fi
+            else Q=soir; fi
           fi
           if [ "$Q" = "mois" ]; then
             python tools/nuit.py tickers
@@ -34,12 +40,23 @@ jobs:
           fi
           python tools/nuit.py chiffres
           if [ -d data/h ]; then python tools/nuit.py derniers; fi
+          # on met de côté le travail : l'enregistrement repart de la dernière version du dépôt
+          mkdir -p "$RUNNER_TEMP/out"
+          [ -d data/h ] && cp -r data/h "$RUNNER_TEMP/out/" || true
+          [ "$Q" = "mois" ] && cp data/tickers.json "$RUNNER_TEMP/out/" || true
       - name: Enregistrer
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data
-          if git diff --cached --quiet; then echo "rien de neuf"; exit 0; fi
-          git commit -q -m "Nuit $(date -u +%Y-%m-%d)"
-          git pull --rebase origin main
-          git push origin main
+          for i in 1 2 3 4 5 6; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            [ -d "$RUNNER_TEMP/out/h" ] && mkdir -p data/h && cp -r "$RUNNER_TEMP/out/h/." data/h/
+            [ -f "$RUNNER_TEMP/out/tickers.json" ] && cp "$RUNNER_TEMP/out/tickers.json" data/
+            python tools/nuit.py appliquer
+            git add data
+            if git diff --cached --quiet; then echo "rien de neuf"; exit 0; fi
+            git commit -q -m "Nuit $(date -u +%Y-%m-%d)"
+            if git push -q origin main; then exit 0; fi
+            sleep $((i * 7))
+          done
+          exit 1
