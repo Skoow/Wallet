@@ -1493,7 +1493,7 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
     const pre=(SRC==='direct'?'En direct · '+h:'Cours du '+d+' à '+h.slice(0,5));
     /* décompte jusqu'à la prochaine mise à jour quand les cours bougent (relevé GitHub de moins de 5 min) ; sinon l'heure du dernier cours */
     let cd=document.getElementById('asof-cd');if(!cd){cd=document.createElement('span');cd.id='asof-cd';cd.className='asof-cd';cd.setAttribute('aria-live','off');e.after(cd);}
-    const frais=LIVEAT&&Date.now()-new Date(LIVEAT).getTime()<5*60000;const r=Math.max(0,Math.ceil((NEXT-Date.now())/1000));const vis=SRC!=='direct'&&frais&&NEXT;
+    const frais=LIVEAT&&Date.now()-new Date(LIVEAT).getTime()<8*60000;const r=Math.max(0,Math.ceil((NEXT-Date.now())/1000));const vis=SRC!=='direct'&&frais&&NEXT;
     const rest=e.textContent.replace(/^(Derniers cours : [^·]*|En direct · [^·]*|Cours du [^·]*)(·\s*)?/,'').trim();
     const txt=vis?rest:pre+(rest?' · '+rest:'');if(e.textContent!==txt)e.textContent=txt;
     cd.hidden=!vis;if(vis){const pc=innerWidth>480;cd.textContent=(pc?'Mise à jour dans ':'Màj dans ')+(r>=60?'1:'+String(r-60).padStart(2,'0'):r+' s');cd.title='Cours relus automatiquement chaque minute (dernier cours : '+d+' à '+h.slice(0,5)+')';}}
@@ -1501,9 +1501,18 @@ if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.service
   setInterval(tick,1000);
   dash.onData(()=>{ensureHist();if(Object.keys(PX).length&&apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];setTimeout(()=>{dash._emit();label();},0);}else setTimeout(label,0);});
   const REPO=(()=>{const h=location.hostname.match(/^([^.]+)\.github\.io$/);const p=location.pathname.split('/').filter(Boolean)[0];return h&&p?h[1]+'/'+p:'Skoow/Wallet';})();
-  async function getLive(){try{const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data/live.json?ref=main&t='+Date.now(),{headers:{Accept:'application/vnd.github.raw+json'},cache:'no-store'});if(r.ok)return await r.json();}catch(e){}const r=await fetch('data/live.json?t='+Date.now(),{cache:'no-store'});return r.ok?await r.json():null;}
+  /* Source des cours : l'API GitHub (à jour à la minute, 60 lectures / heure par connexion) tant qu'il reste du quota,
+     sinon raw.githubusercontent.com (sans limite, copie de 5 min au plus), en dernier recours la copie du site. */
+  let APIOFF=0;
+  async function getLive(){
+    if(Date.now()>APIOFF){try{const r=await fetch('https://api.github.com/repos/'+REPO+'/contents/data/live.json?ref=main&t='+Date.now(),{headers:{Accept:'application/vnd.github.raw+json'},cache:'no-store'});
+      const rem=+r.headers.get('x-ratelimit-remaining'),rst=+r.headers.get('x-ratelimit-reset');
+      if(r.status===403||r.status===429||(r.headers.has('x-ratelimit-remaining')&&rem<=8))APIOFF=rst>0?rst*1000:Date.now()+15*60000;
+      if(r.ok)return await r.json();}catch(e){}}
+    try{const r=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/data/live.json',{cache:'no-store'});if(r.ok)return await r.json();}catch(e){}
+    const r=await fetch('data/live.json?t='+Date.now(),{cache:'no-store'});return r.ok?await r.json():null;}
   let PT=null,NEXT=0,LIVEAT=null;const PAS=65000;function sched(){clearTimeout(PT);NEXT=Date.now()+PAS;PT=setTimeout(poll,PAS);}
-  async function poll(){sched();try{const j=await getLive();if(!j)return;if(j.at)LIVEAT=j.at;
+  async function poll(){sched();if(document.hidden)return;try{const j=await getLive();if(!j)return;if(j.at)LIVEAT=j.at;
       if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}}catch(e){}}
   poll();
   /* Dès que le portefeuille change (ligne ajoutée / retirée, achat, vente) ou qu'on revient sur l'app : cours relus tout de suite. */
