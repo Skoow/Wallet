@@ -561,6 +561,11 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
 @media (max-width:520px){.pf .txq{grid-template-columns:1fr}.pf .txq .stp{justify-content:space-between}.pf .txq .stp input{flex:1}.pf .hr2{grid-template-columns:auto 1fr auto}.pf .hr2 .hq{grid-column:2/4;grid-row:2;font-size:.78rem;margin-top:-6px}}
 .pf .wmx{font-size:.78rem;margin-top:8px}
 @media (min-width:700px){.pf .txq{grid-template-columns:auto 1fr;max-width:560px}.pf .pos2,.pf details.hist{max-width:560px}}
+
+/* v54 : % plus petit, gain sur une ligne */
+.pf .nm .ig,.pf .mob .ig{font-size:.7rem!important;padding:1px 7px}
+@media (max-width:720px){.pf .rh .mob .ig{font-size:.7rem!important;font-weight:600}}
+#lv3,#as-g{white-space:nowrap;font-size:clamp(.74rem,3.4vw,.98rem)}
 </style>
 
 <div class="pf">
@@ -1384,15 +1389,15 @@ body #pf-login button[type=submit]{border-radius:999px;padding:10px 20px}
     const svg=d3.select(box).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`);const yt=y.ticks(4);
     svg.append('g').selectAll('line').data(yt).join('line').attr('x1',mg.l).attr('x2',W-mg.r).attr('y1',y).attr('y2',y).attr('stroke','var(--cds-chart-grid)');
     svg.append('g').call(g=>requestAnimationFrame(()=>g.raise())).selectAll('text').data(yt).join('text').attr('x',mg.l+2).attr('y',d=>y(d)-4).attr('text-anchor','start').attr('paint-order','stroke').attr('stroke','var(--color-panel)').attr('stroke-width',3).attr('font-size',11).attr('fill','var(--color-fg-muted)').text(d=>money?fe(d):(d>0?'+':'')+Math.round(d)+'\u00a0%');
-    const up=G[N]>-0.5;const pc=up?'#2f7fb8':'#c62828';const gid='rg'+Math.random().toString(36).slice(2,8);const gr=svg.append('defs').append('linearGradient').attr('id',gid).attr('x1',0).attr('x2',0).attr('y1',0).attr('y2',1);gr.append('stop').attr('offset','0%').attr('stop-color',pc).attr('stop-opacity',.26);gr.append('stop').attr('offset','100%').attr('stop-color',pc).attr('stop-opacity',0);
+    const up=(G[N]-G[0])>-0.5;const pc=up?'#16a34a':'#dc2626';const gid='rg'+Math.random().toString(36).slice(2,8);const gr=svg.append('defs').append('linearGradient').attr('id',gid).attr('x1',0).attr('x2',0).attr('y1',0).attr('y2',1);gr.append('stop').attr('offset','0%').attr('stop-color',pc).attr('stop-opacity',.26);gr.append('stop').attr('offset','100%').attr('stop-color',pc).attr('stop-opacity',0);
     svg.append('path').attr('d',d3.area().x((d,j)=>x(j)).y0(H-mg.b).y1(d=>y(d)).curve(d3.curveMonotoneX)(Y)).attr('fill','url(#'+gid+')');
-    if(money)svg.append('path').attr('d',d3.line().x((d,j)=>x(j)).y(d=>y(d)).curve(d3.curveStepAfter)(I)).attr('fill','none').attr('stroke','var(--color-fg-muted)').attr('stroke-width',1.3).attr('stroke-dasharray','4 3');
+    if(money){const ic='#8b5cf6';const ip=d3.line().x((d,j)=>x(j)).y(d=>y(d)).curve(d3.curveStepAfter)(I);svg.append('path').attr('d',ip).attr('fill','none').attr('stroke',ic).attr('stroke-opacity',.18).attr('stroke-width',6).attr('stroke-linecap','round');svg.append('path').attr('d',ip).attr('fill','none').attr('stroke',ic).attr('stroke-width',1.8).attr('stroke-dasharray','6 4').attr('stroke-linecap','round');const iy=y(I[N]),vy=y(Y[N]);const ly=iy>=vy-2?iy+15:iy-7;svg.append('text').attr('x',x(N)-8).attr('text-anchor','end').attr('y',Math.min(H-mg.b-4,Math.max(mg.t+10,ly))).attr('paint-order','stroke').attr('stroke','var(--color-panel)').attr('stroke-width',3).attr('font-size',11).attr('font-weight',700).attr('fill',ic).text('Investi '+fe(I[N]));}
     else svg.append('line').attr('x1',mg.l).attr('x2',W-mg.r).attr('y1',y(0)).attr('y2',y(0)).attr('stroke','var(--color-fg-muted)').attr('stroke-dasharray','4 3');
     svg.append('path').attr('d',d3.line().x((d,j)=>x(j)).y(d=>y(d)).curve(d3.curveMonotoneX)(Y)).attr('fill','none').attr('stroke',pc).attr('stroke-width',2.6).attr('stroke-linecap','round');
     svg.append('circle').attr('cx',x(N)).attr('cy',y(Y[N])).attr('r',4.5).attr('fill',pc).attr('stroke','var(--color-panel)').attr('stroke-width',1.5);
     svg.append('text').attr('x',x(N)-8).attr('y',y(Y[N])-10).attr('text-anchor','end').attr('paint-order','stroke').attr('stroke','var(--color-panel)').attr('stroke-width',3).attr('font-size',12).attr('font-weight',700).attr('fill','var(--color-fg)').text(money?fe(V[N]):fm(Y[N]/100));
     const nt=Math.max(1,Math.min(N,W<560?3:6));const tk=[...new Set(d3.range(nt+1).map(j=>Math.round(j*N/nt)))];svg.append('g').selectAll('text').data(tk).join('text').attr('x',x).attr('y',H-6).attr('text-anchor',(d,i)=>i===0?'start':i===tk.length-1?'end':'middle').attr('font-size',11).attr('fill','var(--color-fg-muted)').text(d=>lab(d));
-    if(wk){const fd=d=>d.getUTCDate()+' '+MF[d.getUTCMonth()]+' '+d.getUTCFullYear();lvRange(box,fd(wDate(stD)),fd(wDate(L)),'semaine'+(money?' · pointillés = argent investi':''));}else lvRange(box,lab(0),lab(N),'mois'+(money?' · pointillés = argent investi':''));
+    if(wk){const fd=d=>d.getUTCDate()+' '+MF[d.getUTCMonth()]+' '+d.getUTCFullYear();lvRange(box,fd(wDate(stD)),fd(wDate(L)),'semaine'+(money?' · pointillés violets = argent investi':''));}else lvRange(box,lab(0),lab(N),'mois'+(money?' · pointillés violets = argent investi':''));
     const tip=document.createElement('div');tip.className='lv-tip';tip.hidden=true;box.appendChild(tip);const vl=svg.append('line').attr('y1',mg.t).attr('y2',H-mg.b).attr('stroke','var(--color-fg-muted)').attr('opacity',0);
     svg.append('rect').attr('x',mg.l).attr('y',0).attr('width',W-mg.l-mg.r).attr('height',H).attr('fill','transparent').on('pointermove',ev=>{const [px]=d3.pointer(ev);const j=Math.max(0,Math.min(N,Math.round(x.invert(px))));vl.attr('x1',x(j)).attr('x2',x(j)).attr('opacity',.5);tip.hidden=false;tip.textContent=lab(j)+' · valeur '+fe(V[j])+' · investi '+fe(I[j])+' · '+fs(G[j]);const bw=box.clientWidth,tww=tip.offsetWidth,lx=x(j)/W*bw;tip.style.left=Math.max(0,Math.min(bw-tww,lx-tww/2))+'px';tip.style.top='0px';}).on('pointerleave',()=>{tip.hidden=true;vl.attr('opacity',0);});}
   function drawLive(R,S){if(JR.some(t=>t&&t.cle&&+t.quantite>0))return drawReal(R,S);if(!(RNG&&RNG<=12&&WKS.ok))return drawLiveM(R,S);
