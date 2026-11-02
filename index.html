@@ -26,13 +26,48 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
   const norm=p=>String(p||'').trim().replace(/\s+/g,' ').slice(0,24);
   const profils=()=>{try{return JSON.parse(LS.g('pf-profils')||'[]');}catch(e){return [];}};
   const kOf=p=>'pf-db:'+p.toLowerCase();const uidOf=p=>'p-'+p.toLowerCase().replace(/[^a-z0-9]+/g,'-');window.PFWEB=true;
+  // Modes d'affichage par pseudo : 'mien' (le vrai portefeuille), 'hasard' (10 actions + l'or tirées au hasard), 'conseil' (portefeuille conseillé).
+  // Les deux modes de test ont leur propre stockage : le vrai portefeuille n'est jamais modifié.
+  const modeOf=p=>{const m=LS.g('pf-mode:'+String(p).toLowerCase());return m==='hasard'||m==='conseil'?m:'mien';};
+  const setMode=(p,m)=>{if(m==='mien')LS.d('pf-mode:'+String(p).toLowerCase());else LS.s('pf-mode:'+String(p).toLowerCase(),m);};
+  const storeKey=p=>{const m=modeOf(p);return m==='mien'?kOf(p):kOf(p)+'~'+m;};
+  async function genDemo(p,mode){const j=u=>fetch(u,{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+    const [U,PR,FX,PA]=await Promise.all([j('data/univers.json'),j('data/prix.json'),j('data/fx.json'),j('data/params.json')]);
+    const px={};let L=0;PR.forEach(r=>{let a=r.prix;if(typeof a==='string'){try{a=JSON.parse(a);}catch(_){a=[];}}const [y,m]=String(r.debut).split('-').map(Number);px[r.cle]={s:y*12+m-1,p:a};L=Math.max(L,y*12+m-1+a.length-1);});
+    const at=(k,m)=>{const v=px[k];if(!v)return null;const x=v.p[m-v.s];return x>0?+x:null;};
+    const rate=d=>{if(d==='EUR')return 1;const r=FX.find(x=>x&&x.paire===(d==='CAD'?'EURCAD':'EURUSD'));return r?+r.taux:null;};
+    const rnd=(a,b)=>a+Math.random()*(b-a),pad=n=>String(n).padStart(2,'0');
+    let choix;
+    if(mode==='conseil')choix=(Array.isArray(PA.choix)?PA.choix:[]).slice();
+    else{const seen=new Set();const pool=U.filter(u=>u&&!u.metal&&['USD','CAD','EUR'].includes(u.devise)&&at(u.cle,L-12)&&at(u.cle,L)&&!seen.has(u.cle)&&seen.add(u.cle)).map(u=>u.cle);
+      for(let i=pool.length-1;i>0;i--){const k=Math.floor(Math.random()*(i+1));[pool[i],pool[k]]=[pool[k],pool[i]];}
+      choix=pool.slice(0,10);if(U.some(u=>u&&u.cle==='e/gld'))choix.push('e/gld');}
+    const now=new Date(),base='data/users/'+uidOf(p),st={};st[base+'/choix']={choix,cmp:1,extra:{},at:now.toISOString()};
+    const dOf=(m,d)=>Math.floor(m/12)+'-'+pad(m%12+1)+'-'+pad(d);let n=0;
+    const put=t=>{st[base+'/profil/tx/'+Date.now().toString(36)+(n++).toString(36)+Math.random().toString(36).slice(2,6)]=t;};
+    choix.forEach(c=>{const u=U.find(x=>x&&x.cle===c);if(!u)return;const dev=u.devise||'USD',fx=rate(dev);if(!fx)return;
+      const ms=new Set();const nb=1+Math.floor(Math.random()*3);for(let i=0;i<nb;i++)ms.add(L-12+Math.floor(Math.random()*11));
+      let qty=0,last=0;[...ms].sort((a,b)=>a-b).forEach(m=>{const pr=at(c,m);if(!pr)return;const eur=Math.round(rnd(200,1500));const q=Math.round(eur/(pr/fx)*1e6)/1e6;qty+=q;last=m;
+        put({date:dOf(m,1+Math.floor(Math.random()*27)),heure:pad(9+Math.floor(Math.random()*8))+':'+pad(Math.floor(Math.random()*60)),sens:'achat',cle:c,ticker:u.ticker,nom:u.nom,quantite:q,prix:pr,devise:dev,montant_eur:eur,frais_eur:0,cree:now.toISOString(),test:true});});
+      if(qty>0&&last<L-1&&Math.random()<0.3){const m=last+1+Math.floor(Math.random()*(L-1-last));const pr=at(c,m);if(pr){const q=Math.round(qty*rnd(0.3,0.5)*1e6)/1e6;
+        put({date:dOf(m,1+Math.floor(Math.random()*27)),heure:'15:30',sens:'vente',cle:c,ticker:u.ticker,nom:u.nom,quantite:q,prix:pr,devise:dev,montant_eur:Math.round(q*pr/fx*100)/100,frais_eur:0,cree:now.toISOString(),test:true});}}});
+    return st;}
   // ancienne sauvegarde sans pseudo : reprise dans le premier profil créé
-  function choisir(p){p=norm(p);if(!p)return false;const L=profils();if(!L.some(x=>x.toLowerCase()===p.toLowerCase())){L.push(p);LS.s('pf-profils',JSON.stringify(L));const old=LS.g('pf-local-db');if(old&&!LS.g(kOf(p))){LS.s(kOf(p),old.split('data/users/local/').join('data/users/'+uidOf(p)+'/'));LS.d('pf-local-db');}else if(!LS.g(kOf(p))){const o={};o['data/users/'+uidOf(p)+'/choix']={choix:[],cmp:1,extra:{},at:new Date().toISOString()};LS.s(kOf(p),JSON.stringify(o));}}LS.s('pf-pseudo',p);return true;}
+  function choisir(p){p=norm(p);if(!p)return false;const L=profils();if(!L.some(x=>x.toLowerCase()===p.toLowerCase())){L.push(p);LS.s('pf-profils',JSON.stringify(L));const old=LS.g('pf-local-db');if(old&&!LS.g(kOf(p))){LS.s(kOf(p),old.split('data/users/local/').join('data/users/'+uidOf(p)+'/'));LS.d('pf-local-db');}else if(!LS.g(kOf(p))){setMode(p,'hasard');const o={};o['data/users/'+uidOf(p)+'/choix']={choix:[],cmp:1,extra:{},at:new Date().toISOString()};LS.s(kOf(p),JSON.stringify(o));}}LS.s('pf-pseudo',p);return true;}
   let ready;const pseudoP=new Promise(r=>ready=r);
   function ecran(){const cur=LS.g('pf-pseudo');const L=profils();const o=document.createElement('div');o.id='pf-login';
     o.innerHTML='<div class="pfl-c"><h1>Portefeuille</h1><p>Choisis ton pseudo. Tes lignes et tes achats restent sur ce téléphone : personne d’autre ne les voit.</p><form><input name="p" maxlength="24" autocomplete="nickname" autocapitalize="none" placeholder="Pseudo" required><button type="submit">Entrer</button></form><div class="pfl-l"></div></div>';
     const st=document.createElement('style');st.textContent='#pf-login{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:16px;background:var(--color-bg,#f5f6f4)}#pf-login .pfl-c{width:100%;max-width:360px;background:var(--color-panel,#fff);border:1px solid var(--color-border-line,#ddd);border-radius:16px;padding:24px}#pf-login h1{margin:0 0 8px;font-size:1.5rem}#pf-login p{margin:0 0 16px;font-size:.92rem;line-height:1.4}#pf-login form{display:flex;gap:8px}#pf-login input{flex:1;min-width:0;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--color-border-line,#ccc);background:transparent;color:inherit}#pf-login button{font:inherit;font-weight:600;padding:10px 16px;border-radius:10px;border:0;background:#2f7fb8;color:#fff;cursor:pointer}#pf-login .pfl-k{margin-top:14px;font-size:.88rem}#pf-login .pfl-k summary{cursor:pointer;font-weight:600}#pf-login .pfl-k p{margin:8px 0}#pf-login .pfl-k a{color:#2f7fb8}#pf-login .pfl-k input{width:100%;box-sizing:border-box}#pf-login .pfl-l{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}#pf-login .pfl-l button{background:transparent;color:inherit;border:1px solid var(--color-border-line,#ccc);font-weight:500}#pf-login .pfl-l button.on{border-color:#2f7fb8;color:#2f7fb8}';
     o.appendChild(st);const box=o.querySelector('.pfl-l');L.forEach(p=>{const b=document.createElement('button');b.type='button';b.textContent=p;if(p===cur)b.className='on';b.onclick=()=>go(p);box.appendChild(b);});
+    if(cur){const md=modeOf(cur),mb=document.createElement('div');mb.className='pfl-m';
+      mb.innerHTML='<p class="pfl-t">Portefeuille affiché pour <b></b></p>';mb.querySelector('b').textContent=cur;
+      const sw=(m,t,d)=>{const r=document.createElement('label');r.className='pfl-sw';const i=document.createElement('input');i.type='checkbox';i.setAttribute('role','switch');i.checked=md===m;i.onchange=()=>{setMode(cur,i.checked?m:'mien');location.reload();};const x=document.createElement('span');x.innerHTML='<b></b><small></small>';x.querySelector('b').textContent=t;x.querySelector('small').textContent=d;r.append(i,x);mb.appendChild(r);};
+      sw('hasard','Portefeuille au hasard','10 actions + l’or tirées au hasard, avec de faux achats.');
+      sw('conseil','Portefeuille conseillé','Les 10 actions + l’or conseillées, avec de faux achats.');
+      if(md==='hasard'){const nt=document.createElement('button');nt.type='button';nt.className='pfl-nt';nt.textContent='🎲 Nouveau tirage';nt.onclick=()=>{LS.d(storeKey(cur));location.reload();};mb.appendChild(nt);}
+      const nb=document.createElement('p');nb.className='pfl-n';nb.textContent=md==='mien'?'Les deux sont coupés : c’est ton vrai portefeuille.':'Ton vrai portefeuille est mis de côté, il n’est pas modifié. Coupe l’interrupteur pour y revenir.';mb.appendChild(nb);
+      o.querySelector('.pfl-c').appendChild(mb);
+      const s2=document.createElement('style');s2.textContent='#pf-login .pfl-m{margin-top:18px;padding-top:14px;border-top:1px solid var(--color-border-line,#ddd)}#pf-login .pfl-t{margin:0 0 10px}#pf-login .pfl-sw{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}#pf-login .pfl-sw input{flex:none;width:38px;height:22px;margin:2px 0 0;appearance:none;-webkit-appearance:none;border-radius:999px;background:var(--color-border-line,#ccc);position:relative;cursor:pointer;transition:background .15s}#pf-login .pfl-sw input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}#pf-login .pfl-sw input:checked{background:#3d9a6e}#pf-login .pfl-sw input:checked::after{left:19px}#pf-login .pfl-sw input:focus-visible{outline:2px solid #2f7fb8;outline-offset:2px}#pf-login .pfl-sw span{display:flex;flex-direction:column;gap:2px}#pf-login .pfl-sw small{opacity:.75;font-size:.82rem}#pf-login .pfl-nt{margin-top:6px;font:inherit;padding:8px 12px;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}#pf-login .pfl-n{margin:10px 0 0;font-size:.82rem;opacity:.75}';o.appendChild(s2);}
     const go=p=>{if(!choisir(p))return;if(cur&&cur!==norm(p)){location.reload();return;}o.remove();ready(LS.g('pf-pseudo'));};
     o.querySelector('form').onsubmit=e=>{e.preventDefault();go(o.querySelector('input[name=p]').value);};
     const show=()=>{document.body.appendChild(o);setTimeout(()=>o.querySelector('input[name=p]').focus(),50);};
@@ -41,7 +76,7 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
   (function(){const th=LS.g('pf-theme');if(th)document.documentElement.setAttribute('data-theme',th);})();
   window.PFPROFIL={changer:ecran,pseudo:()=>LS.g('pf-pseudo')};
   if(LS.g('pf-pseudo'))ready(LS.g('pf-pseudo'));else ecran();
-  const dbFor=p=>{const K=kOf(p);let st={};try{st=JSON.parse(LS.g(K)||'{}');}catch(e){st={};}
+  const dbFor=async p=>{const K=storeKey(p);if(K!==kOf(p)&&!LS.g(K)){try{LS.s(K,JSON.stringify(await genDemo(p,modeOf(p))));}catch(e){console.warn('Portefeuille de test indisponible',e);}}let st={};try{st=JSON.parse(LS.g(K)||'{}');}catch(e){st={};}
     const subs={};const save=()=>LS.s(K,JSON.stringify(st));
     const snap=c=>{const docs=Object.keys(st).filter(k=>k.indexOf(c+'/')===0&&k.slice(c.length+1).indexOf('/')<0).map(k=>{const v=st[k];return {id:k.slice(c.length+1),exists:true,data:()=>JSON.parse(JSON.stringify(v))};});return {docs,size:docs.length,empty:!docs.length};};
     const fire=()=>Object.keys(subs).forEach(c=>{const s=snap(c);subs[c].forEach(f=>{try{f(s);}catch(e){console.error(e);}});});
@@ -54,6 +89,11 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
   // pseudo affiché en haut, cliquable pour changer de profil
   const chip=()=>{const h=document.querySelector('.hd-r>div');const p=LS.g('pf-pseudo');if(!h||!p||document.getElementById('pf-who'))return !!document.getElementById('pf-who');const b=document.createElement('button');b.id='pf-who';b.type='button';b.textContent='👤 '+p;b.title='Changer de profil';b.style.cssText='margin-top:6px;font:inherit;font-size:.8rem;padding:3px 10px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;opacity:.85;cursor:pointer';b.onclick=ecran;h.appendChild(b);const tb=document.createElement('button');tb.id='pf-theme';tb.type='button';const dark=()=>{const a=document.documentElement.getAttribute('data-theme');return a?a==='dark':matchMedia('(prefers-color-scheme: dark)').matches;};tb.innerHTML='<span class="th-i th-sun"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></span><span class="th-i th-moon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg></span><span class="th-k"></span>';const lab=()=>{const d=dark();tb.classList.toggle('on',d);tb.setAttribute('aria-pressed',String(d));tb.title=d?'Passer en clair':'Passer en sombre';tb.setAttribute('aria-label',tb.title);};lab();tb.onclick=()=>{const n=dark()?'light':'dark';document.documentElement.setAttribute('data-theme',n);LS.s('pf-theme',n);lab();try{dash._emit();}catch(e){}};(document.querySelector('.pf .hd')||h).appendChild(tb);return true;};
   pseudoP.then(()=>{const t=setInterval(()=>{if(chip())clearInterval(t);},300);setTimeout(()=>clearInterval(t),20000);});
+  pseudoP.then(p=>{const md=modeOf(p);if(md==='mien')return;const put=()=>{if(document.getElementById('pf-test'))return;const b=document.createElement('div');b.id='pf-test';b.setAttribute('role','status');
+    b.style.cssText='position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:8px 16px;background:#c29a2e;color:#1b1b1b;font-size:.88rem;text-align:center';
+    const s=document.createElement('span');s.textContent=(md==='hasard'?'🎲 Portefeuille au hasard':'⭐ Portefeuille conseillé')+' · données de test';
+    const bt=document.createElement('button');bt.type='button';bt.textContent='Revenir à mon portefeuille';bt.style.cssText='font:inherit;padding:3px 10px;border-radius:999px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';bt.onclick=()=>{setMode(p,'mien');location.reload();};
+    b.append(s,bt);document.body.prepend(b);};if(document.body)put();else document.addEventListener('DOMContentLoaded',put);});
 })();
 </script>
 <script>
