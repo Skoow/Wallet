@@ -137,7 +137,9 @@ def histo(limite=None):
                 prev = wk.get(d, prev); hb.append(prev)
             spl = [[dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(x['numerator'] / x['denominator'], 6)]
                    for x in ((m.get('events') or {}).get('splits') or {}).values() if x.get('denominator')]
-            o = {'cle': cle, 'ticker': t, 'nom': nom, 'splits': sorted(spl), 'devise': (m.get('meta') or {}).get('currency') or DEV.get(ex, 'USD'),
+            dvs = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(float(x['amount']), 6)]
+                         for x in ((m.get('events') or {}).get('dividends') or {}).values() if x.get('amount'))[-60:]
+            o = {'cle': cle, 'ticker': t, 'nom': nom, 'splits': sorted(spl), 'divs': dvs, 'devise': (m.get('meta') or {}).get('currency') or DEV.get(ex, 'USD'),
                  'debut': f'{k0 // 12}-{k0 % 12 + 1}', 'prix': pr, 'hdebut': weeks[0].isoformat(), 'hebdo': hb,
                  'maj': dt.date.today().isoformat()}
             json.dump(o, open(fichier(cle), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
@@ -449,7 +451,7 @@ def splits():
     """Divisions d'actions des 10 dernières années pour les actions suivies -> data/splits.json
        (la page corrige les quantités et prix des achats faits avant une division)."""
     import maj
-    out = {}
+    out, DV = {}, {}
     for r in json.load(open(D + 'prix.json', encoding='utf-8')):
         s = maj.sym(r['cle'])
         if not s or r['cle'][:2] in ('c/', 'm/', 'x/', 'e/'): continue
@@ -458,11 +460,15 @@ def splits():
             sp = ((m or {}).get('events') or {}).get('splits') or {}
             L = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(x['numerator'] / x['denominator'], 6)] for x in sp.values() if x.get('denominator'))
             if L: out[r['cle']] = L
+            dv = ((m or {}).get('events') or {}).get('dividends') or {}
+            Ld = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(float(x['amount']), 6)] for x in dv.values() if x.get('amount'))
+            if Ld: DV[r['cle']] = Ld[-40:]
         except Exception as e:
             print(r['cle'], 'splits', e)
         time.sleep(0.15)
     json.dump(out, open(D + 'splits.json', 'w', encoding='utf-8'), separators=(',', ':'))
-    print(len(out), 'actions avec divisions')
+    json.dump(DV, open(D + 'divs.json', 'w', encoding='utf-8'), separators=(',', ':'))
+    print(len(out), 'actions avec divisions,', len(DV), 'avec dividendes')
 
 
 if __name__ == '__main__':

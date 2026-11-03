@@ -39,7 +39,9 @@ jobs:
           if [ "$Q" = "mois" ] || [ "$Q" = "semaine" ]; then BUDGET_MIN=230 python tools/nuit.py histo; fi
           python tools/nuit.py chiffres
           python tools/nuit.py splits || true
-          cp data/splits.json "$RUNNER_TEMP/splits.json" 2>/dev/null || true
+          python tools/alertes.py || true
+          cp data/alertes.json "$RUNNER_TEMP/alertes.json" 2>/dev/null || true
+          cp data/splits.json "$RUNNER_TEMP/splits.json" 2>/dev/null || true; cp data/divs.json "$RUNNER_TEMP/divs.json" 2>/dev/null || true
           if [ -d data/h ]; then python tools/nuit.py derniers; fi
           # on met de côté le travail : l'enregistrement repart de la dernière version du dépôt
           mkdir -p "$RUNNER_TEMP/out"
@@ -54,6 +56,8 @@ jobs:
             [ -d "$RUNNER_TEMP/out/h" ] && mkdir -p data/h && cp -r "$RUNNER_TEMP/out/h/." data/h/
             [ -f "$RUNNER_TEMP/out/tickers.json" ] && cp "$RUNNER_TEMP/out/tickers.json" data/
             [ -f "$RUNNER_TEMP/splits.json" ] && cp "$RUNNER_TEMP/splits.json" data/
+            [ -f "$RUNNER_TEMP/divs.json" ] && cp "$RUNNER_TEMP/divs.json" data/
+            [ -f "$RUNNER_TEMP/alertes.json" ] && cp "$RUNNER_TEMP/alertes.json" data/
             python tools/nuit.py appliquer
             git add data
             if git diff --cached --quiet; then echo "rien de neuf"; exit 0; fi

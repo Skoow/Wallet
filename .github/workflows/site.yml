@@ -1,6 +1,6 @@
 name: Site
-# Publie le site (GitHub Pages, source « GitHub Actions »). Les cours en direct (data/live.json)
-# sont lus directement depuis le dépôt par la page : inutile de republier à chaque minute.
+# Publie le site (GitHub Pages, source « GitHub Actions »), après un test automatique de la page.
+# Les cours en direct (data/live.json) sont lus directement depuis le dépôt : inutile de republier à chaque minute.
 on:
   push:
     branches: [main]
@@ -19,6 +19,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     environment:
       name: github-pages
       url: ${{ steps.d.outputs.page_url }}
@@ -26,9 +27,33 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Préparer (page allégée)
+        run: |
+          mkdir -p "$RUNNER_TEMP/ci" && cd "$RUNNER_TEMP/ci" && npm init -y >/dev/null && npm i -s playwright@1.48.2 html-minifier-terser@7.2.0 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p _site && for f in $(ls -A | grep -v -E '^(\.git|tools|_site)$'); do cp -r "$f" _site/; done
+          node -e "
+            const m=require(process.env.RUNNER_TEMP+'/ci/node_modules/html-minifier-terser');const fs=require('fs');
+            const src=fs.readFileSync('index.html','utf8');
+            m.minify(src,{collapseWhitespace:true,conservativeCollapse:true,removeComments:true,minifyCSS:true,minifyJS:{compress:{passes:1},mangle:false}})
+             .then(o=>{fs.writeFileSync('_site/index.html',o);console.log('page :',src.length,'->',o.length,'octets');})
+             .catch(e=>{console.log('allègement impossible, page d’origine :',e.message);});"
+      - name: Tester la page
+        run: |
+          cp tools/ci/test.js "$RUNNER_TEMP/ci/test.js"
+          cd "$RUNNER_TEMP/ci"
+          if ! node test.js "$GITHUB_WORKSPACE/_site"; then
+            echo "La page allégée échoue : test de la page d’origine"
+            cp "$GITHUB_WORKSPACE/index.html" "$GITHUB_WORKSPACE/_site/index.html"
+            node test.js "$GITHUB_WORKSPACE/_site"
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: d
         uses: actions/deploy-pages@v4

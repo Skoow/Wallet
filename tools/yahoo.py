@@ -29,7 +29,7 @@ def chart(sym, rng='5d', interval='1d'):
     per = f'period1=1136073600&period2={int(time.time())}' if rng == 'depuis2006' else f'range={rng}'
     for host in ('query1', 'query2'):
         try:
-            j = get(f'https://{host}.finance.yahoo.com/v8/finance/chart/{q}?{per}&interval={interval}&events=split')
+            j = get(f'https://{host}.finance.yahoo.com/v8/finance/chart/{q}?{per}&interval={interval}&events=div%7Csplit')
             return j['chart']['result'][0]
         except Exception:
             continue
