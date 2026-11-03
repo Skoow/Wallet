@@ -43,6 +43,8 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
   const PFS={liste:p=>pfsOf(p),actif:p=>pfaOf(p),
     creer:(p,nom)=>{nom=String(nom||'').trim().slice(0,32);if(!nom)return;const L=pfsOf(p);const id='p'+Date.now().toString(36);L.push({id,nom});savePfs(p,L);LS.s(kOf(p)+'#'+id,emptyDb(p));LS.s('pf-pfa:'+String(p).toLowerCase(),id);LS.d('pf-mode:'+String(p).toLowerCase());location.reload();},
     choisir:(p,id)=>{if(id!=='*'&&!pfsOf(p).some(x=>x.id===id))return;LS.s('pf-pfa:'+String(p).toLowerCase(),id);LS.d('pf-mode:'+String(p).toLowerCase());location.reload();},
+    type:p=>{const a=pfaOf(p);if(a==='*')return '*';const x=pfsOf(p).find(y=>y.id===a);return x&&x.type||'cto';},
+    setType:(p,id,t)=>{const L=pfsOf(p);const x=L.find(y=>y.id===id);if(!x)return;x.type=t;savePfs(p,L);location.reload();},
     renommer:(p,id,nom)=>{nom=String(nom||'').trim().slice(0,32);if(!nom)return;const L=pfsOf(p);const x=L.find(y=>y.id===id);if(!x)return;x.nom=nom;savePfs(p,L);},
     supprimer:(p,id)=>{if(id==='principal')return;const L=pfsOf(p).filter(y=>y.id!==id);savePfs(p,L);LS.d(kOf(p)+'#'+id);if(pfaOf(p)===id||LS.g('pf-pfa:'+String(p).toLowerCase())===id)LS.s('pf-pfa:'+String(p).toLowerCase(),'principal');location.reload();}};
   window.PFS=PFS;
@@ -115,6 +117,7 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
      const ask=(label,val,ok)=>{row.textContent='';const f=document.createElement('form');f.className='pm-pff';const i=document.createElement('input');i.maxLength=32;i.placeholder=label;i.value=val||'';i.setAttribute('aria-label',label);const g=document.createElement('button');g.type='submit';g.textContent='OK';f.append(i,g);f.onsubmit=e=>{e.preventDefault();ok(i.value);};f.onclick=e=>e.stopPropagation();row.appendChild(f);setTimeout(()=>i.focus(),20);};
      mk('+ Nouveau',()=>ask('Nom (ex. PEA, Crypto)','',v=>PFS.creer(p,v)),'go');
      if(a!=='*')mk('Renommer',()=>{const cur=L.find(x=>x.id===a);ask('Nouveau nom',cur&&cur.nom,v=>{PFS.renommer(p,a,v);location.reload();});});
+     if(a!=='*'){const cur0=(L.find(x=>x.id===a)||{}).type||'cto';const sl=document.createElement('select');sl.className='pm-ty';sl.setAttribute('aria-label','Type de compte');[['cto','Compte-titres (CTO)'],['pea','PEA'],['crypto','Crypto']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(v===cur0)o.selected=true;sl.appendChild(o);});sl.onclick=e=>e.stopPropagation();sl.onchange=()=>PFS.setType(p,a,sl.value);row.appendChild(sl);}
      if(a!=='principal'&&a!=='*')mk('Supprimer',()=>{const cur=L.find(x=>x.id===a);if(confirm('Supprimer le portefeuille « '+(cur&&cur.nom)+' » et toutes ses opérations ? Cette action est définitive.'))PFS.supprimer(p,a);},'bad');
      m.appendChild(row);const hrp=document.createElement('hr');m.appendChild(hrp);}
     const pc=innerWidth>480;const SIMP=document.documentElement.classList.contains('pf-simple');if(!SIMP){
@@ -1179,6 +1182,12 @@ body.pf-vide .pf #pf-day{display:none!important}
 .pf .sv-nt{justify-self:start;margin-top:8px}
 @media (max-width:720px){.pf .svl li{grid-template-columns:minmax(0,1fr) auto;}.pf .sv-p{text-align:right}.pf .sv-a{grid-column:1/-1}.pf .sv-x{grid-row:1;grid-column:3}}
 @media (min-width:1000px){html:not(.pf-simple) .pf #v-suivre>#sec-suivi{grid-column:1 / -1!important;grid-row:4!important}}
+
+#pf-menu .pm-ty{height:30px;font:inherit;font-size:.8rem;font-weight:600;border-radius:999px;border:1px solid var(--color-border-line,#ddd);background:transparent;color:inherit;padding:0 8px;cursor:pointer}
+.pf .fiscw{font-size:.86rem;margin-top:8px}
+
+.pf #pf-topbar .tb-imp{height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--color-border-line);background:var(--app-card);color:var(--color-fg);font:inherit;font-size:.86rem;font-weight:600;cursor:pointer;box-shadow:var(--app-shadow)}.pf #pf-topbar .tb-imp:hover{border-color:#2f7fb8;color:#2f7fb8}.pf #pf-topbar .tb-imp[hidden]{display:none}
+@media (max-width:999px){.pf #pf-topbar .tb-r{display:flex!important;justify-self:start}}
 </style>
 
 <div class="pf">
@@ -2130,6 +2139,12 @@ body.pf-vide .pf #pf-day{display:none!important}
     const ys=Object.keys(Y).sort();let stock=[];const rows=[];
     ys.forEach(y=>{const o=Y[y];let net=o.g-o.l;let used=0;if(net>0){stock=stock.filter(s=>+y-s.y<=10);for(const s of stock){if(net<=0)break;const u=Math.min(s.v,net);s.v-=u;net-=u;used+=u;}stock=stock.filter(s=>s.v>0.005);}else if(net<0){stock.push({y:+y,v:-net});}
       const base=Math.max(0,net),taux=Math.round((12.8+ps(y))*10)/10;rows.push({y,o,net:o.g-o.l,used,base,taux,imp:base*taux/100+o.div*taux/100});});
+    const TY=(()=>{try{const P0=window.PFPROFIL,p0=P0&&P0.pseudo();return p0&&window.PFS?PFS.type(p0):'cto';}catch(_){return 'cto';}})();
+    if(TY==='pea'){sec.textContent='';sec.hidden=!JR.length;const sh=el('div','sh');sh.appendChild(el('h2','','Fiscalité du PEA'));sec.appendChild(sh);const t0=JR.map(t=>t.date).filter(Boolean).sort()[0];let V=0,C=0;Object.entries(POS||{}).forEach(([k,p])=>{if(p&&p.qty>1e-9){const e=eurPx(k);V+=e?p.qty*e:(p.cost||0);C+=p.cost||0;}});const real=Object.values(Y).reduce((a,o)=>a+o.g-o.l+o.div,0);const gain=V-C+real;const d5=t0?new Date(t0):null;if(d5)d5.setFullYear(d5.getFullYear()+5);const plus5=d5&&d5<=new Date();const tx=plus5?ps(new Date().getFullYear()):12.8+ps(new Date().getFullYear());
+     const dl=el('dl','dv-k');const kv=(l,v,c)=>{const d=el('div','');d.append(el('dt','',l),el('dd',c||'',v));dl.appendChild(d);};kv('Ouvert le',t0?new Date(t0).toLocaleDateString('fr-FR'):'—');kv('5 ans le',d5?d5.toLocaleDateString('fr-FR'):'—',plus5?'ok':'');kv('Gain total',fe(gain),gain>=0?'ok':'bad');kv('Si tu retires tout aujourd’hui',fe(Math.max(0,gain)*tx/100)+' ('+String(Math.round(tx*10)/10).replace('.',',')+' %)');sec.appendChild(dl);
+     sec.appendChild(el('p','fiscn','Aucun impôt tant que tu ne retires rien : ventes et dividendes restent dans le PEA. Au retrait, avant 5 ans : 12,8 % d’impôt + prélèvements sociaux, et le plan est clôturé. Après 5 ans : seulement les prélèvements sociaux sur les gains.'));
+     const bad=(LASTR||[]).filter(u=>u&&!/^(France|Allemagne|Pays-Bas|Belgique|Italie|Espagne|Portugal|Irlande|Autriche|Finlande|Luxembourg|Grèce|Suède|Danemark|Norvège|Islande|Pologne|Tchéquie|Hongrie|Roumanie|Slovaquie|Slovénie|Croatie|Estonie|Lettonie|Lituanie|Malte|Chypre|Bulgarie|Liechtenstein|Europe)/i.test(String(u.pays||''))&&!/^e\//.test(u.cle));if(bad.length)sec.appendChild(el('p','warn fiscw','Non éligibles au PEA (sociétés hors Union européenne) : '+bad.map(u=>u.nom||u.ticker).slice(0,8).join(', ')+(bad.length>8?'…':'')+'. Elles ne peuvent pas être achetées dans un PEA, sauf via un ETF éligible.'));return;}
+    if(TY==='crypto'){Object.values(Y).forEach(o=>{o.div=0;});}
     const anyDiv=ys.some(y=>Y[y].div>0),anyFr=ys.some(y=>Y[y].fr>0);
     sec.innerHTML='<div class="sh"><h2>Récapitulatif fiscal</h2></div><div class="tw"><table id="t-fisc"><thead><tr><th>Année</th><th class="n">Plus-values nettes</th><th class="n">Pertes reportées utilisées</th>'+(anyDiv?'<th class="n">Dividendes</th>':'')+(anyFr?'<th class="n">Frais</th>':'')+'<th class="n">Impôt estimé</th></tr></thead><tbody></tbody></table></div><p class="fiscn"></p>';
     const tb=sec.querySelector('tbody');sec.hidden=!rows.some(r=>r.o.ventes||r.o.div);
@@ -2481,7 +2496,7 @@ function run(){Object.keys(I).forEach(function(k){var b=document.getElementById(
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();setTimeout(run,800);})();
 /* Barre du haut : nom du portefeuille, recherche centrée, jour/nuit à droite */
 (function(){var mq=window.matchMedia('(min-width:1000px)');
-function nomPf(){try{var P=window.PFPROFIL,p=P&&P.pseudo();if(!p||!window.PFS)return 'Portefeuille';var md=P.mode();if(md==='conseil')return 'Démo · Conseillé';if(md==='hasard')return 'Démo · Au hasard';var L=PFS.liste(p),a=PFS.actif(p);if(a==='*')return 'Tous mes portefeuilles';var x=L.filter(function(y){return y.id===a;})[0];return x?x.nom:'Principal';}catch(e){return 'Portefeuille';}}
+function nomPf(){try{var P=window.PFPROFIL,p=P&&P.pseudo();if(!p||!window.PFS)return 'Portefeuille';var md=P.mode();if(md==='conseil')return 'Démo · Conseillé';if(md==='hasard')return 'Démo · Au hasard';var L=PFS.liste(p),a=PFS.actif(p);if(a==='*')return 'Tous mes portefeuilles';var x=L.filter(function(y){return y.id===a;})[0];var ty=x&&x.type==='pea'?' · PEA':x&&x.type==='crypto'?' · Crypto':'';return (x?x.nom:'Principal')+ty;}catch(e){return 'Portefeuille';}}
 function target(){return document.querySelector('#addl .tk-open, #pf-empty .tk-open');}
 function build(){var hd=document.querySelector('.pf>.hd');if(!hd)return null;var tb=document.getElementById('pf-topbar');if(tb)return tb;tb=document.createElement('div');tb.id='pf-topbar';
  tb.innerHTML='<button type="button" class="tb-w" aria-haspopup="menu" title="Changer de portefeuille"><span class="tb-wi" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="18" height="13" rx="3"/><path d="M6 6.5V5.8A2.3 2.3 0 0 1 8.3 3.5H17"/><circle cx="16.5" cy="13" r="1.4" fill="currentColor" stroke="none"/></svg></span><span class="tb-wt"><b class="tb-wn"></b></span><svg class="tb-wc" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5l5.5 5.5 5.5-5.5"/></svg></button>'
@@ -2491,7 +2506,7 @@ function build(){var hd=document.querySelector('.pf>.hd');if(!hd)return null;var
  var inp=tb.querySelector('.tb-s input');var open=function(e){if(e)e.preventDefault();inp.blur();var t=target();if(t)t.click();};inp.addEventListener('click',open);inp.addEventListener('focus',open);
  document.addEventListener('keydown',function(e){if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')&&!document.getElementById('tk-sheet')){e.preventDefault();open();}});
  return tb;}
-function sync(){var tb=build();if(!tb)return;var n=tb.querySelector('.tb-wn');var v=nomPf();if(n.textContent!==v)n.textContent=v;var ro=document.documentElement.classList.contains('pf-ro');tb.querySelector('.tb-s').hidden=ro||!target();
+function sync(){var tb=build();if(!tb)return;var n=tb.querySelector('.tb-wn');var v=nomPf();if(n.textContent!==v)n.textContent=v;var ro=document.documentElement.classList.contains('pf-ro');tb.querySelector('.tb-s').hidden=ro||!target();var ib=tb.querySelector('.tb-imp');if(!ib){ib=document.createElement('button');ib.type='button';ib.className='tb-imp';ib.textContent='Importer un CSV';ib.title='Importer tes opérations depuis le fichier de ton courtier';ib.addEventListener('click',function(){var x=document.querySelector('.pf-imp0 .btn');if(x)x.click();});tb.querySelector('.tb-r').prepend(ib);}ib.hidden=!document.body.classList.contains('pf-vide')||!document.querySelector('.pf-imp0 .btn');
  var th=document.getElementById('pf-theme'),home=document.getElementById('pf-right'),side=document.querySelector('.pf>.hd');if(th&&side&&home){if(mq.matches&&th.parentNode!==side)side.appendChild(th);else if(!mq.matches&&th.parentNode!==home)home.appendChild(th);}}
 function go(){sync();setTimeout(sync,600);setTimeout(sync,2000);try{new MutationObserver(function(){clearTimeout(go.t);go.t=setTimeout(sync,150);}).observe(document.querySelector('.pf')||document.body,{childList:true,subtree:true});}catch(e){}if(mq.addEventListener)mq.addEventListener('change',sync);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
