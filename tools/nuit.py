@@ -135,7 +135,9 @@ def histo(limite=None):
             hb = []; prev = None
             for d in weeks:
                 prev = wk.get(d, prev); hb.append(prev)
-            o = {'cle': cle, 'ticker': t, 'nom': nom, 'devise': (m.get('meta') or {}).get('currency') or DEV.get(ex, 'USD'),
+            spl = [[dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(x['numerator'] / x['denominator'], 6)]
+                   for x in ((m.get('events') or {}).get('splits') or {}).values() if x.get('denominator')]
+            o = {'cle': cle, 'ticker': t, 'nom': nom, 'splits': sorted(spl), 'devise': (m.get('meta') or {}).get('currency') or DEV.get(ex, 'USD'),
                  'debut': f'{k0 // 12}-{k0 % 12 + 1}', 'prix': pr, 'hdebut': weeks[0].isoformat(), 'hebdo': hb,
                  'maj': dt.date.today().isoformat()}
             json.dump(o, open(fichier(cle), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
@@ -443,6 +445,26 @@ def pro(limite=None):
         list(ex.map(un, [r for _, _, r in todo]))
     print(cpt[0], 'autres actions mises à jour,', max(0, len(todo) - cpt[0]), 'en attente')
 
+def splits():
+    """Divisions d'actions des 10 dernières années pour les actions suivies -> data/splits.json
+       (la page corrige les quantités et prix des achats faits avant une division)."""
+    import maj
+    out = {}
+    for r in json.load(open(D + 'prix.json', encoding='utf-8')):
+        s = maj.sym(r['cle'])
+        if not s or r['cle'][:2] in ('c/', 'm/', 'x/', 'e/'): continue
+        try:
+            m = yahoo.chart(s, '10y', '3mo')
+            sp = ((m or {}).get('events') or {}).get('splits') or {}
+            L = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(x['numerator'] / x['denominator'], 6)] for x in sp.values() if x.get('denominator'))
+            if L: out[r['cle']] = L
+        except Exception as e:
+            print(r['cle'], 'splits', e)
+        time.sleep(0.15)
+    json.dump(out, open(D + 'splits.json', 'w', encoding='utf-8'), separators=(',', ':'))
+    print(len(out), 'actions avec divisions')
+
+
 if __name__ == '__main__':
     a = sys.argv[1]
     if a == 'tickers': tickers()
@@ -450,4 +472,5 @@ if __name__ == '__main__':
     elif a == 'chiffres': chiffres()
     elif a == 'derniers': derniers()
     elif a == 'appliquer': appliquer()
+    elif a == 'splits': splits()
     elif a == 'pro': pro(int(sys.argv[2]) if len(sys.argv) > 2 else None)

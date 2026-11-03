@@ -10,13 +10,13 @@ import json, math, time, urllib.request, datetime as dt
 UA = {'User-Agent': 'Portefeuille-Wallet/1.0 (github.com/Skoow/Wallet)', 'Accept': 'application/json'}
 
 
-def get(url, tries=4):
+def get(url, tries=4, pause=15):
     for i in range(tries):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=40) as r:
                 return json.load(r)
         except Exception as e:
-            err = e; time.sleep(15 * (i + 1))
+            err = e; time.sleep(pause * (i + 1))
     raise err
 
 
@@ -43,10 +43,12 @@ def main():
     except Exception: INFO = {}
     now = time.time()
     todo = sorted([r['id'] for r in rows], key=lambda i: (INFO.get(i) or {}).get('t', 0))
+    t_fin = time.time() + 12 * 60  # 12 minutes au plus pour les fiches détaillées (l'API gratuite limite le débit)
     for i in todo[:int(__import__('os').environ.get('CG_INFO', '120'))]:
+        if time.time() > t_fin: print('fiches : budget de temps atteint'); break
         if now - (INFO.get(i) or {}).get('t', 0) < 6 * 86400: continue
         try:
-            d = get(f'https://api.coingecko.com/api/v3/coins/{i}?localization=false&tickers=true&market_data=false&community_data=true&developer_data=true&sparkline=false', tries=2)
+            d = get(f'https://api.coingecko.com/api/v3/coins/{i}?localization=false&tickers=true&market_data=false&community_data=false&developer_data=false&sparkline=false', tries=2, pause=20)
             dv = d.get('developer_data') or {}; cm = d.get('community_data') or {}
             INFO[i] = {'t': int(time.time()), 'gen': d.get('genesis_date'), 'cat': (d.get('categories') or [])[:3], 'algo': d.get('hashing_algorithm'),
                        'commits4w': dv.get('commit_count_4_weeks'), 'contrib': dv.get('pull_request_contributors'), 'stars': dv.get('stars'),
@@ -64,7 +66,7 @@ def main():
     n = 0
     for i in sorted(INFO, key=lambda k: INFO[k].get('ght', 0)):
         x = INFO[i]; g = x.get('gh')
-        if not g or now - x.get('ght', 0) < 6 * 86400 or n >= 300: continue
+        if not g or now - x.get('ght', 0) < 6 * 86400 or n >= 300 or time.time() > t_fin + 8 * 60: continue
         parts = g.rstrip('/').split('github.com/')[-1].split('/')
         try:
             if len(parts) >= 2:
