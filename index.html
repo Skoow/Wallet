@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d2a4a">
+<meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Portefeuille">
@@ -19,7 +20,7 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
 #dash-root{padding:16px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
 
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 /* Version web : un profil par pseudo, tout reste sur ce téléphone (localStorage). Personne d'autre ne voit tes lignes ni tes transactions. */
 (function(){if(window.claude)return;
@@ -93,7 +94,7 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
     const fire=()=>Object.keys(subs).forEach(c=>{const s=snap(c);subs[c].forEach(f=>{try{f(s);}catch(e){console.error(e);}});});
     const doc=pth=>({get:()=>Promise.resolve({exists:!!st[pth],data:()=>st[pth]?JSON.parse(JSON.stringify(st[pth])):undefined}),set:d=>{st[pth]=JSON.parse(JSON.stringify(d));save();fire();return Promise.resolve();},delete:()=>{delete st[pth];save();fire();return Promise.resolve();},collection:c=>coll(pth+'/'+c)});
     const coll=c=>({doc:id=>doc(c+'/'+id),add:d=>{const id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);st[c+'/'+id]=JSON.parse(JSON.stringify(d));save();fire();return Promise.resolve({id});},onSnapshot:n=>{(subs[c]=subs[c]||[]).push(n);setTimeout(()=>n(snap(c)),0);return ()=>{};}});
-    window.PFLOCAL={exporter:()=>JSON.stringify({app:'portefeuille',version:2,pseudo:p,date:new Date().toISOString(),data:st},null,1),importer:txt=>{const o=JSON.parse(txt);if(!o||o.app!=='portefeuille'||typeof o.data!=='object')throw new Error('Fichier non reconnu');st=o.data;save();location.reload();}};
+    window.PFLOCAL={exporter:()=>JSON.stringify({app:'portefeuille',version:2,pseudo:p,date:new Date().toISOString(),data:st},null,1),importer:txt=>{const o=JSON.parse(txt);if(!o||o.app!=='portefeuille'||!o.data||typeof o.data!=='object'||Array.isArray(o.data))throw new Error('Fichier non reconnu');const OK=['ticker','nom','devise','secteur','metier','pays','cours','capi_mds','crypto','cgid','matiere','bourse','ajoute'];const d={};Object.keys(o.data).forEach(k=>{if(typeof k!=='string'||!/^data\/users\//.test(k))return;let v=o.data[k];if(!v||typeof v!=='object')return;v=JSON.parse(JSON.stringify(v));if(/\/choix$/.test(k)&&v.extra&&typeof v.extra==='object'){const ex={};Object.keys(v.extra).forEach(c=>{const e=v.extra[c];if(!e||typeof e!=='object')return;const z={};OK.forEach(f=>{const x=e[f];if(typeof x==='string')z[f]=x.slice(0,200);else if(typeof x==='number'&&isFinite(x))z[f]=x;else if(typeof x==='boolean')z[f]=x;});ex[String(c).slice(0,80)]=z;});v.extra=ex;}d[k]=v;});if(!Object.keys(d).length)throw new Error('Fichier vide');if(!confirm('Remplacer toutes les données de ce portefeuille par celles du fichier ? Cette action est définitive.'))return;st=d;save();location.reload();}};
     return {doc,collection:coll};};
   let DBP=null;
   window.claude={use:n=>{if(n==='db')return DBP||(DBP=pseudoP.then(p=>dbFor(p)));if(n==='user')return pseudoP.then(p=>({id:()=>Promise.resolve(uidOf(p)),isOwner:()=>Promise.resolve(true),can:()=>Promise.resolve(true)}));return Promise.resolve(null);}};
@@ -1038,6 +1039,83 @@ html.pf-ro .pf #pf-day::after{content:'Vue combinée de tous tes portefeuilles :
 /* Portefeuille vide : pas de message, la recherche du haut suffit */
 body.pf-vide #pf-empty{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;padding:0;margin:-1px}
 body.pf-vide .pf #pf-day{display:none!important}
+
+/* v73 : cartes alignées, sans trou */
+@media (min-width:1000px) and (max-width:1799px){
+ html:not(.pf-simple) .pf #v-suivre>#sec-live,html:not(.pf-simple) .pf #v-suivre>#sec-equi{align-self:stretch}
+ .pf #v-repart>#sec-manque{grid-column:1;grid-row:1}
+ .pf #v-repart>#sec-themes{grid-column:1;grid-row:2}
+ .pf #v-repart>#sec-equilibre{grid-column:2;grid-row:1 / span 2}
+ .pf #v-repart>#sec-vue{grid-column:1 / -1;grid-row:3}
+ .pf #v-repart>#sec-metiers{grid-column:1 / -1;grid-row:4}
+ .pf #v-analyse>#sec-courbe,.pf #v-analyse>#sec-chiffres{align-self:stretch}
+}
+@media (min-width:1800px){
+ html:not(.pf-simple) .pf #v-suivre>#sec-live,html:not(.pf-simple) .pf #v-suivre>#sec-equi,html:not(.pf-simple) .pf #v-suivre>#achat1{align-self:stretch}
+ .pf #v-analyse>#sec-courbe,.pf #v-analyse>#sec-chiffres{align-self:stretch}
+}
+
+@media (min-width:1800px){
+ .pf #v-repart:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .pf #v-repart>#sec-manque{grid-column:1!important;grid-row:1!important}
+ .pf #v-repart>#sec-themes{grid-column:1!important;grid-row:2!important}
+ .pf #v-repart>#sec-equilibre{grid-column:2!important;grid-row:1 / span 2!important}
+ .pf #v-repart>#sec-vue{grid-column:1 / -1!important;grid-row:3!important}
+ .pf #v-repart>#sec-metiers{grid-column:1 / -1!important;grid-row:4!important}
+ .pf #v-journal:not([hidden]){grid-template-rows:auto auto auto 1fr}
+ .pf #v-journal>#sec-journal{grid-column:1 / span 2!important;grid-row:1 / span 4!important}
+ .pf #v-journal>#sec-div{grid-column:3!important;grid-row:1!important}
+ .pf #v-journal>#sec-fisc{grid-column:3!important;grid-row:2!important}
+ .pf #v-journal>#pf-backup{grid-column:3!important;grid-row:3!important}
+}
+
+/* D'un coup d'œil : cartes blanches comme le reste, rangées en colonnes qui s'emboîtent */
+.pf #rp-grid.rpg{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));grid-auto-rows:4px;grid-auto-flow:row dense;column-gap:20px;row-gap:0}
+.pf #rp-grid>.rp{align-self:start;break-inside:avoid;-webkit-column-break-inside:avoid;display:grid;margin:0 0 20px;background:var(--app-card)!important;border:1px solid var(--color-border-line);border-radius:var(--app-r);box-shadow:var(--app-shadow);padding:18px 20px}
+.pf #rp-grid>.rp.wm{grid-column:1/-1}
+@media (max-width:720px){.pf #rp-grid.rpg{grid-template-columns:1fr}.pf #rp-grid>.rp{padding:16px;margin-bottom:14px}}
+/* Analyse : les baisses ne s'étirent pas à la hauteur des liens */
+@media (min-width:1000px){.pf #g-risque{align-items:start}}
+
+/* v74 : « Mon portefeuille » en grand, « Mes lignes » dessous, les 3 autres cartes ensuite */
+@media (min-width:1000px){
+ html:not(.pf-simple) .pf #v-suivre:not([hidden]){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ html:not(.pf-simple) .pf #v-suivre>#sec-live{grid-column:1 / -1!important;grid-row:1!important}
+ html:not(.pf-simple) .pf #v-suivre>#sec-plan{grid-column:1 / -1!important;grid-row:2!important}
+ html:not(.pf-simple) .pf #v-suivre>#sec-equi{grid-column:1!important;grid-row:3!important;align-self:start!important}
+ html:not(.pf-simple) .pf #v-suivre>#achat1{grid-column:2!important;grid-row:3!important;align-self:start!important}
+ html:not(.pf-simple) .pf #v-suivre>#objectif{grid-column:3!important;grid-row:3!important;align-self:start!important}
+ .pf #sec-live .live-k dd{font-size:clamp(1.6rem,1.4vw + .6rem,2.3rem)!important}
+ .pf #sec-live .live-k dt,.pf #sec-live .src-k dt{font-size:.85rem}
+ .pf #sec-live .src-k dd{font-size:clamp(1.25rem,.8vw + .7rem,1.7rem)!important}
+ .pf #sec-live .src-k{gap:14px 36px}
+ /* Répartition : la carte du monde en haut */
+ .pf #v-repart>#sec-vue{grid-column:1 / -1!important;grid-row:1!important}
+ .pf #v-repart>#sec-manque{grid-column:1!important;grid-row:2!important}
+ .pf #v-repart>#sec-themes{grid-column:1!important;grid-row:3!important}
+ .pf #v-repart>#sec-equilibre{grid-column:2!important;grid-row:2 / span 2!important}
+ .pf #v-repart>#sec-metiers{grid-column:1 / -1!important;grid-row:4!important}
+}
+@media (max-width:999px){.pf #sec-live .src-k dd{font-size:1.15rem}}
+
+/* v75 : tuile en double retirée, tuiles aérées, carte moins zoomée, Analyse : la courbe en grand */
+.pf #sec-metiers{display:none!important}
+.pf #rp-grid>.rp{gap:14px;padding:20px 22px}
+.pf #rp-grid .rpl{gap:12px}
+.pf #rp-grid .rpl li{font-size:.92rem;gap:3px 10px}
+.pf #rp-grid .rpl .who{font-size:.8rem;line-height:1.45}
+.pf #rp-grid .rpb{height:10px}
+.pf #rp-grid .rph h3{font-size:1rem}
+.pf .wm .wmb{max-width:820px;width:100%;justify-self:center;align-self:center}
+.pf .wm{grid-template-columns:minmax(0,1.7fr) minmax(16rem,1fr)!important;align-items:center}
+@media (min-width:1000px){
+ .pf #v-analyse:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .pf #v-analyse>#sec-courbe{grid-column:1 / -1!important;grid-row:1!important}
+ .pf #v-analyse>#sec-chiffres{grid-column:1 / -1!important;grid-row:2!important}
+ .pf #v-analyse>#g-risque{grid-column:1 / -1!important;grid-row:3!important}
+ .pf #v-analyse>#sec-stress{grid-column:1 / -1!important;grid-row:4!important}
+ .pf #v-analyse>#sec-courbe .an-strip dd{font-size:clamp(1.5rem,1.2vw + .6rem,2.2rem)}
+}
 </style>
 
 <div class="pf">
@@ -1420,7 +1498,7 @@ body.pf-vide .pf #pf-day{display:none!important}
       if(u){const tf=txForm(u,POS[u.cle]);dt.insertBefore(tf,dt.children[1]||null);}const ft=el('div','ft');
       if(u&&!u.verifie&&u.maj_auto)ft.appendChild(el('span','mu','Chiffres automatiques (Yahoo) du '+String(u.maj_auto).split('-').reverse().join('/')+', non vérifiés à la main.'));{const ex=u&&(window.__EX||{})[u.cle];if(ex&&ex.estime)ft.appendChild(el('span','mu','Ventes par pays : estimation, pas encore vérifiée.'));}
       if(u&&u.verifie){const pdv=s=>{const m=String(s).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]):new Date(s);};const dv=pdv(u.verifie),now=new Date();const pr=u.prochains_resultats?new Date(u.prochains_resultats+'T12:00:00'):null;const after=pr&&!isNaN(pr)&&pr<now&&pr>dv;const old=(now-dv)/864e5>100;ft.appendChild(el('span',after||old?'warn':'',(after||old?'⚠ ':'✓ ')+'Vérifié sur 3 sources le '+u.verifie+(after?' · nouveaux résultats depuis, revérification en cours':old?' · à revérifier':'')));}
-      if(u&&Array.isArray(u.sources)&&u.sources.length){const LB={'stockanalysis.com':'Stock Analysis','finance.yahoo.com':'Yahoo Finance','sec.gov':'SEC (rapports officiels)','companiesmarketcap.com':'CompaniesMarketCap','macrotrends.net':'Macrotrends','gurufocus.com':'GuruFocus','marketscreener.com':'MarketScreener','globenewswire.com':'communiqués (GlobeNewswire)','newswire.ca':'communiqués (Newswire)','businesswire.com':'communiqués (Business Wire)','justice.gov':'Justice américaine','bnnbloomberg.ca':'BNN Bloomberg','reuters.com':'Reuters','morningstar.com':'Morningstar'};const sp=el('span','src','Sources ('+u.sources.length+') : ');u.sources.forEach((s,j)=>{let d='';try{d=new URL(s).hostname.replace(/^www\.|^ca\./,'');}catch(_){}const x=document.createElement('a');x.href=s;x.target='_blank';x.rel='noopener';x.textContent=LB[d]||d;sp.appendChild(x);if(j<u.sources.length-1)sp.append(' · ');});ft.appendChild(sp);}
+      if(u&&Array.isArray(u.sources)&&u.sources.length){const LB={'stockanalysis.com':'Stock Analysis','finance.yahoo.com':'Yahoo Finance','sec.gov':'SEC (rapports officiels)','companiesmarketcap.com':'CompaniesMarketCap','macrotrends.net':'Macrotrends','gurufocus.com':'GuruFocus','marketscreener.com':'MarketScreener','globenewswire.com':'communiqués (GlobeNewswire)','newswire.ca':'communiqués (Newswire)','businesswire.com':'communiqués (Business Wire)','justice.gov':'Justice américaine','bnnbloomberg.ca':'BNN Bloomberg','reuters.com':'Reuters','morningstar.com':'Morningstar'};const sp=el('span','src','Sources ('+u.sources.length+') : ');u.sources.forEach((s,j)=>{let d='';try{d=new URL(s).hostname.replace(/^www\.|^ca\./,'');}catch(_){}let okp=false;try{okp=/^https?:$/.test(new URL(s).protocol);}catch(_){}if(!okp)return;const x=document.createElement('a');x.href=s;x.target='_blank';x.rel='noopener noreferrer';x.textContent=LB[d]||d;sp.appendChild(x);if(j<u.sources.length-1)sp.append(' · ');});ft.appendChild(sp);}
       if(u&&!met&&u.prochains_resultats){const d=new Date(u.prochains_resultats+'T12:00:00');if(!isNaN(d)&&d>new Date())ft.appendChild(el('span','','Prochains résultats : '+d.toLocaleDateString('fr-FR')));}
       if(u&&!(POS[u.cle]&&POS[u.cle].tx.length))
       dt.appendChild(ft);
@@ -1884,7 +1962,7 @@ body.pf-vide .pf #pf-day{display:none!important}
    const oq=+o.quantite||0,op=+o.prix||0;let me=oq>0&&op>0?(+o.montant_eur||0)*(q*pp)/(oq*op):null;if(!(me>0)){const r=fxRate(o.devise||'USD');me=r?q*pp/r:null;}if(!(me>0)){ms.textContent='Conversion en euros impossible.';return;}
    const n=Object.assign({},o);delete n.id;delete n._db;Object.assign(n,{date:d,heure:d===o.date?(o.heure||''):'',quantite:Math.round(q*1e6)/1e6,prix:pp,montant_eur:Math.round(me*100)/100,frais_eur:Math.round(fr0*100)/100,modifie:new Date().toISOString()});
    sv.disabled=true;ms.textContent='Enregistrement…';try{await window.PF.add(n);await window.PF.del(o.id);}catch(e){sv.disabled=false;ms.textContent='Échec de l’enregistrement.';}});
-  td.appendChild(f);r2.appendChild(td);tr.after(r2);setTimeout(()=>iQ.focus(),20);});c.appendChild(ed);}if(t._db&&window.PF&&window.PF.can){const b=el('button','btn sm','Supprimer');b.type='button';let arm=false;b.addEventListener('click',async()=>{if(!arm){arm=true;b.textContent='Confirmer ?';b.classList.add('bad');setTimeout(()=>{arm=false;b.textContent='Supprimer';b.classList.remove('bad');},4000);return;}b.disabled=true;try{await window.PF.del(t.id);}catch(e){b.disabled=false;b.textContent='Échec';}});c.appendChild(b);}tr.appendChild(c);}tb.appendChild(tr);});const tbl=document.getElementById('t-journal');if(tbl)tbl.hidden=!rows.length;{let b=document.getElementById('jr-csv');if(!b&&tbl){b=el('button','btn sm','Exporter (CSV)');b.id='jr-csv';b.type='button';b.addEventListener('click',()=>{const H=['date','heure','sens','ticker','nom','quantite','prix','devise','montant_eur','frais_eur'];const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const L=[H.join(';')].concat(JR.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(t=>H.map(k=>esc(k==='quantite'||k==='prix'||k==='montant_eur'||k==='frais_eur'?String(t[k]??'').replace('.',','):t[k])).join(';')));const bl=new Blob(['\ufeff'+L.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='transactions-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);});tbl.after(b);}if(b)b.hidden=!rows.length;}{let ib=document.getElementById('jr-imp');if(!ib&&tbl&&window.PF.can){const w=el('div','jr-imp');w.id='jr-imp';const b2=el('button','btn sm','Importer un fichier CSV');b2.type='button';const fi=document.createElement('input');fi.type='file';fi.accept='.csv,text/csv,text/plain';fi.hidden=true;const ms=el('span','mu jr-imp-m','');w.append(b2,fi,ms);b2.addEventListener('click',()=>fi.click());
+  td.appendChild(f);r2.appendChild(td);tr.after(r2);setTimeout(()=>iQ.focus(),20);});c.appendChild(ed);}if(t._db&&window.PF&&window.PF.can){const b=el('button','btn sm','Supprimer');b.type='button';let arm=false;b.addEventListener('click',async()=>{if(!arm){arm=true;b.textContent='Confirmer ?';b.classList.add('bad');setTimeout(()=>{arm=false;b.textContent='Supprimer';b.classList.remove('bad');},4000);return;}b.disabled=true;try{await window.PF.del(t.id);}catch(e){b.disabled=false;b.textContent='Échec';}});c.appendChild(b);}tr.appendChild(c);}tb.appendChild(tr);});const tbl=document.getElementById('t-journal');if(tbl)tbl.hidden=!rows.length;{let b=document.getElementById('jr-csv');if(!b&&tbl){b=el('button','btn sm','Exporter (CSV)');b.id='jr-csv';b.type='button';b.addEventListener('click',()=>{const H=['date','heure','sens','ticker','nom','quantite','prix','devise','montant_eur','frais_eur'];const esc=v=>{let x=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(x)&&!/^-?\d/.test(x))x="'"+x;return '"'+x.replace(/"/g,'""')+'"';};const L=[H.join(';')].concat(JR.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).map(t=>H.map(k=>esc(k==='quantite'||k==='prix'||k==='montant_eur'||k==='frais_eur'?String(t[k]??'').replace('.',','):t[k])).join(';')));const bl=new Blob(['\ufeff'+L.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='transactions-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);});tbl.after(b);}if(b)b.hidden=!rows.length;}{let ib=document.getElementById('jr-imp');if(!ib&&tbl&&window.PF.can){const w=el('div','jr-imp');w.id='jr-imp';const b2=el('button','btn sm','Importer un fichier CSV');b2.type='button';const fi=document.createElement('input');fi.type='file';fi.accept='.csv,text/csv,text/plain';fi.hidden=true;const ms=el('span','mu jr-imp-m','');w.append(b2,fi,ms);b2.addEventListener('click',()=>fi.click());
  fi.addEventListener('change',async()=>{const f=fi.files&&fi.files[0];fi.value='';if(!f)return;ms.textContent='Lecture…';try{const r=await importCsv(await f.text());ms.textContent=r;}catch(e){ms.textContent='Import impossible : '+(e&&e.message||e);}});
  const host=document.getElementById('jr-csv')||tbl;host.after(w);}}}
   const pmS=s=>{if(!s)return null;const [y,mm]=String(s).split('-').map(Number);return y&&mm?y*12+mm-1:null;};
@@ -1973,7 +2051,7 @@ body.pf-vide .pf #pf-day{display:none!important}
     const dG=G[N]-G[0];if(ls){ls.textContent='';const per0=false;ls.hidden=true;{const g3=document.getElementById('lv3');const dt3=g3&&g3.previousElementSibling;if(g3){g3.dataset.tot=g3.textContent;g3.dataset.totc=g3.className;const isP=RNG&&st>first;const base=isP?(V[0]+(I[N]-I[0])):I[N];g3.textContent=fs(dG)+(base>0?' ('+fm(dG/base)+')':'');g3.className=dG>-0.5?'ok':'bad';if(dt3)dt3.textContent=isP?'Gain sur '+per:'Gain';}}if(per0){ls.append('Plus-value sur '+per+' : ');ls.appendChild(el('b',dG>-0.5?'ok':'bad',fs(dG)+(I[N]>0?' ('+fm(dG/I[N])+')':'')));}}
     const money=LM==='eur';const Y=money?V:V.map((v,j)=>I[j]>0?(v/I[j]-1)*100:0);
     const lab=j=>{const i=stD+j;if(wk){const d=wDate(i);return d.getUTCDate()+' '+MF[d.getUTCMonth()]+(N>20?' '+String(d.getUTCFullYear()).slice(2):'');}return MF[i%12]+' '+Math.floor(i/12);};
-    const W=box.clientWidth||600,H=W<560?220:300,mg={t:18,r:6,b:22,l:2};let ext=money?d3.extent(V.concat(I)):d3.extent(Y.concat([0]));if(!(ext[1]-ext[0]>1e-9)){const pd=Math.max(money?1:0.5,Math.abs(ext[0])*0.02);ext=[ext[0]-pd,ext[1]+pd];}
+    const W=box.clientWidth||600,H=W<560?220:W<900?300:Math.round(Math.min(480,Math.max(340,W*0.28))),mg={t:18,r:6,b:22,l:2};let ext=money?d3.extent(V.concat(I)):d3.extent(Y.concat([0]));if(!(ext[1]-ext[0]>1e-9)){const pd=Math.max(money?1:0.5,Math.abs(ext[0])*0.02);ext=[ext[0]-pd,ext[1]+pd];}
     const y=d3.scaleLinear([money?Math.max(0,ext[0]-(ext[1]-ext[0])*.08):ext[0]-(ext[1]-ext[0])*.08,ext[1]+(ext[1]-ext[0])*.08||1],[H-mg.b,mg.t]).nice(4);const x=d3.scaleLinear([0,N],[mg.l,W-mg.r]);
     const svg=d3.select(box).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`);const yt=y.ticks(4);
     svg.append('g').selectAll('line').data(yt).join('line').attr('x1',mg.l).attr('x2',W-mg.r).attr('y1',y).attr('y2',y).attr('stroke','var(--cds-chart-grid)');
@@ -2010,7 +2088,7 @@ body.pf-vide .pf #pf-day{display:none!important}
     const ls=document.getElementById('live-s');if(ls){ls.textContent='';const g0=hv?tw-tw/(1+ch):1000*ks.reduce((a,x)=>a+WG(null,x),0)*ch;ls.append(hv?'Tes achats, sur '+per+' : ':'Si tu avais mis 1 000 € dans chaque action (2 000 € dans l’or) il y a '+per+' : ');ls.appendChild(el('b',ch>=0?'ok':'bad',(g0>=0?'+':'−')+fe(Math.abs(g0))+' ('+fm(ch)+')'));}
     REDRAW.live=()=>drawLive(R,S);segBtns('rng-live',RNGS,RNG,setRng);lmSeg();
     const MF=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];const lab=i=>{const d=wDate(i0+i);return d.getUTCDate()+' '+MF[d.getUTCMonth()]+(n>20?' '+String(d.getUTCFullYear()).slice(2):'');};
-    const W=box.clientWidth||600,H=W<560?220:300,mg={t:18,r:6,b:22,l:2};
+    const W=box.clientWidth||600,H=W<560?220:W<900?300:Math.round(Math.min(520,Math.max(360,W*0.3))),mg={t:18,r:6,b:22,l:2};
     const y=d3.scaleLinear([d3.min(vals)*0.985,d3.max(vals)*1.015],[H-mg.b,mg.t]).nice(4);const x=d3.scaleLinear([0,N],[mg.l,W-mg.r]);
     const svg=d3.select(box).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`);
     const yt=y.ticks(4);svg.append('g').selectAll('line').data(yt).join('line').attr('x1',mg.l).attr('x2',W-mg.r).attr('y1',y).attr('y2',y).attr('stroke','var(--cds-chart-grid, var(--color-border-line))');
@@ -2051,7 +2129,7 @@ body.pf-vide .pf #pf-day{display:none!important}
     const ls=document.getElementById('live-s');if(ls){ls.textContent='';const g0=hv?(!RNG&&inv>0?now-inv:tw-tw/(1+ch)):1000*ks.reduce((a,x)=>a+WG(null,x),0)*ch;ls.append(hv?(RNG?'Tes achats, sur '+per+' : ':'Tes achats, depuis le premier : '):(RNG?'Si tu avais mis 1 000 € dans chaque action (2 000 € dans l’or) il y a '+per+' : ':'Si tu avais mis 1 000 € dans chaque action (2 000 € dans l’or) en '+Math.floor(m0/12)+' : '));ls.appendChild(el('b',ch>=0?'ok':'bad',(g0>=0?'+':'−')+fe(Math.abs(g0))+' ('+fm(ch)+')'));}
     REDRAW.live=()=>drawLive(R,S);segBtns('rng-live',RNGS,RNG,setRng);lmSeg();
     const MF=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];const lab=m=>MF[m%12]+' '+Math.floor(m/12);
-    const W=box.clientWidth||600,H=W<560?220:300,mg={t:18,r:6,b:22,l:2};
+    const W=box.clientWidth||600,H=W<560?220:W<900?300:Math.round(Math.min(480,Math.max(340,W*0.28))),mg={t:18,r:6,b:22,l:2};
     const y=d3.scaleLinear([d3.min(vals)*0.985,d3.max(vals)*1.015],[H-mg.b,mg.t]).nice(4);const x=d3.scaleLinear([0,n],[mg.l,W-mg.r]);
     const svg=d3.select(box).append('svg').attr('width','100%').attr('viewBox',`0 0 ${W} ${H}`);
     const yt=y.ticks(4);svg.append('g').selectAll('line').data(yt).join('line').attr('x1',mg.l).attr('x2',W-mg.r).attr('y1',y).attr('y2',y).attr('stroke','var(--cds-chart-grid, var(--color-border-line))');
@@ -2312,6 +2390,14 @@ function build(){var hd=document.querySelector('.pf>.hd');if(!hd)return null;var
 function sync(){var tb=build();if(!tb)return;var n=tb.querySelector('.tb-wn');var v=nomPf();if(n.textContent!==v)n.textContent=v;var ro=document.documentElement.classList.contains('pf-ro');tb.querySelector('.tb-s').hidden=ro||!target();
  var th=document.getElementById('pf-theme'),home=document.getElementById('pf-right'),side=document.querySelector('.pf>.hd');if(th&&side&&home){if(mq.matches&&th.parentNode!==side)side.appendChild(th);else if(!mq.matches&&th.parentNode!==home)home.appendChild(th);}}
 function go(){sync();setTimeout(sync,600);setTimeout(sync,2000);try{new MutationObserver(function(){clearTimeout(go.t);go.t=setTimeout(sync,150);}).observe(document.querySelector('.pf')||document.body,{childList:true,subtree:true});}catch(e){}if(mq.addEventListener)mq.addEventListener('change',sync);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
+</script>
+
+<script>
+/* Mosaïque « D'un coup d'œil » : chaque carte prend la hauteur qu'il lui faut, sans trou */
+(function(){var raf=0;function lay(){raf=0;var g=document.getElementById('rp-grid');if(!g||!g.offsetParent)return;[].forEach.call(g.children,function(c){c.style.gridRowEnd='';var h=c.getBoundingClientRect().height;c.style.gridRowEnd='span '+Math.ceil((h+20)/4);});}
+function q(){if(!raf)raf=requestAnimationFrame(lay);}
+function go(){q();try{new MutationObserver(q).observe(document.querySelector('.pf')||document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','aria-selected']});}catch(e){}addEventListener('resize',q);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
 </script>
 </body>

@@ -26,8 +26,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Travaux
+        env:
+          IN_QUOI: ${{ github.event.inputs.quoi }}
         run: |
-          Q="${{ github.event.inputs.quoi }}"
+          Q="$IN_QUOI"
           if [ "${{ github.event_name }}" = "push" ]; then Q=mois; fi
           if [ -z "$Q" ]; then
             if [ "${{ github.event.schedule }}" = "0 3 * * 0" ]; then

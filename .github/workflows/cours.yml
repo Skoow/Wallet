@@ -30,8 +30,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Mise à jour
+        env:
+          IN_MODE: ${{ github.event.inputs.mode }}
         run: |
-          MODE="${{ github.event.inputs.mode }}"
+          MODE="$IN_MODE"
           if [ -z "$MODE" ]; then
             case "${{ github.event.schedule }}" in
               "45 22 * * 1-5") MODE=close ;;
