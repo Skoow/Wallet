@@ -14,7 +14,12 @@ D = 'data/'
 UA = {'User-Agent': 'Mozilla/5.0 (portefeuille web app)'}
 ETF = {'e/gld': 'GLD', 'e/slv': 'SLV', 'e/spy': 'SPY', 'e/qqq': 'QQQ', 'e/urth': 'URTH', 'e/ezu': 'EZU',
        'e/fxe': 'FXE', 'e/fxf': 'FXF', 'e/fxc': 'FXC', 'e/cac': '^FCHI'}
-EXCH = {'tsx': '.TO', 'epa': '.PA', 'swx': '.SW', 'xetra': '.DE', 'lse': '.L', 'ams': '.AS', 'mil': '.MI'}
+EXCH = {'tsx': '.TO', 'epa': '.PA', 'swx': '.SW', 'xetra': '.DE', 'lse': '.L', 'ams': '.AS', 'mil': '.MI',
+        'ebr': '.BR', 'elis': '.LS', 'bme': '.MC', 'sto': '.ST', 'osl': '.OL', 'hel': '.HE', 'cph': '.CO'}
+# cryptos dont le symbole Yahoo n'est pas simplement XXX-USD
+CSYM = {'ton': 'TON11419-USD', 'sui': 'SUI20947-USD', 'uni': 'UNI7083-USD', 'apt': 'APT21794-USD', 'arb': 'ARB11841-USD',
+        'pepe': 'PEPE24478-USD', 'tao': 'TAO22974-USD', 'grt': 'GRT6719-USD', 'stx': 'STX4847-USD', 'mnt': 'MNT27075-USD',
+        'pol': 'POL28321-USD', 'op': 'OP-USD', 'render': 'RENDER-USD', 'imx': 'IMX10603-USD', 'hype': 'HYPE32196-USD'}
 
 
 def sym(cle):
@@ -22,7 +27,11 @@ def sym(cle):
         return ETF[cle]
     k, rest = cle.split('/', 1)
     if k == 'c':  # cryptomonnaie, cotée en dollars
-        return rest.upper() + '-USD'
+        return CSYM.get(rest, rest.upper() + '-USD')
+    if k == 'm':  # matière première : contrat à terme le plus proche (ex. m/gc -> GC=F)
+        return rest.upper() + '=F'
+    if k == 'x':  # change (ex. x/gbpusd -> GBPUSD=X)
+        return rest.upper() + '=X'
     if k == 's':
         return rest.upper().replace('.', '-')
     if k == 'a' and '-' in rest:

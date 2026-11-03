@@ -2,7 +2,7 @@ name: Nuit
 on:
   schedule:
     - cron: '20 23 * * 1-5'   # chaque soir : chiffres des sociétés + dernier cours de toutes les actions
-    - cron: '0 3 * * 0'       # le dimanche ; seulement le 1er du mois : liste des tickers + historiques complets
+    - cron: '0 3 * * 0'       # chaque dimanche : historiques par roulement ; le 1er du mois, aussi la liste des tickers
   push:
     branches: [main]
     paths: ['data/lancer_nuit.txt']   # modifier ce fichier relance tout de suite les historiques complets
@@ -31,13 +31,12 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then Q=mois; fi
           if [ -z "$Q" ]; then
             if [ "${{ github.event.schedule }}" = "0 3 * * 0" ]; then
-              if [ "$(date -u +%d)" -le 7 ]; then Q=mois; else echo "pas le 1er dimanche"; exit 0; fi
+              if [ "$(date -u +%d)" -le 7 ]; then Q=mois; else Q=semaine; fi
             else Q=soir; fi
           fi
-          if [ "$Q" = "mois" ]; then
-            python tools/nuit.py tickers
-            python tools/nuit.py histo
-          fi
+          # liste des tickers le 1er dimanche du mois ; historiques chaque dimanche, par roulement (les plus anciens d'abord)
+          if [ "$Q" = "mois" ]; then python tools/nuit.py tickers; fi
+          if [ "$Q" = "mois" ] || [ "$Q" = "semaine" ]; then BUDGET_MIN=230 python tools/nuit.py histo; fi
           python tools/nuit.py chiffres
           if [ -d data/h ]; then python tools/nuit.py derniers; fi
           # on met de côté le travail : l'enregistrement repart de la dernière version du dépôt
