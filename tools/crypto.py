@@ -42,7 +42,7 @@ def main():
         rk, mc, vol = r['market_cap_rank'], r.get('market_cap') or 0, r.get('total_volume') or 0
         athc = r.get('ath_change_percentage'); c30 = r.get('price_change_percentage_30d_in_currency'); c1y = r.get('price_change_percentage_1y_in_currency')
         circ, mx, tot = r.get('circulating_supply') or 0, r.get('max_supply'), r.get('total_supply')
-        stable = r['symbol'].lower() in STABLE
+        stable = r['symbol'].lower() in STABLE or (0.97 <= r['current_price'] <= 1.03 and abs(c30 or 0) < 2 and abs(c1y or 0) < 5) or (1.0 <= r['current_price'] <= 1.25 and 'eur' in (r['symbol'] + r['name']).lower() and abs(c30 or 0) < 3)
         P = {}
         P['taille'] = lin([[1, 1], [10, .95], [50, .75], [100, .6], [300, .35], [1000, 0]], rk) * 25
         liq = vol / mc * 100 if mc else 0
