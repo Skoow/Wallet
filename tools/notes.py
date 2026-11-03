@@ -17,7 +17,7 @@ NC = {
     'sh': ('actions_an', -1, [[-3, 1], [0, .8], [2, .5], [5, .1], [8, 0]], [-20, 30]),
     'fy': ('rendement_cash', 1, [[-5, 0], [0, .2], [2, .45], [4, .7], [7, .9], [10, 1]], [-20, 20]),
     'pe': ('per_prevu', -1, [[8, 1], [15, .85], [25, .6], [35, .4], [50, .15], [80, 0]], [0, 150])}
-CRIT = {'rent': 15, 'eff': 15, 'cash': 10, 'croi': 15, 'sol': 10, 'prix': 10, 'qual': 10}
+CRIT = {'rent': 12, 'eff': 12, 'cash': 8, 'croi': 12, 'sol': 8, 'prix': 10, 'qual': 10, 'dyn': 8, 'risk': 10}
 
 
 def lin(pts, v):
@@ -66,7 +66,65 @@ def depuis_pro(o):
         if u.get('cash_libre') is None and C[-1].get('cash_libre') is not None: u['cash_libre'] = C[-1]['cash_libre']
     u['fin'] = (o.get('profil') or {}).get('secteur') == 'Financial Services'
     u['_q'] = qualite(C)
+    u['_o'] = o
     return u
+
+
+def serie_h(cle):
+    try:
+        h = json.load(open(D + 'h/' + cle.replace('/', '_') + '.json', encoding='utf-8'))
+        y, m = map(int, str(h['debut']).split('-')[:2])
+        return y * 12 + m - 1, [x for x in h.get('prix') or []]
+    except Exception:
+        return None, []
+
+
+def dynamique(o):
+    pr = []
+    ra = (o.get('revisions') or {}).get('an') or {}
+    if ra.get('revision_90j_pct') is not None: pr.append(lin([[-10, 0], [-3, .25], [0, .5], [3, .75], [10, 1]], ra['revision_90j_pct']))
+    up, dn = ra.get('hausses_30j'), ra.get('baisses_30j')
+    if up is not None and dn is not None and up + dn > 0: pr.append(lin([[-1, 0], [0, .5], [1, 1]], (up - dn) / (up + dn)))
+    ins = o.get('inities') or {}
+    if ins.get('net_pct') is not None: pr.append(lin([[-30, .2], [-5, .45], [0, .6], [2, .85], [10, 1]], ins['net_pct']))
+    return sum(pr) / len(pr) if pr else None
+
+
+def risque(o, p0, P):
+    import math
+    rk = []
+    X = [x for x in P[-120:] if x]
+    if len(X) >= 24:
+        pk, dd = 0, 0
+        for x in X:
+            pk = max(pk, x); dd = min(dd, x / pk - 1)
+        rk.append(lin([[-80, 0], [-50, .3], [-35, .55], [-20, .85], [-10, 1]], dd * 100))
+    R = [math.log(b / a) for a, b in zip(P[-61:-1], P[-60:]) if a and b and a > 0 and b > 0]
+    if len(R) >= 24:
+        mu = sum(R) / len(R); vol = (sum((r - mu) ** 2 for r in R) / (len(R) - 1) * 12) ** .5 * 100
+        rk.append(lin([[15, 1], [25, .75], [40, .4], [60, .1], [80, 0]], vol))
+    if o.get('short_pct') is not None: rk.append(lin([[1, 1], [5, .7], [10, .35], [20, 0]], o['short_pct']))
+    return sum(rk) / len(rk) if rk else None
+
+
+def per_hist(o, p0, P):
+    """PER d'aujourd'hui comparé à sa médiane sur 5 ans (cours mensuel / bénéfice de l'exercice précédent) -> écart en %."""
+    B = {int(c['annee']): c['bpa'] for c in o.get('comptes') or [] if (c.get('bpa') or 0) > 0}
+    if len(B) < 2 or p0 is None or len(P) < 24: return None
+    def eps(y):
+        b = None
+        for k in sorted(B):
+            if k <= y: b = B[k]
+        return b
+    pe = []
+    for i in range(max(0, len(P) - 60), len(P)):
+        m = p0 + i; e = eps(m // 12 - 1)
+        if P[i] and e: pe.append(P[i] / e)
+    pe = sorted(x for x in pe if 0 < x < 250)
+    if len(pe) < 24: return None
+    md = pe[len(pe) // 2]
+    cur = P[-1] / o['bpa_12m'] if o.get('bpa_12m') and o['bpa_12m'] > 0 and P[-1] else None
+    return (md / cur - 1) * 100 if cur else None
 
 
 def qualite(C):
@@ -137,6 +195,12 @@ def main():
              'cash': None if fin else block([('fcf', 1)]), 'croi': block([('g5', 8), ('g1', 4), ('e5', 3)]),
              'sol': block([('sh', 1)] if fin else [('de', 6), ('sh', 4)]), 'prix': block([('pe', 1)] if fin else [('fy', 6), ('pe', 4)]),
              'qual': u.get('_q')}
+        o = u.get('_o') or {}; p0, PP = serie_h(cle)
+        B['dyn'] = dynamique(o); B['risk'] = risque(o, p0, PP)
+        hc = per_hist(o, p0, PP)
+        if hc is not None:
+            h = lin([[-40, 0], [-20, .25], [0, .55], [20, .85], [40, 1]], hc)
+            B['prix'] = h if B['prix'] is None else (B['prix'] * 6 + h * 4) / 10
         pm, fcf, sh, de = num(u.get('marge_nette')), num(u.get('cash_libre')), num(u.get('actions_an')), num(u.get('dette_ebitda'))
         if pm is not None and pm < 0 and B['rent'] is not None: B['rent'] = min(B['rent'], .3)
         if not fin and fcf is not None and fcf < 0 and B['cash'] is not None: B['cash'] = min(B['cash'], .25)
@@ -144,9 +208,9 @@ def main():
         if sh is not None and sh > 5 and B['sol'] is not None: B['sol'] = min(B['sol'], .2)
         connus = sum(1 for k, v in B.items() if v is not None)
         crits = sum(1 for c in NC if nraw(u, c) is not None)
-        if connus < 6 or crits < 8: continue  # pas assez de chiffres : pas de note plutôt qu'une note fausse
+        if connus < 7 or crits < 8: continue  # pas assez de chiffres : pas de note plutôt qu'une note fausse
         pts = sum((.4 if B[k] is None else B[k]) * m for k, m in CRIT.items())
-        pa = regularite(cle); pts += pa / 100 * 10 if pa is not None else 5
+        pa = regularite(cle); pts += pa / 100 * 5 if pa is not None else 2.5
         pts += 2.5  # fiabilité (5) : chiffres automatiques, pas de vérification à la main
         out[cle] = [NMAP[max(0, min(100, round(pts)))], crits]
     json.dump({'maj': dt.date.today().isoformat(), 'n': out}, open(D + 'notes.json', 'w', encoding='utf-8'), separators=(',', ':'))

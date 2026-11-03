@@ -1,10 +1,9 @@
 """Les 1 000 premières cryptos (classement par capitalisation, source CoinGecko, sans clé) -> data/crypto.json,
    avec une note /100 sur un barème propre aux cryptos :
-     Taille 15 (rang)                       · Liquidité 10 (volume / capitalisation)
-     Dilution 15 (en circulation / maximum, et capitalisation / valeur totale diluée)
-     Ancienneté 10 (années d'existence)     · Développement 10 (activité du code ces 4 dernières semaines)
-     Communauté et marchés 10 (nombre de places de cotation, suiveurs) · Distance au plus haut 10
-     Face au bitcoin 10 (1 an)              · Stabilité 10 (variations sur 7 et 30 jours)
+     Taille 12 · Liquidité 8 · Dilution 12 · Ancienneté 8 · Développement 8 (code, GitHub) · Marchés et notoriété 8
+     Plus haut 8 · Face au bitcoin 8 · Stabilité 8
+     Fondamentaux 12 (frais payés par les utilisateurs et argent déposé, rapportés à la capitalisation ; DefiLlama)
+     Usage 12 (infrastructure / DeFi / autre ; les memecoins n'ont rien)
    Les fiches détaillées (âge, code, communauté) sont relues par roulement, 120 par passage, gardées dans data/crypto_info.json."""
 import json, math, time, urllib.request, datetime as dt
 
@@ -85,6 +84,22 @@ def main():
         x['ght'] = int(time.time()); n += 1
     print(n, 'dépôts de code relus')
     json.dump(INFO, open('data/crypto_info.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    # fondamentaux : frais payés par les utilisateurs et argent déposé (DefiLlama, gratuit, sans clé)
+    FEES, TVL = {}, {}
+    try:
+        for x in get('https://api.llama.fi/overview/fees?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true').get('protocols') or []:
+            g = x.get('gecko_id')
+            if g and x.get('total30d'): FEES[g] = FEES.get(g, 0) + x['total30d']
+    except Exception as e: print('fees', e)
+    try:
+        for x in get('https://api.llama.fi/protocols'):
+            g = x.get('gecko_id')
+            if g and x.get('tvl'): TVL[g] = TVL.get(g, 0) + x['tvl']
+        for x in get('https://api.llama.fi/v2/chains'):
+            g = x.get('gecko_id')
+            if g and x.get('tvl'): TVL[g] = max(TVL.get(g, 0), x['tvl'])
+    except Exception as e: print('tvl', e)
+    MEME = ('meme', 'dog-themed', 'cat-themed', 'frog-themed', 'pump.fun')
     out = []
     today = dt.date.today()
     for r in rows:
@@ -96,15 +111,15 @@ def main():
         stable = r['symbol'].lower() in STABLE or (0.97 <= r['current_price'] <= 1.03 and abs(c30 or 0) < 2 and abs(c1y or 0) < 5) or (1.0 <= r['current_price'] <= 1.25 and 'eur' in (r['symbol'] + r['name']).lower() and abs(c30 or 0) < 3)
         inf = INFO.get(r['id']) or {}
         P = {}
-        P['taille'] = lin([[1, 1], [10, .95], [50, .75], [100, .6], [300, .35], [1000, 0]], rk) * 15
+        P['taille'] = lin([[1, 1], [10, .95], [50, .75], [100, .6], [300, .35], [1000, 0]], rk) * 12
         liq = vol / mc * 100 if mc else 0
-        P['liquidite'] = lin([[0.2, 0], [1, .35], [3, .65], [8, .9], [15, 1]], liq) * 10
+        P['liquidite'] = (lin([[0.2, 0], [1, .35], [3, .65], [8, .9], [15, 1]], liq) if liq <= 60 else .3) * 8  # volume > 60 % de la capitalisation : suspect
         ref = mx or tot
         dil = circ / ref * 100 if ref else None
         dfd = mc / fdv * 100 if fdv else None
         dv = [x for x in ((lin([[10, 0], [30, .3], [60, .65], [85, .9], [100, 1]], dil) if dil is not None else None),
                           (lin([[10, 0], [40, .4], [70, .75], [95, 1]], dfd) if dfd is not None else None)) if x is not None]
-        P['dilution'] = (sum(dv) / len(dv) if dv else .4) * 15
+        P['dilution'] = (sum(dv) / len(dv) if dv else .4) * 12
         # ancienneté : date de création, sinon la plus ancienne date connue (plus haut ou plus bas historique)
         d0 = None
         for k in (inf.get('gen'), r.get('atl_date'), r.get('ath_date')):
@@ -113,23 +128,31 @@ def main():
                 d0 = x if d0 is None or x < d0 else d0
             except Exception: pass
         age = (today - d0).days / 365.25 if d0 else None
-        P['anciennete'] = lin([[0, 0], [1, .2], [3, .55], [5, .8], [8, 1]], age) * 10 if age is not None else 4
+        P['anciennete'] = lin([[0, 0], [1, .2], [3, .55], [5, .8], [8, 1]], age) * 8 if age is not None else 3
         cmt = inf.get('commits4w')
-        P['developpement'] = (lin([[0, .1], [5, .4], [20, .7], [60, .9], [150, 1]], cmt) if cmt is not None else .35) * 10
+        P['developpement'] = (lin([[0, .1], [5, .4], [20, .7], [60, .9], [100, 1]], cmt) if cmt is not None else .35) * 8
         pl, tw = inf.get('places'), inf.get('stars')
         cv = [x for x in ((lin([[1, 0], [5, .4], [20, .75], [60, 1]], pl) if pl else None), (lin([[0, 0], [100, .3], [1000, .6], [10000, 1]], tw) if tw else None)) if x is not None]
-        P['communaute'] = (sum(cv) / len(cv) if cv else .4) * 10
-        P['plus_haut'] = lin([[-95, 0], [-80, .2], [-60, .45], [-40, .7], [-20, .9], [-5, 1]], athc) * 10 if athc is not None else 4
-        P['tendance'] = (lin([[-80, 0], [-40, .3], [0, .6], [40, .85], [100, 1]], (c1y or 0) - b1y) * .7 + (lin([[-50, 0], [0, .6], [50, 1]], c200) if c200 is not None else .5) * .3) * 10 if c1y is not None else 4
+        P['communaute'] = (sum(cv) / len(cv) if cv else .4) * 8
+        P['plus_haut'] = lin([[-95, 0], [-80, .2], [-60, .45], [-40, .7], [-20, .9], [-5, 1]], athc) * 8 if athc is not None else 3
+        P['tendance'] = (lin([[-80, 0], [-40, .3], [0, .6], [40, .85], [100, 1]], (c1y or 0) - b1y) * .7 + (lin([[-50, 0], [0, .6], [50, 1]], c200) if c200 is not None else .5) * .3) * 8 if c1y is not None else 3
         sv = [x for x in ((lin([[0, 1], [10, .85], [25, .55], [45, .25], [70, 0]], abs(c30)) if c30 is not None else None),
                           (lin([[0, 1], [5, .8], [12, .45], [25, 0]], abs(c7)) if c7 is not None else None)) if x is not None]
-        P['stabilite'] = (sum(sv) / len(sv) if sv else .4) * 10
+        P['stabilite'] = (sum(sv) / len(sv) if sv else .4) * 8
+        fees, tvl = FEES.get(r['id']), TVL.get(r['id'])
+        fv = []
+        if fees and mc: fv.append(lin([[0.1, 0], [1, .4], [3, .7], [8, .9], [15, 1]], fees * 12 / mc * 100))  # frais annuels en % de la capitalisation
+        if tvl and mc: fv.append(lin([[1, 0], [10, .35], [30, .65], [80, .9], [150, 1]], tvl / mc * 100))
+        P['fondamentaux'] = (sum(fv) / len(fv) if fv else .2) * 12
+        cats = [c.lower() for c in inf.get('cat') or []]
+        meme = any(any(m in c for m in MEME) for c in cats)
+        P['usage'] = (0 if meme else 1 if any(k in c for c in cats for k in ('layer 1', 'smart contract', 'oracle', 'infrastructure', 'layer 2', 'store of value')) else .8 if any(k in c for c in cats for k in ('defi', 'decentralized exchange', 'lending', 'liquid staking', 'real world', 'payment')) else .5) * 12
         note = round(sum(P.values()))
         out.append({'id': r['id'], 's': r['symbol'].upper(), 'n': r['name'], 'r': rk, 'p': r['current_price'], 'mc': mc, 'v': vol,
                     'athc': None if athc is None else round(athc, 1), 'c7': None if c7 is None else round(c7, 1), 'c30': None if c30 is None else round(c30, 1),
                     'c200': None if c200 is None else round(c200, 1), 'c1y': None if c1y is None else round(c1y, 1),
                     'dil': None if dil is None else round(dil, 1), 'dfd': None if dfd is None else round(dfd, 1), 'age': None if age is None else round(age, 1),
-                    'cmt': cmt, 'pl': pl, 'tw': inf.get('stars'), 'cat': inf.get('cat'), 'liq': round(liq, 1),
+                    'cmt': cmt, 'pl': pl, 'tw': inf.get('stars'), 'fees': round(fees * 12) if fees else None, 'tvl': round(tvl) if tvl else None, 'meme': meme or None, 'cat': inf.get('cat'), 'liq': round(liq, 1),
                     'img': r.get('image'), 'note': None if stable else note, 'stable': stable or None,
                     'det': {k: round(v, 1) for k, v in P.items()}})
     json.dump({'maj': dt.datetime.now(dt.timezone.utc).isoformat(timespec='minutes'), 'btc_1y': round(b1y, 1), 'c': out},
