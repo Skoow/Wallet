@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: python tools/crypto.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CG_INFO: '200'
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

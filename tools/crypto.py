@@ -53,10 +53,37 @@ def main():
                        'commits4w': dv.get('commit_count_4_weeks'), 'contrib': dv.get('pull_request_contributors'), 'stars': dv.get('stars'),
                        'tw': cm.get('twitter_followers'), 'tg': cm.get('telegram_channel_user_count'),
                        'places': len({(t.get('market') or {}).get('identifier') for t in d.get('tickers') or []}),
-                       'web': ((d.get('links') or {}).get('homepage') or [None])[0]}
+                       'web': ((d.get('links') or {}).get('homepage') or [None])[0],
+                       'gh': next((u for u in (((d.get('links') or {}).get('repos_url') or {}).get('github') or []) if 'github.com/' in u), None)}
         except Exception as e:
             print(i, 'info', e)
         time.sleep(2.6)
+    # activité du code : API GitHub (le jeton du dépôt permet 1 000 appels par heure)
+    tok = __import__('os').environ.get('GITHUB_TOKEN')
+    hdr = {'User-Agent': UA['User-Agent'], 'Accept': 'application/vnd.github+json', **({'Authorization': 'Bearer ' + tok} if tok else {})}
+    depuis = (dt.datetime.utcnow() - dt.timedelta(days=28)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    n = 0
+    for i in sorted(INFO, key=lambda k: INFO[k].get('ght', 0)):
+        x = INFO[i]; g = x.get('gh')
+        if not g or now - x.get('ght', 0) < 6 * 86400 or n >= 300: continue
+        parts = g.rstrip('/').split('github.com/')[-1].split('/')
+        try:
+            if len(parts) >= 2:
+                rq = urllib.request.Request(f'https://api.github.com/repos/{parts[0]}/{parts[1]}/commits?since={depuis}&per_page=100', headers=hdr)
+                with urllib.request.urlopen(rq, timeout=20) as r: x['commits4w'] = len(json.load(r))
+                rq = urllib.request.Request(f'https://api.github.com/repos/{parts[0]}/{parts[1]}', headers=hdr)
+                with urllib.request.urlopen(rq, timeout=20) as r: j = json.load(r); x['stars'] = j.get('stargazers_count')
+            else:  # organisation : on prend son dépôt le plus récemment modifié
+                rq = urllib.request.Request(f'https://api.github.com/orgs/{parts[0]}/repos?sort=pushed&per_page=1', headers=hdr)
+                with urllib.request.urlopen(rq, timeout=20) as r: L = json.load(r)
+                if L:
+                    rq = urllib.request.Request(f'https://api.github.com/repos/{L[0]["full_name"]}/commits?since={depuis}&per_page=100', headers=hdr)
+                    with urllib.request.urlopen(rq, timeout=20) as r: x['commits4w'] = len(json.load(r))
+                    x['stars'] = L[0].get('stargazers_count')
+        except Exception as e:
+            x['commits4w'] = x.get('commits4w')
+        x['ght'] = int(time.time()); n += 1
+    print(n, 'dépôts de code relus')
     json.dump(INFO, open('data/crypto_info.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     out = []
     today = dt.date.today()
@@ -89,8 +116,8 @@ def main():
         P['anciennete'] = lin([[0, 0], [1, .2], [3, .55], [5, .8], [8, 1]], age) * 10 if age is not None else 4
         cmt = inf.get('commits4w')
         P['developpement'] = (lin([[0, .1], [5, .4], [20, .7], [60, .9], [150, 1]], cmt) if cmt is not None else .35) * 10
-        pl, tw = inf.get('places'), inf.get('tw')
-        cv = [x for x in ((lin([[1, 0], [5, .4], [20, .75], [60, 1]], pl) if pl else None), (lin([[0, 0], [10e3, .3], [100e3, .6], [1e6, 1]], tw) if tw else None)) if x is not None]
+        pl, tw = inf.get('places'), inf.get('stars')
+        cv = [x for x in ((lin([[1, 0], [5, .4], [20, .75], [60, 1]], pl) if pl else None), (lin([[0, 0], [100, .3], [1000, .6], [10000, 1]], tw) if tw else None)) if x is not None]
         P['communaute'] = (sum(cv) / len(cv) if cv else .4) * 10
         P['plus_haut'] = lin([[-95, 0], [-80, .2], [-60, .45], [-40, .7], [-20, .9], [-5, 1]], athc) * 10 if athc is not None else 4
         P['tendance'] = (lin([[-80, 0], [-40, .3], [0, .6], [40, .85], [100, 1]], (c1y or 0) - b1y) * .7 + (lin([[-50, 0], [0, .6], [50, 1]], c200) if c200 is not None else .5) * .3) * 10 if c1y is not None else 4
@@ -102,7 +129,7 @@ def main():
                     'athc': None if athc is None else round(athc, 1), 'c7': None if c7 is None else round(c7, 1), 'c30': None if c30 is None else round(c30, 1),
                     'c200': None if c200 is None else round(c200, 1), 'c1y': None if c1y is None else round(c1y, 1),
                     'dil': None if dil is None else round(dil, 1), 'dfd': None if dfd is None else round(dfd, 1), 'age': None if age is None else round(age, 1),
-                    'cmt': cmt, 'pl': pl, 'tw': tw, 'cat': inf.get('cat'), 'liq': round(liq, 1),
+                    'cmt': cmt, 'pl': pl, 'tw': inf.get('stars'), 'cat': inf.get('cat'), 'liq': round(liq, 1),
                     'img': r.get('image'), 'note': None if stable else note, 'stable': stable or None,
                     'det': {k: round(v, 1) for k, v in P.items()}})
     json.dump({'maj': dt.datetime.now(dt.timezone.utc).isoformat(timespec='minutes'), 'btc_1y': round(b1y, 1), 'c': out},
