@@ -42,6 +42,7 @@ jobs:
             m.minify(src,{collapseWhitespace:true,conservativeCollapse:true,removeComments:true,minifyCSS:true,minifyJS:{compress:{passes:1},mangle:false}})
              .then(o=>{fs.writeFileSync('_site/index.html',o);console.log('page :',src.length,'->',o.length,'octets');})
              .catch(e=>{console.log('allègement impossible, page d’origine :',e.message);});"
+          node tools/ci/csp.js _site/index.html
       - name: Tester la page
         run: |
           cp tools/ci/test.js "$RUNNER_TEMP/ci/test.js"
@@ -49,6 +50,7 @@ jobs:
           if ! node test.js "$GITHUB_WORKSPACE/_site"; then
             echo "La page allégée échoue : test de la page d’origine"
             cp "$GITHUB_WORKSPACE/index.html" "$GITHUB_WORKSPACE/_site/index.html"
+            node "$GITHUB_WORKSPACE/tools/ci/csp.js" "$GITHUB_WORKSPACE/_site/index.html"
             node test.js "$GITHUB_WORKSPACE/_site"
           fi
       - uses: actions/configure-pages@v5
