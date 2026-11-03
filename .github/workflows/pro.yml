@@ -14,7 +14,7 @@ concurrency:
 jobs:
   pro:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 170
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,15 +22,17 @@ jobs:
           python-version: '3.12'
       - run: python tools/nuit.py pro
         env:
-          BUDGET_MIN: '100'
+          BUDGET_MIN: '120'
+          PRO_FILS: '6'
+      - run: python tools/notes.py
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          cp data/pro.json "$RUNNER_TEMP/pro.json"; mkdir -p data/p; cp -r data/p "$RUNNER_TEMP/p"
+          cp data/pro.json "$RUNNER_TEMP/pro.json"; cp data/notes.json "$RUNNER_TEMP/notes.json"; mkdir -p data/p; cp -r data/p "$RUNNER_TEMP/p"
           for i in 1 2 3 4 5; do
             git fetch -q origin main && git reset -q --hard origin/main
-            cp "$RUNNER_TEMP/pro.json" data/pro.json; mkdir -p data/p; cp -r "$RUNNER_TEMP/p/." data/p/
-            git add data/pro.json data/p
+            cp "$RUNNER_TEMP/pro.json" data/pro.json; cp "$RUNNER_TEMP/notes.json" data/notes.json; mkdir -p data/p; cp -r "$RUNNER_TEMP/p/." data/p/
+            git add data/pro.json data/p data/notes.json
             if git diff --cached --quiet; then echo "rien de neuf"; exit 0; fi
             git commit -q -m "Pro $(date -u +%Y-%m-%d)"
             if git push -q origin main; then exit 0; fi

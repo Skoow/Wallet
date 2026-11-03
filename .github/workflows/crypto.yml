@@ -1,0 +1,36 @@
+name: Crypto
+on:
+  schedule:
+    - cron: '7 */6 * * *'   # toutes les 6 heures : top 1000, cours, notes crypto
+  push:
+    branches: [main]
+    paths: ['data/lancer_crypto.txt', 'tools/crypto.py']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: crypto
+  cancel-in-progress: false
+jobs:
+  c:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tools/crypto.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp data/crypto.json "$RUNNER_TEMP/c.json"
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            cp "$RUNNER_TEMP/c.json" data/crypto.json; git add data/crypto.json
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -q -m "Crypto $(date -u +%Y-%m-%dT%H:%MZ)"
+            if git push -q origin main; then exit 0; fi
+            sleep $((i * 7))
+          done
+          exit 1
