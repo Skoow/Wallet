@@ -934,6 +934,16 @@ html{scrollbar-color:color-mix(in srgb,var(--color-fg) 22%,transparent) transpar
 #pf-menu .pm-pff button{height:34px;padding:0 14px;border-radius:10px;border:0;background:#2f7fb8;color:#fff;font:inherit;font-weight:650;cursor:pointer}
 .pf .pf-imp0{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:4px}.pf .pf-imp0 .mu{font-size:.84rem}
 .pf .jr-imp{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:8px}.pf .jr-imp-m{font-size:.84rem}
+
+/* Mes dividendes */
+.pf .dv-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:12px 20px;margin:0}
+.pf .dv-k dt{font-size:.78rem;color:var(--muted)}.pf .dv-k dd{margin:2px 0 0;font-size:1.25rem;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}.pf .dv-k dd.ok{color:var(--ok)}
+.pf .dv-ch{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;height:150px;align-items:end;padding-top:6px}
+.pf .dv-c{display:grid;grid-template-rows:auto 1fr auto;height:100%;align-items:end;justify-items:center;gap:4px;min-width:0}
+.pf .dv-c i{display:block;width:100%;max-width:28px;align-self:end;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,#3b93d1,#2f7fb8)}
+.pf .dv-v{font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums}.pf .dv-l{font-size:.7rem;color:var(--muted);text-transform:capitalize}
+.pf .dv-n ul{list-style:none;margin:0;padding:0;display:grid}.pf .dv-n li{display:grid;grid-template-columns:4.5rem minmax(0,1fr) auto;gap:10px;padding:8px 0;border-bottom:1px solid var(--color-border-line);font-size:.9rem}.pf .dv-n li b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf .dv-nt{margin:6px 0 2px;font-weight:650;font-size:.92rem}
 </style>
 
 <div class="pf">
@@ -1807,6 +1817,24 @@ html{scrollbar-color:color-mix(in srgb,var(--color-fg) 22%,transparent) transpar
     const s=document.getElementById('ach-s');if(s)s.textContent=(held>0?'Apport réparti vers les lignes sous leur part':'Parts égales, l’or compte double')+(BMODE==='plan'?' · maintenant les lignes « bon moment », les autres par tranches':'');
     const r=document.getElementById('ach-r');if(r){r.textContent='';const zero=items.filter(x=>x.n===0&&x.amt<x.pe);if(zero.length){const mb=Math.max(...items.filter(x=>x.pe).map(x=>x.pe*SW/x.w));r.appendChild(el('span','warn','Pour avoir au moins 1 action partout : '+fe(Math.ceil(mb/1000)*1000)+' minimum.'));}}
   }
+  /* Mes dividendes : reçus, revenu annuel estimé, rendement sur prix payé, 12 derniers mois, prochains versements probables */
+  function fillDivs(){const J=document.getElementById('v-journal');if(!J)return;let sec=document.getElementById('sec-div');if(!sec){sec=document.createElement('section');sec.id='sec-div';const f=document.getElementById('sec-fisc');if(f)f.before(sec);else J.appendChild(sec);}
+   const fe=v=>(Math.round(v*100)/100).toLocaleString('fr-FR',{minimumFractionDigits:v<100?2:0,maximumFractionDigits:v<100?2:0}).replace(/[  ]/g,' ')+' €';
+   const today=new Date(),iso=d=>d.toISOString().slice(0,10),t0=iso(today),y0=String(today.getFullYear()),a1=new Date(today);a1.setFullYear(a1.getFullYear()-1);const t1=iso(a1);
+   const D=(JR||[]).filter(t=>t.sens==='dividende');const sum=f=>D.filter(f).reduce((a,t)=>a+(+t.montant_eur||0)-(+t.frais_eur||0),0);
+   const recY=sum(t=>String(t.date).slice(0,4)===y0),rec12=sum(t=>t.date>t1&&t.date<=t0),recAll=sum(()=>true);
+   const DV=window.DIV||{};let est=0,cost=0;const nxt=[];const has=Object.keys(DV).length>0;
+   Object.entries(POS||{}).forEach(([k,p])=>{if(!(p&&p.qty>1e-9))return;cost+=p.cost||0;const H=DV[k];if(!H||!H.length)return;const r=fxRate(CUR[k]||'USD');if(!r)return;const last=H.filter(([d])=>d>t1&&d<=t0);const ps=last.reduce((a,[,v])=>a+(+v||0),0);est+=ps*p.qty/r;
+    last.forEach(([d,v])=>{const n=new Date(d);n.setFullYear(n.getFullYear()+1);const nd=iso(n);if(nd>t0){const u=(LASTR||[]).find(x=>x&&x.cle===k)||{};nxt.push({d:nd,nom:u.nom||k,eur:(+v||0)*p.qty/r});}});});
+   nxt.sort((a,b)=>a.d.localeCompare(b.d));
+   sec.textContent='';const sh=el('div','sh');sh.appendChild(el('h2','','Mes dividendes'));sh.appendChild(el('p','mu',has?'Estimation sur les versements des 12 derniers mois':'Historique des dividendes en cours de relevé'));sec.appendChild(sh);
+   const k=el('dl','dv-k');const kv=(l,v,c)=>{const d=el('div','');d.append(el('dt','',l),el('dd',c||'',v));k.appendChild(d);};
+   kv('Reçus en '+y0,fe(recY),recY>0?'ok':'');kv('Sur 12 mois',fe(rec12));kv('Revenu annuel estimé',has?fe(est):'—',est>0?'ok':'');kv('Rendement sur prix payé',has&&cost>0?(Math.round(est/cost*1000)/10).toLocaleString('fr-FR')+' %':'—');sec.appendChild(k);
+   const M=[];for(let i=11;i>=0;i--){const d=new Date(today.getFullYear(),today.getMonth()-i,1);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');M.push({key,lab:d.toLocaleDateString('fr-FR',{month:'short'}).replace('.',''),v:sum(t=>String(t.date).slice(0,7)===key)});}
+   const mx=Math.max(...M.map(m=>m.v));if(mx>0){const ch=el('div','dv-ch');ch.setAttribute('role','img');ch.setAttribute('aria-label','Dividendes reçus par mois sur 12 mois');M.forEach(m=>{const c=el('div','dv-c');const b=el('i','');b.style.height=Math.max(m.v>0?6:2,Math.round(m.v/mx*100))+'%';b.title=m.lab+' : '+fe(m.v);c.append(el('span','dv-v',m.v>=0.5?Math.round(m.v)+'\u00a0€':''),b,el('span','dv-l',m.lab));ch.appendChild(c);});sec.appendChild(ch);}
+   if(nxt.length){const t=el('div','dv-n');t.appendChild(el('p','dv-nt','Prochains versements probables'));const ul=el('ul','');nxt.slice(0,6).forEach(x=>{const li=el('li','');li.append(el('span','',new Date(x.d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})),el('b','',x.nom),el('span','n',fe(x.eur)));ul.appendChild(li);});t.appendChild(ul);t.appendChild(el('p','mu','Dates et montants déduits de l’an dernier, à confirmer par la société.'));sec.appendChild(t);}
+   else if(!has)sec.appendChild(el('p','mu','Les dividendes de chaque action sont relevés chaque nuit ; ils apparaîtront ici automatiquement.'));
+   else if(!(est>0))sec.appendChild(el('p','mu','Aucune de tes lignes n’a versé de dividende sur les 12 derniers mois.'));}
   function fillFisc(){const J=document.getElementById('v-journal');if(!J)return;let sec=document.getElementById('sec-fisc');if(!sec){sec=document.createElement('section');sec.id='sec-fisc';J.appendChild(sec);}
     // Méthode française : prix moyen pondéré d'achat (frais inclus), cession nette de frais, montants en € au cours du jour de chaque opération.
     // Flat tax : 12,8 % d'impôt + prélèvements sociaux (17,2 % jusqu'en 2024, 18,6 % ensuite) ; moins-values imputables 10 ans.
@@ -2052,7 +2080,7 @@ html{scrollbar-color:color-mix(in srgb,var(--color-fg) 22%,transparent) transpar
     loadPrix(pr.data,U);notes(U.filter(u=>!u.metal));
     const S=state(LG);const R=resolve(U,LG,S);LASTR=R;{const jr=dash.data('journal');JR=jr.status==='ok'&&Array.isArray(jr.data)?jr.data.filter(t=>t&&t.cle).map(adjSplit):[];JR=JR.concat(autoDivs(JR));buildPos(JR);}{const hb=dash.data('hebdo');if(hb.status==='ok')loadHebdo(hb.data);}
     let saved=true;if(ms.status==='ok'){const M=ms.data.slice().sort((a,b)=>+a.n-+b.n);saved=M.length===R.length&&M.every((r,i)=>R[i]&&R[i].cle===r.cle);}
-    fillPlan(U,LG,S,R);fillJournal();fillEqui(R);fillAchat(R);fillFisc();drawLive(R,S);
+    fillPlan(U,LG,S,R);fillJournal();fillEqui(R);fillAchat(R);fillFisc();fillDivs();drawLive(R,S);
     const X=compute(R,C,S,LG);window.__X=X;
     header(X,R,S,saved);
     bars('c-roles',X.roles);bars('c-pays',X.pays);bars('c-tailles',X.tailles);bars('c-strat',X.strat);bars('c-monnaies',X.monnaies);fillDefs(X.strat);fillAlerts(X.al);fillBilan(X,R,LG);bars('c-sect',X.secteurs);{let E=[];try{const ex=dash.data('expo');if(ex&&ex.status==='ok'&&Array.isArray(ex.data))E=ex.data;}catch(_){}fillRepart(U,LG,R,X,E);}
