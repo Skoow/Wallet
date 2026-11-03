@@ -1137,6 +1137,29 @@ body.pf-vide .pf #pf-day{display:none!important}
  html:not(.pf-simple) .pf #v-suivre>#sec-equi{grid-column:1!important;grid-row:3!important}
  html:not(.pf-simple) .pf #v-suivre>#achat1{grid-column:2!important;grid-row:3!important}
 }
+
+/* TRI et prochains résultats */
+.pf .lv-tri{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin:-2px 0 2px;font-size:.92rem;max-width:none}
+.pf .lv-tri b{font-size:1.1rem}.pf .lv-tri b.ok{color:var(--ok)}.pf .lv-tri b.bad{color:var(--bad)}
+.pf .lv-tri>span:first-child{color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px;cursor:help}
+.pf .ern{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.pf .ern li{display:grid;grid-template-columns:3rem minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--color-border-line)}
+.pf .ern li:last-child{border-bottom:0}
+.pf .ern-d{display:grid;place-items:center;width:3rem;height:3rem;border-radius:12px;background:color-mix(in srgb,#2f7fb8 10%,transparent);line-height:1}
+.pf .ern-d b{font-size:1.15rem;color:#2f7fb8}.pf .ern-d small{font-size:.68rem;color:var(--muted);margin-top:2px}
+.pf .ern-n{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (min-width:1000px){
+ html:not(.pf-simple) .pf #v-suivre:not([hidden]){grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ html:not(.pf-simple) .pf #v-suivre>#sec-equi{grid-column:1!important;grid-row:3!important}
+ html:not(.pf-simple) .pf #v-suivre>#achat1{grid-column:2!important;grid-row:3!important}
+ html:not(.pf-simple) .pf #v-suivre>#sec-earn{grid-column:3!important;grid-row:3!important;align-self:start}
+}
+@media (min-width:1000px) and (max-width:1399px){
+ html:not(.pf-simple) .pf #v-suivre:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html:not(.pf-simple) .pf #v-suivre>#sec-equi{grid-column:1!important;grid-row:3 / span 2!important}
+ html:not(.pf-simple) .pf #v-suivre>#achat1{grid-column:2!important;grid-row:3!important}
+ html:not(.pf-simple) .pf #v-suivre>#sec-earn{grid-column:2!important;grid-row:4!important}
+}
 </style>
 
 <div class="pf">
@@ -2038,6 +2061,26 @@ body.pf-vide .pf #pf-day{display:none!important}
    if(nxt.length){const t=el('div','dv-n');t.appendChild(el('p','dv-nt','Prochains versements probables'));const ul=el('ul','');nxt.slice(0,6).forEach(x=>{const li=el('li','');li.append(el('span','',new Date(x.d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})),el('b','',x.nom),el('span','n',fe(x.eur)));ul.appendChild(li);});t.appendChild(ul);t.appendChild(el('p','mu','Dates et montants déduits de l’an dernier, à confirmer par la société.'));sec.appendChild(t);}
    else if(!has)sec.appendChild(el('p','mu','Les dividendes de chaque action sont relevés chaque nuit ; ils apparaîtront ici automatiquement.'));
    else if(!(est>0))sec.appendChild(el('p','mu','Aucune de tes lignes n’a versé de dividende sur les 12 derniers mois.'));}
+  /* Rendement annuel réel (TRI, pondéré par les dates des versements) */
+  function fillPerf(){const sec=document.getElementById('sec-live');if(!sec)return;let b=document.getElementById('lv-tri');const T=(JR||[]).filter(t=>t.date&&+t.montant_eur>0);
+   let V=0;Object.entries(POS||{}).forEach(([k,p])=>{if(p&&p.qty>1e-9){const e=eurPx(k);V+=e?p.qty*e:(p.cost||0);}});
+   if(!T.length||!(V>0)){if(b)b.remove();return;}
+   const t0=new Date(T.map(t=>t.date).sort()[0]).getTime(),now=Date.now(),yr=d=>(new Date(d).getTime()-t0)/31557600000;
+   const F=T.map(t=>{const m=+t.montant_eur||0,f=+t.frais_eur||0;return [yr(t.date),t.sens==='vente'?m-f:t.sens==='dividende'?m-f:-(m+f)];});F.push([(now-t0)/31557600000,V]);
+   const span=(now-t0)/31557600000;const npv=r=>F.reduce((a,[y,c])=>a+c/Math.pow(1+r,y),0);
+   let lo=-0.99,hi=10,ok=npv(lo)*npv(hi)<0,r=null;if(ok){for(let i=0;i<200;i++){const m=(lo+hi)/2;if(npv(lo)*npv(m)<=0)hi=m;else lo=m;}r=(lo+hi)/2;}
+   if(!b){b=el('p','lv-tri');b.id='lv-tri';const k=sec.querySelector('.live-k');if(k)k.after(b);else sec.appendChild(b);}
+   b.textContent='';const pc=v=>(v>=0?'+':'−')+Math.abs(Math.round(v*1000)/10).toLocaleString('fr-FR')+' %';
+   if(r==null){b.append('Rendement annuel réel : —');return;}
+   const lab=el('span','','Rendement annuel réel');lab.title='TRI : tient compte de la date et du montant de chaque versement, comme le calcul de ton courtier.';
+   b.append(lab,el('b',r>=0?'ok':'bad',pc(r)+(span>=0.95?' par an':'')),el('span','mu',span<0.95?'sur '+Math.max(1,Math.round(span*12))+' mois (pas encore annualisé)':'depuis '+new Date(t0).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})));
+   if(span<0.95)b.querySelector('b').textContent=pc(Math.pow(1+r,span)-1);}
+  /* Prochains résultats des sociétés détenues */
+  function fillEarn(R){const V=document.getElementById('v-suivre');if(!V)return;let sec=document.getElementById('sec-earn');const t0=new Date().toISOString().slice(0,10);
+   const L=(R||[]).filter(u=>u&&u.prochains_resultats&&u.prochains_resultats>=t0).sort((a,b)=>a.prochains_resultats.localeCompare(b.prochains_resultats)).slice(0,8);
+   if(!L.length){if(sec)sec.remove();return;}
+   if(!sec){sec=document.createElement('section');sec.id='sec-earn';V.appendChild(sec);}sec.textContent='';const sh=el('div','sh');sh.appendChild(el('h2','','Prochains résultats'));sh.appendChild(el('p','mu','Dates de publication annoncées'));sec.appendChild(sh);
+   const ul=el('ul','ern');L.forEach(u=>{const d=new Date(u.prochains_resultats+'T12:00:00');const n=Math.round((d-new Date(t0+'T12:00:00'))/864e5);const li=el('li','');const dd=el('span','ern-d');dd.append(el('b','',String(d.getDate())),el('small','',d.toLocaleDateString('fr-FR',{month:'short'}).replace('.','')));li.append(dd,el('span','ern-n',u.nom||u.ticker),el('span','mu',n===0?'aujourd’hui':n===1?'demain':'dans '+n+' j'));ul.appendChild(li);});sec.appendChild(ul);}
   function fillFisc(){const J=document.getElementById('v-journal');if(!J)return;let sec=document.getElementById('sec-fisc');if(!sec){sec=document.createElement('section');sec.id='sec-fisc';J.appendChild(sec);}
     // Méthode française : prix moyen pondéré d'achat (frais inclus), cession nette de frais, montants en € au cours du jour de chaque opération.
     // Flat tax : 12,8 % d'impôt + prélèvements sociaux (17,2 % jusqu'en 2024, 18,6 % ensuite) ; moins-values imputables 10 ans.
@@ -2286,7 +2329,7 @@ body.pf-vide .pf #pf-day{display:none!important}
     loadPrix(pr.data,U);notes(U.filter(u=>!u.metal));
     const S=state(LG);const R=resolve(U,LG,S);LASTR=R;{const jr=dash.data('journal');JR=jr.status==='ok'&&Array.isArray(jr.data)?jr.data.filter(t=>t&&t.cle).map(adjSplit):[];JR=JR.concat(autoDivs(JR));buildPos(JR);}{const hb=dash.data('hebdo');if(hb.status==='ok')loadHebdo(hb.data);}
     let saved=true;if(ms.status==='ok'){const M=ms.data.slice().sort((a,b)=>+a.n-+b.n);saved=M.length===R.length&&M.every((r,i)=>R[i]&&R[i].cle===r.cle);}
-    fillPlan(U,LG,S,R);fillJournal();fillEqui(R);fillAchat(R);fillFisc();fillDivs();drawLive(R,S);
+    fillPlan(U,LG,S,R);fillJournal();fillEqui(R);fillAchat(R);fillFisc();fillDivs();fillPerf();fillEarn(R);drawLive(R,S);
     const X=compute(R,C,S,LG);window.__X=X;
     header(X,R,S,saved);
     bars('c-roles',X.roles);bars('c-pays',X.pays);bars('c-tailles',X.tailles);bars('c-strat',X.strat);bars('c-monnaies',X.monnaies);fillDefs(X.strat);fillAlerts(X.al);fillBilan(X,R,LG);bars('c-sect',X.secteurs);{let E=[];try{const ex=dash.data('expo');if(ex&&ex.status==='ok'&&Array.isArray(ex.data))E=ex.data;}catch(_){}fillRepart(U,LG,R,X,E);}
