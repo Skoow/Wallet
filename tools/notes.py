@@ -17,7 +17,7 @@ NC = {
     'sh': ('actions_an', -1, [[-3, 1], [0, .8], [2, .5], [5, .1], [8, 0]], [-20, 30]),
     'fy': ('rendement_cash', 1, [[-5, 0], [0, .2], [2, .45], [4, .7], [7, .9], [10, 1]], [-20, 20]),
     'pe': ('per_prevu', -1, [[8, 1], [15, .85], [25, .6], [35, .4], [50, .15], [80, 0]], [0, 150])}
-CRIT = {'rent': 15, 'eff': 15, 'cash': 10, 'croi': 15, 'sol': 10, 'prix': 10}
+CRIT = {'rent': 15, 'eff': 15, 'cash': 10, 'croi': 15, 'sol': 10, 'prix': 10, 'qual': 10}
 
 
 def lin(pts, v):
@@ -60,10 +60,29 @@ def depuis_pro(o):
     if len(S) >= 2:
         u['actions_an'] = round(((S[-1]['actions_m'] / S[0]['actions_m']) ** (1 / (len(S) - 1)) - 1) * 100, 1)
     if C:
+        for k in ('roic', 'roe', 'dette_ebitda'):
+            if u.get(k) is None and C[-1].get(k) is not None: u[k] = C[-1][k]
         if u.get('marge_nette') is None and C[-1].get('marge_nette') is not None: u['marge_nette'] = C[-1]['marge_nette']
         if u.get('cash_libre') is None and C[-1].get('cash_libre') is not None: u['cash_libre'] = C[-1]['cash_libre']
     u['fin'] = (o.get('profil') or {}).get('secteur') == 'Financial Services'
+    u['_q'] = qualite(C)
     return u
+
+
+def qualite(C):
+    """Qualité des bénéfices (0 à 1) : cash libre / bénéfice, régularité des marges, rémunération en actions, couverture des intérêts."""
+    if len(C) < 2: return None
+    L = C[-1]; parts = []
+    mn, cf = L.get('marge_nette'), L.get('cash_libre')
+    if mn and mn > 0 and cf is not None: parts.append((3, lin([[0, 0], [.5, .4], [.8, .8], [1, 1]], min(2, cf / mn))))
+    M = [c['marge_nette'] for c in C if c.get('marge_nette') is not None]
+    if len(M) >= 3:
+        m = sum(M) / len(M); sd = (sum((x - m) ** 2 for x in M) / len(M)) ** .5
+        parts.append((3, lin([[0, 1], [2, .85], [5, .5], [10, .1], [15, 0]], sd)))
+    if L.get('sbc') is not None: parts.append((2, lin([[0, 1], [2, .8], [5, .4], [10, 0]], L['sbc'])))
+    if L.get('couverture_interets') is not None: parts.append((2, lin([[1, 0], [3, .4], [8, .8], [15, 1]], L['couverture_interets'])))
+    w = sum(p[0] for p in parts)
+    return sum(p[0] * p[1] for p in parts) / w if w >= 4 else None
 
 
 def regularite(cle):
@@ -116,18 +135,20 @@ def main():
             return s / w if w else None
         B = {'rent': block([('pm', 1)] if fin else [('pm', 8), ('gm', 7)]), 'eff': block([('roe', 1)] if fin else [('roic', 1), ('roe', 1)]),
              'cash': None if fin else block([('fcf', 1)]), 'croi': block([('g5', 8), ('g1', 4), ('e5', 3)]),
-             'sol': block([('sh', 1)] if fin else [('de', 6), ('sh', 4)]), 'prix': block([('pe', 1)] if fin else [('fy', 6), ('pe', 4)])}
+             'sol': block([('sh', 1)] if fin else [('de', 6), ('sh', 4)]), 'prix': block([('pe', 1)] if fin else [('fy', 6), ('pe', 4)]),
+             'qual': u.get('_q')}
         pm, fcf, sh, de = num(u.get('marge_nette')), num(u.get('cash_libre')), num(u.get('actions_an')), num(u.get('dette_ebitda'))
         if pm is not None and pm < 0 and B['rent'] is not None: B['rent'] = min(B['rent'], .3)
         if not fin and fcf is not None and fcf < 0 and B['cash'] is not None: B['cash'] = min(B['cash'], .25)
         if not fin and de is not None and (de > 4 or de < 0) and B['sol'] is not None: B['sol'] = min(B['sol'], .4)
         if sh is not None and sh > 5 and B['sol'] is not None: B['sol'] = min(B['sol'], .2)
         connus = sum(1 for k, v in B.items() if v is not None)
-        if connus < 4: continue
+        crits = sum(1 for c in NC if nraw(u, c) is not None)
+        if connus < 6 or crits < 8: continue  # pas assez de chiffres : pas de note plutôt qu'une note fausse
         pts = sum((.4 if B[k] is None else B[k]) * m for k, m in CRIT.items())
-        pa = regularite(cle); pts += pa / 100 * 15 if pa is not None else 7.5
-        pts += 5  # fiabilité : pas de vérification à la main
-        out[cle] = NMAP[max(0, min(100, round(pts)))]
+        pa = regularite(cle); pts += pa / 100 * 10 if pa is not None else 5
+        pts += 2.5  # fiabilité (5) : chiffres automatiques, pas de vérification à la main
+        out[cle] = [NMAP[max(0, min(100, round(pts)))], crits]
     json.dump({'maj': dt.date.today().isoformat(), 'n': out}, open(D + 'notes.json', 'w', encoding='utf-8'), separators=(',', ':'))
     print(len(out), 'notes')
 

@@ -236,7 +236,8 @@ VALO = ['quarterlyPeRatio', 'quarterlyForwardPeRatio', 'quarterlyPsRatio', 'quar
         'quarterlyEnterprisesValueEBITDARatio', 'quarterlyMarketCap']
 FOND = ['annualTotalRevenue', 'annualNetIncome', 'annualGrossProfit', 'annualOperatingIncome', 'annualEBIT', 'annualInterestExpense',
         'annualDilutedEPS', 'annualFreeCashFlow', 'annualOperatingCashFlow', 'annualCapitalExpenditure', 'annualStockBasedCompensation',
-        'annualRepurchaseOfCapitalStock', 'annualTotalDebt', 'annualCashAndCashEquivalents', 'annualDilutedAverageShares']
+        'annualRepurchaseOfCapitalStock', 'annualTotalDebt', 'annualCashAndCashEquivalents', 'annualDilutedAverageShares',
+        'annualInvestedCapital', 'annualTaxRateForCalcs', 'annualStockholdersEquity', 'annualEBITDA']
 
 
 def _med(a):
@@ -328,6 +329,13 @@ def pro_un(s, us_ticker=None):
         c['couverture_interets'] = round(eb / ie, 1) if eb and ie and ie > 0 else None
         de, ch = r.get('annualTotalDebt'), r.get('annualCashAndCashEquivalents')
         c['dette_nette_mds'] = round((de - (ch or 0)) / 1e9, 2) if de is not None else None
+        icap, tax = r.get('annualInvestedCapital'), r.get('annualTaxRateForCalcs')
+        if eb is not None and icap and icap > 0:
+            c['roic'] = round(eb * (1 - (tax if tax is not None and 0 <= tax < 0.6 else 0.21)) / icap * 100, 1)
+        eq = r.get('annualStockholdersEquity'); nib = r.get('annualNetIncome')
+        if eq and eq > 0 and nib is not None: c['roe'] = round(nib / eq * 100, 1)
+        ebd = r.get('annualEBITDA')
+        if ebd and ebd > 0 and de is not None: c['dette_ebitda'] = round((de - (ch or 0)) / ebd, 2)
         c['bpa'] = r.get('annualDilutedEPS'); sh = r.get('annualDilutedAverageShares'); c['actions_m'] = round(sh / 1e6, 1) if sh else None
         comptes.append(c)
     if comptes: o['comptes'] = comptes
@@ -379,7 +387,7 @@ def pro_un(s, us_ticker=None):
             ya = {c['annee']: c for c in o.get('comptes', [])}
             for c in sc:  # on garde la couverture des intérêts et la dette nette de Yahoo quand la SEC ne les donne pas
                 y = ya.get(c['annee']) or {}
-                for k in ('couverture_interets', 'dette_nette_mds'):
+                for k in ('couverture_interets', 'dette_nette_mds', 'roic', 'roe', 'dette_ebitda', 'marge_brute'):
                     if c.get(k) is None and y.get(k) is not None: c[k] = y[k]
             o['comptes'] = sc; o['source_comptes'] = 'SEC (rapports annuels 10-K officiels)'
     if 'comptes' in o and 'source_comptes' not in o: o['source_comptes'] = 'Yahoo Finance'
