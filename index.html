@@ -17,6 +17,7 @@
 :root[data-theme="dark"]{--color-fg:#e7e9ec;--color-fg-muted:#9aa2ad;--color-bg:#0e1013;--color-panel:#15181c;--color-border-line:#2a2f35;--color-ok:#4cc382;--color-warn:#e3a53b;--color-bad:#ef6b6b;color-scheme:dark}
 html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
 #dash-root{padding:16px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
@@ -713,6 +714,40 @@ html.pf-simple #objectif{display:none!important}
 .pf .lvsrc .srct{display:none}
 .pf .lv-tip{display:grid;gap:2px;font-size:.76rem;line-height:1.3;padding:6px 9px;border-radius:10px;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.18)}.pf .lv-tip[hidden]{display:none}.pf .lv-tip .lt{display:flex;align-items:center;gap:6px}.pf .lv-tip .lt i{width:8px;height:8px;border-radius:50%;display:inline-block}.pf .lv-tip .lt b{margin-left:auto;padding-left:10px}
 .pf .cgd{display:grid;gap:6px;margin-top:8px}.pf .cgr{display:grid;grid-template-columns:6.5rem 1fr 3rem;align-items:center;gap:4px 8px;font-size:.84rem}.pf .cgr small{grid-column:1/-1;margin-top:-3px;font-size:.74rem}.pf .cgb{height:6px;border-radius:999px;background:color-mix(in srgb,var(--color-fg) 10%,transparent);overflow:hidden}.pf .cgb i{display:block;height:100%;background:var(--sea);border-radius:999px}.pf .cgr b{text-align:right}
+/* Ordinateur : vrai tableau de bord sur toute la largeur (le téléphone garde sa mise en page) */
+@media (min-width:1200px) and (hover:hover) and (pointer:fine){
+ .pf{max-width:min(1800px,100%);gap:32px}
+ .pf .view:not([hidden]){align-items:start;column-gap:48px;row-gap:40px}
+ .pf .view>*{min-width:0}
+ /* Portefeuille : courbe + équilibre en haut, lignes sur toute la largeur, combien investir + objectif dessous */
+ html:not(.pf-simple) .pf #v-suivre:not([hidden]){grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+ html:not(.pf-simple) .pf #v-suivre>*{grid-column:1}
+ html:not(.pf-simple) .pf #v-suivre>#sec-live{grid-column:1;grid-row:1}
+ html:not(.pf-simple) .pf #v-suivre>#sec-equi{grid-column:2;grid-row:1}
+ html:not(.pf-simple) .pf #v-suivre>#sec-plan{grid-column:1 / -1;grid-row:2}
+ html:not(.pf-simple) .pf #v-suivre>#achat1{grid-column:1;grid-row:3}
+ html:not(.pf-simple) .pf #v-suivre>#objectif{grid-column:2;grid-row:3}
+ html.pf-simple .pf #v-suivre #sec-live{max-width:1200px;width:100%;margin:0 auto}
+ /* Répartition : problèmes et bilan côte à côte, carte en grand, métiers et thèmes côte à côte */
+ .pf #v-repart:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pf #v-repart>*{grid-column:1 / -1}
+ .pf #v-repart>#sec-manque{grid-column:1;grid-row:1}
+ .pf #v-repart>#sec-equilibre{grid-column:2;grid-row:1 / span 2}
+ .pf #v-repart>#sec-vue{grid-column:1 / -1;grid-row:3}
+ .pf #v-repart>#sec-metiers{grid-column:1;grid-row:4}
+ .pf #v-repart>#sec-themes{grid-column:2;grid-row:4}
+ /* Analyse : courbe et chiffres côte à côte, puis risques et scénarios */
+ .pf #v-analyse:not([hidden]){display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+ .pf #v-analyse>*{grid-column:1 / -1}
+ .pf #v-analyse>#sec-courbe{grid-column:1;grid-row:1}
+ .pf #v-analyse>#sec-chiffres{grid-column:2;grid-row:1}
+ /* Transactions : journal en grand, impôts et sauvegarde dessous côte à côte */
+ .pf #v-journal:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pf #v-journal>*{grid-column:1 / -1}
+ .pf #v-journal>#sec-fisc{grid-column:1}
+ .pf #v-journal>#pf-backup{grid-column:2}
+ .pf p{max-width:90ch}
+}
 </style>
 
 <div class="pf">
@@ -793,7 +828,7 @@ html.pf-simple #objectif{display:none!important}
       <div class="attendu" id="attendu"></div>
       <p class="mu">Or : cours du fonds GLD, qui suit le métal comme l’ETC détenu. Ce n'est pas un conseil financier.</p>
     </section>
-    <section id="sec-valo" data-source="univers prix"><div class="sh"><h2>Cher ou pas, pour ce que ça livre</h2><p class="mu">Prix payé (fois les bénéfices) contre croissance des ventes sur 5 ans</p></div><div class="chart sm" id="c-valo"></div><p class="mu" id="valo-n"></p></section>
+    
   <section id="sec-equilibre" data-source="univers cibles lignes">
       <div class="sh"><h2>Bilan du portefeuille</h2><p class="mu">Recalculé à chaque changement de ligne ou d’achat</p></div><ul class="ck" id="l-bilan"></ul><h3 class="rep">Répartition <span class="mu">· barre = part du portefeuille · chiffre vert = dans la zone visée, orange = en dehors</span></h3>
       <div class="trio">
