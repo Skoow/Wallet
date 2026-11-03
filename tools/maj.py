@@ -20,9 +20,9 @@ EXCH = {'tsx': '.TO', 'epa': '.PA', 'swx': '.SW', 'xetra': '.DE', 'lse': '.L', '
 CSYM = {'ton': 'TON11419-USD', 'sui': 'SUI20947-USD', 'uni': 'UNI7083-USD', 'apt': 'APT21794-USD', 'arb': 'ARB11841-USD',
         'pepe': 'PEPE24478-USD', 'tao': 'TAO22974-USD', 'grt': 'GRT6719-USD', 'stx': 'STX4847-USD', 'mnt': 'MNT27075-USD',
         'pol': 'POL28321-USD', 'op': 'OP-USD', 'render': 'RENDER-USD', 'imx': 'IMX10603-USD', 'hype': 'HYPE32196-USD',
-        'jup': 'JUP29210-USD', 'comp': 'COMP5692-USD', 'tia': 'TIA22861-USD', 'strk': 'STRK22691-USD', 'beam': 'BEAM28298-USD',
+        'jup': 'JUP29210-USD', 'comp': 'COMP5692-USD', 'strk': 'STRK22691-USD', 'beam': 'BEAM28298-USD',
         'zk': 'ZK24091-USD', 'aero': 'AERO29270-USD', 'brett': 'BRETT29743-USD', 'popcat': 'POPCAT28782-USD', 'eigen': 'EIGEN-USD',
-        'trump': 'TRUMP-OFFICIAL-USD', 's': 'S32684-USD', 'fartcoin': 'FARTCOIN-USD', 'virtual': 'VIRTUAL-USD', 'ena': 'ENA-USD'}
+        'trump': 'TRUMP35336-USD', 's': 'S32684-USD', 'fartcoin': 'FARTCOIN-USD', 'virtual': 'VIRTUAL-USD', 'ena': 'ENA-USD'}
 
 
 def sym(cle):

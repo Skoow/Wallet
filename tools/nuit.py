@@ -418,18 +418,22 @@ def pro(limite=None):
     todo = [(age(cle_of(r[0], r[2])), -(r[4] or 0), r) for r in L]
     todo = [x for x in todo if x[0] < 0 or auj - x[0] > 30]
     todo.sort(key=lambda x: (x[0], x[1]))
-    k = 0
-    for _, _, r in todo:
-        if time.time() > t_fin or (limite and k >= limite): break
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    lock = threading.Lock(); cpt = [0]
+    def un(r):
+        if time.time() > t_fin or (limite and cpt[0] >= limite): return
         c = cle_of(r[0], r[2])
         try:
             o = pro_un(ysym(r[0], r[2]), r[0] if r[2] == 'US' else None)
             json.dump(o or {'maj': dt.date.today().isoformat(), 'vide': True}, open(D + 'p/' + c.replace('/', '_') + '.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-            k += 1
+            with lock: cpt[0] += 1
         except Exception as e:
             print(c, 'pro', e)
-        time.sleep(0.25)
-    print(k, 'autres actions mises à jour,', max(0, len(todo) - k), 'en attente')
+        time.sleep(0.2)
+    with ThreadPoolExecutor(max_workers=int(os.environ.get('PRO_FILS', '4'))) as ex:
+        list(ex.map(un, [r for _, _, r in todo]))
+    print(cpt[0], 'autres actions mises à jour,', max(0, len(todo) - cpt[0]), 'en attente')
 
 if __name__ == '__main__':
     a = sys.argv[1]
