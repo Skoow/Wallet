@@ -8,7 +8,7 @@ const srv=http.createServer((q,s)=>{const u=decodeURIComponent(q.url.split('?')[
     await p.route(/^https:\/\/(?!cdnjs\.cloudflare\.com)/,r=>r.fulfill({status:404,body:''}));
     if(process.env.D3_LOCAL)await p.route('**/d3.min.js',r=>r.fulfill({body:fs.readFileSync(process.env.D3_LOCAL,'utf8'),contentType:'application/javascript'}));
     await p.goto('http://localhost:8799/');if(mode==='hasard')await p.evaluate(()=>{localStorage.setItem('pf-mode:ci','hasard');localStorage.setItem('pf-vue','detail');});await p.reload();await p.waitForTimeout(1500);
-    const inp=await p.$('#pf-login input[name=p]');if(inp){await inp.fill('Ci');await p.click('#pf-login form button');await p.waitForTimeout(800);const nv=await p.$('#pf-login .pfl-new');if(nv)await nv.click();}await p.waitForTimeout(5000);
+    const inp=await p.$('#pf-login input[name=p]');if(inp){await inp.fill('Ci');const sans=await p.$('#pf-login .pfl-sans');if(sans)await sans.click();else await p.click('#pf-login form button');await p.waitForTimeout(800);const nv=await p.$('#pf-login .pfl-new');if(nv)await nv.click();}await p.waitForTimeout(5000);
     if(mode==='hasard'){const n=await p.evaluate(()=>document.querySelectorAll('#lignes .row').length);if(n<5)bad.push(mode+' '+w+' : '+n+' lignes seulement');}
     for(const t of ['repart','analyse','journal','suivre']){const tb=await p.$('#tab-'+t);if(tb&&await tb.isVisible()){await tb.click();await p.waitForTimeout(1200);}}
     const txt=await p.evaluate(()=>document.body.innerText);for(const w0 of ['NaN','undefined','[object'])if(txt.includes(w0))bad.push(mode+' '+w+' : texte « '+w0+' » affiché');
