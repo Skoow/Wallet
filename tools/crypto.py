@@ -87,20 +87,25 @@ def main():
     print(n, 'dépôts de code relus')
     json.dump(INFO, open('data/crypto_info.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     # fondamentaux : frais payés par les utilisateurs et argent déposé (DefiLlama, gratuit, sans clé)
-    FEES, TVL = {}, {}
-    try:
-        for x in get('https://api.llama.fi/overview/fees?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true').get('protocols') or []:
-            g = x.get('gecko_id')
-            if g and x.get('total30d'): FEES[g] = FEES.get(g, 0) + x['total30d']
-    except Exception as e: print('fees', e)
+    FEES, TVL, G = {}, {}, {}
     try:
         for x in get('https://api.llama.fi/protocols'):
             g = x.get('gecko_id')
-            if g and x.get('tvl'): TVL[g] = TVL.get(g, 0) + x['tvl']
+            if not g: continue
+            for k in (x.get('slug'), x.get('name'), x.get('parentProtocol')):
+                if k: G[str(k).lower()] = g
+            if x.get('tvl'): TVL[g] = TVL.get(g, 0) + x['tvl']
         for x in get('https://api.llama.fi/v2/chains'):
             g = x.get('gecko_id')
             if g and x.get('tvl'): TVL[g] = max(TVL.get(g, 0), x['tvl'])
+            if g and x.get('name'): G[x['name'].lower()] = g
     except Exception as e: print('tvl', e)
+    try:
+        for x in get('https://api.llama.fi/overview/fees?excludeTotalDataChart=true&excludeTotalDataChartBreakdown=true').get('protocols') or []:
+            g = x.get('gecko_id') or next((G[str(k).lower()] for k in (x.get('slug'), x.get('name'), x.get('parentProtocol'), x.get('displayName')) if k and str(k).lower() in G), None)
+            if g and x.get('total30d'): FEES[g] = FEES.get(g, 0) + x['total30d']
+    except Exception as e: print('fees', e)
+    print(len(FEES), 'avec frais ;', len(TVL), 'avec dépôts')
     MEME = ('meme', 'dog-themed', 'cat-themed', 'frog-themed', 'pump.fun')
     out = []
     today = dt.date.today()
