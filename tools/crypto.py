@@ -109,6 +109,14 @@ def main():
     MEME = ('meme', 'dog-themed', 'cat-themed', 'frog-themed', 'pump.fun')
     out = []
     today = dt.date.today()
+    # Deuxième source indépendante (CoinPaprika) pour recouper cours et capitalisation
+    PAP = {}
+    try:
+        for x in get('https://api.coinpaprika.com/v1/tickers?quotes=USD', tries=2, pause=10) or []:
+            q = (x.get('quotes') or {}).get('USD') or {}
+            if q.get('price'): PAP.setdefault(str(x.get('symbol', '')).upper(), []).append((str(x.get('name', '')).lower(), x.get('rank') or 9999, q['price'], q.get('market_cap')))
+    except Exception as e:
+        print('CoinPaprika indisponible :', e)
     for r in rows:
         if not r.get('current_price') or not r.get('market_cap_rank'): continue
         rk, mc, vol = r['market_cap_rank'], r.get('market_cap') or 0, r.get('total_volume') or 0
@@ -155,13 +163,21 @@ def main():
         meme = any(any(m in c for m in MEME) for c in cats)
         P['usage'] = (0 if meme else 1 if any(k in c for c in cats for k in ('layer 1', 'smart contract', 'oracle', 'infrastructure', 'layer 2', 'store of value')) else .8 if any(k in c for c in cats for k in ('defi', 'decentralized exchange', 'lending', 'liquid staking', 'real world', 'payment')) else .5) * 12
         note = round(sum(P.values()))
+        x2 = None
+        C2 = PAP.get(r['symbol'].upper()) or []
+        if C2:
+            C2 = sorted(C2, key=lambda c: (c[0] != r['name'].lower(), abs((c[1] or 9999) - rk)))
+            c2 = C2[0]
+            ec = abs(c2[2] / r['current_price'] - 1) * 100 if r['current_price'] else None
+            if ec is not None and ec < 25: x2 = {'p': c2[2], 'mc': c2[3], 'ec': round(ec, 2)}
+        srcs = ['CoinGecko'] + (['CoinPaprika'] if x2 else []) + (['DefiLlama'] if (fees or tvl) else []) + (['GitHub'] if cmt is not None else [])
         out.append({'id': r['id'], 's': r['symbol'].upper(), 'n': r['name'], 'r': rk, 'p': r['current_price'], 'mc': mc, 'v': vol,
                     'athc': None if athc is None else round(athc, 1), 'c7': None if c7 is None else round(c7, 1), 'c30': None if c30 is None else round(c30, 1),
                     'c200': None if c200 is None else round(c200, 1), 'c1y': None if c1y is None else round(c1y, 1),
                     'dil': None if dil is None else round(dil, 1), 'dfd': None if dfd is None else round(dfd, 1), 'age': None if age is None else round(age, 1),
                     'cmt': cmt, 'pl': pl, 'tw': inf.get('stars'), 'fees': round(fees * 12) if fees else None, 'tvl': round(tvl) if tvl else None, 'meme': meme or None, 'cat': inf.get('cat'), 'liq': round(liq, 1),
                     'img': r.get('image'), 'note': None if stable else note, 'stable': stable or None,
-                    'det': {k: round(v, 1) for k, v in P.items()}})
+                    'det': {k: round(v, 1) for k, v in P.items()}, 'x2': x2, 'src': srcs})
     json.dump({'maj': dt.datetime.now(dt.timezone.utc).isoformat(timespec='minutes'), 'btc_1y': round(b1y, 1), 'c': out},
               open('data/crypto.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     print(len(out), 'cryptos')
