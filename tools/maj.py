@@ -73,11 +73,16 @@ def quote(s):
         ts, cl = r.get('timestamp') or [], r['indicators']['quote'][0].get('close') or []
         for a, b in zip(ts, cl):
             if b and dt.datetime.fromtimestamp(a, tz).date() < d.date():
-                pc = round(float(b), 4)
+                pc = rp(b)
     except Exception:
         pc = None
-    pc = pc or (round(float(m['chartPreviousClose']), 4) if m.get('chartPreviousClose') else None)
-    return round(float(p), 4), d.date().isoformat(), dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat(), pc
+    return rp(p), d.date().isoformat(), dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat(), pc
+
+
+def rp(v):
+    """Arrondi qui garde les tout petits cours (SHIB, PEPE…) : 6 chiffres significatifs sous 1."""
+    v = float(v)
+    return float(f'{v:.6g}') if abs(v) < 1 else round(v, 4)
 
 
 def load(f):

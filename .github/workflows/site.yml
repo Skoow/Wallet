@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths-ignore: ['data/live.json']
   workflow_run:
-    workflows: [Cours, Nuit]
+    workflows: [Cours, Nuit, Crypto, Pro, Ajout, Analyse]
     types: [completed]
   workflow_dispatch:
 permissions:

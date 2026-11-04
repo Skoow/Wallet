@@ -226,7 +226,7 @@ def derniers():
     out = {}
     for s_, (p, t, pc) in q.items():
         if s_ in sy:
-            out[sy[s_]] = [round(p, 4), dt.datetime.utcfromtimestamp(t).date().isoformat()] + ([round(pc, 4)] if pc else [])
+            out[sy[s_]] = [maj.rp(p), dt.datetime.fromtimestamp(t, dt.timezone.utc).date().isoformat()] + ([maj.rp(pc)] if pc else [])
     for s_, c in sy.items():  # repli un par un pour ceux que le lot n'a pas rendus
         if c in out: continue
         r = maj.quote(s_)
