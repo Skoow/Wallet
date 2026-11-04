@@ -1,6 +1,6 @@
 {
-  "name": "Portefeuille",
-  "short_name": "Portefeuille",
+  "name": "Cap · mon portefeuille",
+  "short_name": "Cap",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",

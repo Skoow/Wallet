@@ -177,7 +177,7 @@ def main():
         lo = bisect.bisect_left(a, v); hi = bisect.bisect_right(a, v)
         p = (lo + hi) / 2 / len(a)
         return p if NC[c][1] > 0 else 1 - p
-    out = {}
+    out, det = {}, {}
     for cle, u in S.items():
         fin = u.get('fin')
         def crit(c):
@@ -213,7 +213,10 @@ def main():
         pa = regularite(cle); pts += pa / 100 * 5 if pa is not None else 2.5
         pts += 2.5  # fiabilité (5) : chiffres automatiques, pas de vérification à la main
         out[cle] = [NMAP[max(0, min(100, round(pts)))], crits]
+        # détail par critère (points, None = pas de donnée), même ordre que la page : rent eff cash croi sol prix qual dyn risk reg fia
+        det[cle] = [None if B[k] is None else round(B[k] * m, 1) for k, m in CRIT.items()] + [None if pa is None else round(pa / 100 * 5, 1), 2.5]
     json.dump({'maj': dt.date.today().isoformat(), 'n': out}, open(D + 'notes.json', 'w', encoding='utf-8'), separators=(',', ':'))
+    json.dump({'maj': dt.date.today().isoformat(), 'd': det}, open(D + 'notes_det.json', 'w', encoding='utf-8'), separators=(',', ':'))
     print(len(out), 'notes')
 
 

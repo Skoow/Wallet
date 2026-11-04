@@ -67,7 +67,17 @@ def quote(s):
         return None
     tz = dt.timezone(dt.timedelta(seconds=m.get('gmtoffset', 0)))
     d = dt.datetime.fromtimestamp(t, tz)
-    return round(float(p), 4), d.date().isoformat(), dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat()
+    # clôture de la séance précédente, pour la variation du jour
+    pc = None
+    try:
+        ts, cl = r.get('timestamp') or [], r['indicators']['quote'][0].get('close') or []
+        for a, b in zip(ts, cl):
+            if b and dt.datetime.fromtimestamp(a, tz).date() < d.date():
+                pc = round(float(b), 4)
+    except Exception:
+        pc = None
+    pc = pc or (round(float(m['chartPreviousClose']), 4) if m.get('chartPreviousClose') else None)
+    return round(float(p), 4), d.date().isoformat(), dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat(), pc
 
 
 def load(f):
@@ -95,12 +105,14 @@ def live(cles=None):
         old = load('live.json')
     except Exception:
         old = {}
-    px, at = dict(old.get('px', {})), dict(old.get('heure', {}))
+    px, at, vl = dict(old.get('px', {})), dict(old.get('heure', {})), dict(old.get('veille', {}))
     for c in (cles or suivis()):
         s = sym(c)
         r = quote(s) if s else None
         if r:
             px[c], at[c] = r[0], r[2]
+            if r[3]:
+                vl[c] = r[3]
     fx = dict(old.get('fx', {}))
     for pair, s in (('EURUSD', 'EURUSD=X'), ('EURCAD', 'EURCAD=X')):
         r = quote(s)
@@ -108,7 +120,7 @@ def live(cles=None):
             fx[pair] = r[0]
     if not px:
         print('aucun cours reçu, live.json inchangé'); return False
-    save('live.json', {'at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'px': px, 'heure': at, 'fx': fx})
+    save('live.json', {'at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'px': px, 'heure': at, 'veille': vl, 'fx': fx})
     print(len(px), 'cours')
     return True
 

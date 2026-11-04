@@ -190,7 +190,7 @@ def main():
             if e3 is not None and e3 < 25: x3 = {'p': c3[2], 'mc': c3[3], 'ec': round(e3, 2), 'slug': c3[4]}
         srcs = ['CoinGecko'] + (['CoinMarketCap'] if x3 else []) + (['CoinPaprika'] if x2 else []) + (['DefiLlama'] if (fees or tvl) else []) + (['GitHub'] if cmt is not None else [])
         out.append({'id': r['id'], 's': r['symbol'].upper(), 'n': r['name'], 'r': rk, 'p': r['current_price'], 'mc': mc, 'v': vol,
-                    'athc': None if athc is None else round(athc, 1), 'c7': None if c7 is None else round(c7, 1), 'c30': None if c30 is None else round(c30, 1),
+                    'athc': None if athc is None else round(athc, 1), 'c1': None if r.get('price_change_percentage_24h') is None else round(r['price_change_percentage_24h'], 2), 'c7': None if c7 is None else round(c7, 1), 'c30': None if c30 is None else round(c30, 1),
                     'c200': None if c200 is None else round(c200, 1), 'c1y': None if c1y is None else round(c1y, 1),
                     'dil': None if dil is None else round(dil, 1), 'dfd': None if dfd is None else round(dfd, 1), 'age': None if age is None else round(age, 1),
                     'cmt': cmt, 'pl': pl, 'tw': inf.get('stars'), 'fees': round(fees * 12) if fees else None, 'tvl': round(tvl) if tvl else None, 'meme': meme or None, 'cat': inf.get('cat'), 'liq': round(liq, 1),
