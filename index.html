@@ -1477,6 +1477,26 @@ html,body{background:var(--color-bg)!important;background-attachment:scroll!impo
 .pf #pf-day .todo .t:not(.go):not(.wt):not(.bad):not(.ok) i{background:var(--muted3)!important}
 
 .pf .an-strip dd.as-s,.pf #v-analyse>#sec-courbe .an-strip dd.as-s{font-size:.74rem!important;font-weight:400!important;letter-spacing:0!important;color:var(--color-fg-muted)!important;line-height:1.3!important;margin:2px 0 0!important}
+
+/* v92 fiche plus lisible */
+.pf .fx-main>.kv2{grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr))!important}
+.pf .fx-main>.kv2 dd{font-size:1rem!important;line-height:1.3}
+.pf .fx-main>.dl{padding:14px 16px;border-radius:12px;background:var(--raised);gap:6px!important}
+.pf .fx-main>.dl .dv{font-size:.92rem;line-height:1.55}
+.pf .fx-note .dnote{border-top:0!important;margin-top:0!important;padding-top:4px!important}
+.pf .dnote .bars{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))!important;gap:18px 32px!important}
+.pf .dnote .br{grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:'l v' 'b b' 'd d';row-gap:6px!important;column-gap:12px}
+.pf .dnote .br>span:first-child{grid-area:l;font-weight:600;font-size:.9rem}
+.pf .dnote .br>.v{grid-area:v;font-size:.86rem}
+.pf .dnote .br>.bt{grid-area:b;height:6px!important}
+.pf .dnote .br>.bd{grid-area:d;margin-top:0!important;font-size:.78rem!important}
+.pf .dnote .br.nd>.v{color:var(--color-fg-muted);font-weight:400}
+.pf .dnote .br.nd>span:first-child{color:var(--color-fg-muted)}
+.pf .dnote>p{color:var(--color-fg-muted)}
+@media (min-width:1600px){.pf .dnote .bars{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+
+@media (min-width:1100px){.pf .fx-main>.kv2{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+.pf .fx-main>details.hist{max-width:none!important;width:100%}
 </style>
 
 <div class="pf">
@@ -1854,7 +1874,7 @@ html,body{background:var(--color-bg)!important;background-attachment:scroll!impo
         if(!met){const fw=nForts(u);if(fw.f.length){row('Forces').appendChild(el('span','ok',fw.f.join(', ')));}{const okS=(+u.actions_an<=-0.5)&&(u.dette_ebitda==null||+u.dette_ebitda<=1);fw.w=fw.w.filter(x=>!(okS&&x==='solidité'));}if(fw.w.length){row('Faiblesses').appendChild(el('span','bad',fw.w.join(', ')));}}
         if(u.verdict&&!met){const tx=u.risque||u.raison_verif||'';if(tx){const c=row('Risque');c.appendChild(vbadge(u));c.append(' '+tx);}}
         if(met&&u.note){row('Détention').append(u.note);}
-        if(N){const det=el('div','dnote');det.appendChild(el('h4','','La note '+N.n+'/100, critère par critère'));const bars=el('div','bars');CRIT.forEach(c=>{const p=N.part[c.k];const r=el('div','br');const a=el('span','',c.lab);a.title=c.txt;const bt=el('span','bt');const ii=document.createElement('i');ii.style.width=Math.round(p.p/c.max*100)+'%';ii.style.background=p.p/c.max>=.7?'var(--ok)':p.p/c.max<.45?'var(--bad)':'var(--sea)';bt.appendChild(ii);const dd=el('small','bd',c.txt);r.append(a,bt,el('span','v',p.na?'non mesuré':p.miss?'absent':Math.round(p.p)+'/'+c.max),dd);bars.appendChild(r);});det.appendChild(bars);if(N.pen)det.appendChild(el('p','warn','Malus drapeau rouge : −'+N.pen+' points.'));det.appendChild(el('p','mu','Chaque critère compare la société aux autres de son secteur, puis à toutes les actions suivies par l’app. Calcul fait par l’app sur les chiffres ci-dessus, chaque nuit.'));dt.appendChild(det);}
+        if(N){const det=el('div','dnote');det.appendChild(el('h4','','La note '+N.n+'/100, critère par critère'));const bars=el('div','bars');CRIT.forEach(c=>{const p=N.part[c.k];const r=el('div','br');const a=el('span','',c.lab);a.title=c.txt;const bt=el('span','bt');const ii=document.createElement('i');ii.style.width=(p.na||p.miss)?'0%':Math.round(p.p/c.max*100)+'%';ii.style.background=p.p/c.max>=.7?'var(--ok)':p.p/c.max<.45?'var(--bad)':'var(--sea)';if(p.na||p.miss)r.classList.add('nd');bt.appendChild(ii);const dd=el('small','bd',c.txt);r.append(a,bt,el('span','v',p.na?'non mesuré':p.miss?'pas de donnée':Math.round(p.p)+'/'+c.max),dd);bars.appendChild(r);});det.appendChild(bars);if(N.pen)det.appendChild(el('p','warn','Malus drapeau rouge : −'+N.pen+' points.'));det.appendChild(el('p','mu','Chaque critère compare la société aux autres de son secteur, puis à toutes les actions suivies par l’app. Calcul fait par l’app sur les chiffres ci-dessus, chaque nuit.'));dt.appendChild(det);}
       }
       if(u){const tf=txForm(u,POS[u.cle]);dt.insertBefore(tf,dt.children[1]||null);}const ft=el('div','ft');
       if(u&&!u.verifie&&u.maj_auto)ft.appendChild(el('span','mu','Chiffres automatiques (Yahoo) du '+String(u.maj_auto).split('-').reverse().join('/')+', non vérifiés à la main.'));{const ex=u&&(window.__EX||{})[u.cle];if(ex&&ex.estime)ft.appendChild(el('span','mu','Ventes par pays : estimation, pas encore vérifiée.'));}
@@ -2838,6 +2858,7 @@ function fiche(rd){if(rd.classList.contains('fx'))return;var row=rd.closest('.ro
  side.appendChild(vh);
  if(mom&&mom.textContent.trim()&&mom.textContent.trim()!=='—'){var ch=document.createElement('span');ch.className='fx-chip '+(mom.className.replace('mom','').trim()||'');ch.textContent=mom.textContent.trim();side.appendChild(ch);}
  kids.forEach(function(k){if(k===head)return;if(k.classList.contains('dl')&&/^(acheter|forces|faiblesses|risque)$/.test(lab(k))){var dv=k.querySelector('.dv');if(!dv||!dv.textContent.trim())return;k.classList.add('fx-dl');side.appendChild(k);}else main.appendChild(k);});
+ var ds=main.querySelector('.dsrc'),dn=ds&&ds.querySelector('.dnote');if(dn){var nd=document.createElement('details');nd.className='fx-note';var su=document.createElement('summary');var h4=dn.querySelector('h4');var nn=h4?(h4.textContent.match(/(\d+)\/100/)||[])[1]:null;su.textContent=nn?'Comment la note '+nn+'/100 est calculée':'Comment la note est calculée';if(h4)h4.remove();nd.appendChild(su);nd.appendChild(dn);ds.after(nd);var lis=ds.querySelectorAll('.dsrc-l li');[].forEach.call(lis,function(li){if(/^Note/.test(li.textContent))li.lastElementChild.textContent='calculée par l’app à partir de ces chiffres (voir « Comment la note est calculée »)';});}
  if(head){head.classList.add('fx-head');rd.appendChild(head);}rd.appendChild(main);if(side.children.length)rd.appendChild(side);}
 function run(){rows();[].forEach.call(document.querySelectorAll('#lignes .rd'),fiche);}
 var q=0;function sch(){if(!q)q=requestAnimationFrame(function(){q=0;run();});}
