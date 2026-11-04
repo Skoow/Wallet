@@ -1355,6 +1355,34 @@ body.pf-vide .pf #pf-day{display:none!important}
 @media (prefers-reduced-motion:no-preference){.pf .tb-pop:not([hidden]){animation:pfPop .22s cubic-bezier(.16,1,.3,1) both}}
 @keyframes pfPop{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
 @media (max-width:999px){.pf #pf-topbar{grid-template-columns:minmax(0,1fr) auto!important}.pf #pf-topbar .tb-w{grid-column:1/-1}.pf #pf-topbar .tb-s{grid-column:1}.pf #pf-topbar .tb-r{grid-column:2;grid-row:2}.pf .tb-pop,.pf .tb-pop:has(.tb-pe){position:fixed!important;left:12px!important;right:12px!important;top:auto!important;width:auto!important}}
+
+/* ===== v82 Mouvement « marée » et finitions ===== */
+html,body{background:radial-gradient(1100px 620px at 8% -8%,color-mix(in srgb,var(--acc) 13%,transparent),transparent 65%),radial-gradient(900px 520px at 100% 0%,color-mix(in srgb,#7cc0ef 9%,transparent),transparent 60%),var(--color-bg)!important;background-attachment:fixed!important}
+.pf .view>section,.pf .view>.achat1,.pf #pf-backup,.pf #sec-fisc,.pf #rp-grid>.rp,.pf .fx-side{box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 5%,transparent),var(--app-shadow)!important;transition:border-color .2s ease,box-shadow .2s ease}
+.pf .view>section:hover,.pf #rp-grid>.rp:hover{border-color:color-mix(in srgb,var(--acc) 28%,var(--color-border-line))}
+.pf button,.pf .btn,.pf [role=button]{transition:transform .1s ease,background-color .15s ease,border-color .15s ease,color .15s ease}
+.pf button:active,.pf .btn:active,.pf [role=button]:active{transform:scale(.97)}
+.pf>.hd .tabs button{transition:background-color .2s ease,color .2s ease,box-shadow .2s ease}
+.pf>.hd .tabs button[aria-selected=true]{box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.pf .flash-up{animation:pfUp 1.4s ease-out}.pf .flash-dn{animation:pfDn 1.4s ease-out}
+@keyframes pfUp{0%{text-shadow:0 0 0 transparent;filter:brightness(1.35)}100%{filter:none}}
+@keyframes pfDn{0%{filter:brightness(1.35) saturate(1.4)}100%{filter:none}}
+.pf .flash-up::after,.pf .flash-dn::after{content:'';position:absolute}
+@media (prefers-reduced-motion:no-preference){
+ .pf #c-live.tide svg{animation:pfTide 1s cubic-bezier(.16,1,.3,1) both}
+ .sg-ring svg circle:last-child{animation:pfRing 1s cubic-bezier(.16,1,.3,1) both}
+ .pf .rd.fx:not([hidden]){animation:pfOpen .34s cubic-bezier(.16,1,.3,1) both}
+ .pf .rd.fx:not([hidden])>.fx-side{animation:pfSide .5s .06s cubic-bezier(.16,1,.3,1) both}
+ .tk-sheet .tsr{animation:pfRow .28s cubic-bezier(.16,1,.3,1) both}
+ .tk-sheet .tsr:nth-child(2){animation-delay:.02s}.tk-sheet .tsr:nth-child(3){animation-delay:.04s}.tk-sheet .tsr:nth-child(n+4){animation-delay:.06s}
+}
+@keyframes pfTide{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes pfRing{from{stroke-dasharray:0 999}}
+@keyframes pfOpen{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes pfSide{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+@keyframes pfRow{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+@media (min-width:1000px){.pf>.hd #titre{justify-content:flex-start!important;align-self:flex-start!important;margin:2px 0 22px 6px!important;width:auto!important}.pf>.hd>#pf-theme{top:22px!important}}
 </style>
 
 <div class="pf">
@@ -2721,6 +2749,19 @@ function run(){rows();[].forEach.call(document.querySelectorAll('#lignes .rd'),f
 var q=0;function sch(){if(!q)q=requestAnimationFrame(function(){q=0;run();});}
 function go(){run();try{new MutationObserver(sch).observe(document.getElementById('lignes')||document.body,{childList:true,subtree:true});}catch(e){}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();setTimeout(go,1500);})();
+</script>
+
+<script>
+/* Mouvement : courbe qui monte comme la marée, montants qui comptent, éclair quand un cours change */
+(function(){var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;var done={},last={},tided=false;
+function parse(t){var m=String(t).replace(/[\s  ]/g,'').match(/^([+−-]?)(\d+(?:,\d+)?)(.*)$/);if(!m)return null;return {sg:m[1],v:parseFloat(m[2].replace(',','.')),dec:(m[2].split(',')[1]||'').length,rest:m[3]};}
+function fmt(o,v){return o.sg+v.toLocaleString('fr-FR',{minimumFractionDigits:o.dec,maximumFractionDigits:o.dec})+(o.rest?' '+o.rest.replace(/^€/,'€'):'');}
+function count(el){var t=el.textContent.trim();var o=parse(t);if(!o||!(o.v>0))return;var t0=performance.now(),D=750;var final=t;function step(n){var k=Math.min(1,(n-t0)/D),e=1-Math.pow(1-k,4);if(el.textContent!==final&&k<1&&el.dataset.cnt!=='1'){}el.firstChild&&el.firstChild.nodeType===3?el.firstChild.nodeValue=fmt(o,o.v*e):el.textContent=fmt(o,o.v*e);if(k<1)requestAnimationFrame(step);else el.textContent=final;}el.dataset.cnt='1';requestAnimationFrame(step);}
+function tick(){['lv1','lv2','lv3'].forEach(function(id){var el=document.getElementById(id);if(!el)return;var t=el.textContent.trim();if(!t||t==='—')return;if(!done[id]){done[id]=1;last[id]=t;if(!RM&&el.children.length===0)count(el);return;}if(last[id]!==t){var a=parse(last[id]),b=parse(t);last[id]=t;if(a&&b&&a.v!==b.v&&el.dataset.cnt!=='1'){el.classList.remove('flash-up','flash-dn');void el.offsetWidth;el.classList.add((b.sg==='−'||b.sg==='-')!==(b.v>a.v)?'flash-up':'flash-dn');}}el.dataset.cnt='';});
+ var c=document.getElementById('c-live');if(c&&!tided&&c.querySelector('svg path')){tided=true;c.classList.add('tide');setTimeout(function(){c.classList.remove('tide');},1200);}}
+var q=0;function sch(){if(!(done.lv1&&done.lv2&&done.lv3)){tick();return;}if(!q)q=setTimeout(function(){q=0;tick();},60);}
+function go(){tick();try{new MutationObserver(sch).observe(document.querySelector('.pf')||document.body,{childList:true,subtree:true,characterData:true});}catch(e){}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
 </script>
 </body>
 </html>
