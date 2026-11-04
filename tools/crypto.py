@@ -5,7 +5,7 @@
      Fondamentaux 12 (frais payés par les utilisateurs et argent déposé, rapportés à la capitalisation ; DefiLlama)
      Usage 12 (infrastructure / DeFi / autre ; les memecoins n'ont rien)
    Les fiches détaillées (âge, code, communauté) sont relues par roulement, 120 par passage, gardées dans data/crypto_info.json."""
-import json, math, time, urllib.request, datetime as dt
+import os, json, math, time, urllib.request, datetime as dt
 
 UA = {'User-Agent': 'Portefeuille-Wallet/1.0 (github.com/Skoow/Wallet)', 'Accept': 'application/json'}
 
@@ -109,6 +109,18 @@ def main():
     MEME = ('meme', 'dog-themed', 'cat-themed', 'frog-themed', 'pump.fun')
     out = []
     today = dt.date.today()
+    # Troisième source (CoinMarketCap) si une clé gratuite est fournie (secret CMC_KEY)
+    CMC = {}
+    if os.environ.get('CMC_KEY'):
+        try:
+            rq = urllib.request.Request('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=1500&convert=USD',
+                                        headers={'X-CMC_PRO_API_KEY': os.environ['CMC_KEY'], 'Accept': 'application/json'})
+            with urllib.request.urlopen(rq, timeout=40) as rr:
+                for x in json.load(rr).get('data') or []:
+                    q = (x.get('quote') or {}).get('USD') or {}
+                    if q.get('price'): CMC.setdefault(str(x.get('symbol', '')).upper(), []).append((str(x.get('name', '')).lower(), x.get('cmc_rank') or 9999, q['price'], q.get('market_cap'), x.get('slug')))
+        except Exception as e:
+            print('CoinMarketCap indisponible :', e)
     # Deuxième source indépendante (CoinPaprika) pour recouper cours et capitalisation
     PAP = {}
     try:
@@ -170,14 +182,20 @@ def main():
             c2 = C2[0]
             ec = abs(c2[2] / r['current_price'] - 1) * 100 if r['current_price'] else None
             if ec is not None and ec < 25: x2 = {'p': c2[2], 'mc': c2[3], 'ec': round(ec, 2)}
-        srcs = ['CoinGecko'] + (['CoinPaprika'] if x2 else []) + (['DefiLlama'] if (fees or tvl) else []) + (['GitHub'] if cmt is not None else [])
+        x3 = None
+        C3 = CMC.get(r['symbol'].upper()) or []
+        if C3:
+            c3 = sorted(C3, key=lambda c: (c[0] != r['name'].lower(), abs((c[1] or 9999) - rk)))[0]
+            e3 = abs(c3[2] / r['current_price'] - 1) * 100 if r['current_price'] else None
+            if e3 is not None and e3 < 25: x3 = {'p': c3[2], 'mc': c3[3], 'ec': round(e3, 2), 'slug': c3[4]}
+        srcs = ['CoinGecko'] + (['CoinMarketCap'] if x3 else []) + (['CoinPaprika'] if x2 else []) + (['DefiLlama'] if (fees or tvl) else []) + (['GitHub'] if cmt is not None else [])
         out.append({'id': r['id'], 's': r['symbol'].upper(), 'n': r['name'], 'r': rk, 'p': r['current_price'], 'mc': mc, 'v': vol,
                     'athc': None if athc is None else round(athc, 1), 'c7': None if c7 is None else round(c7, 1), 'c30': None if c30 is None else round(c30, 1),
                     'c200': None if c200 is None else round(c200, 1), 'c1y': None if c1y is None else round(c1y, 1),
                     'dil': None if dil is None else round(dil, 1), 'dfd': None if dfd is None else round(dfd, 1), 'age': None if age is None else round(age, 1),
                     'cmt': cmt, 'pl': pl, 'tw': inf.get('stars'), 'fees': round(fees * 12) if fees else None, 'tvl': round(tvl) if tvl else None, 'meme': meme or None, 'cat': inf.get('cat'), 'liq': round(liq, 1),
                     'img': r.get('image'), 'note': None if stable else note, 'stable': stable or None,
-                    'det': {k: round(v, 1) for k, v in P.items()}, 'x2': x2, 'src': srcs})
+                    'det': {k: round(v, 1) for k, v in P.items()}, 'x2': x2, 'x3': x3, 'src': srcs})
     json.dump({'maj': dt.datetime.now(dt.timezone.utc).isoformat(timespec='minutes'), 'btc_1y': round(b1y, 1), 'c': out},
               open('data/crypto.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     print(len(out), 'cryptos')

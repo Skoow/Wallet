@@ -13,7 +13,8 @@ import yahoo
 D = 'data/'
 UA = {'User-Agent': 'Mozilla/5.0 (portefeuille web app)'}
 ETF = {'e/gld': 'GLD', 'e/slv': 'SLV', 'e/spy': 'SPY', 'e/qqq': 'QQQ', 'e/urth': 'URTH', 'e/ezu': 'EZU',
-       'e/fxe': 'FXE', 'e/fxf': 'FXF', 'e/fxc': 'FXC', 'e/cac': '^FCHI'}
+       'e/fxe': 'FXE', 'e/fxf': 'FXF', 'e/fxc': 'FXC', 'e/cac': '^FCHI',
+       'e/agg': 'AGG', 'e/tlt': 'TLT', 'e/ief': 'IEF', 'e/shy': 'SHY', 'e/lqd': 'LQD', 'e/eunh': 'EUNH.DE', 'e/ieac': 'IEAC.L'}
 EXCH = {'tsx': '.TO', 'epa': '.PA', 'swx': '.SW', 'xetra': '.DE', 'lse': '.L', 'ams': '.AS', 'mil': '.MI',
         'ebr': '.BR', 'elis': '.LS', 'bme': '.MC', 'sto': '.ST', 'osl': '.OL', 'hel': '.HE', 'cph': '.CO'}
 # cryptos dont le symbole Yahoo n'est pas simplement XXX-USD

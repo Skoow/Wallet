@@ -7,7 +7,7 @@ const srv=http.createServer((q,s)=>{const u=decodeURIComponent(q.url.split('?')[
     const p=await b.newPage({viewport:{width:w,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
     await p.route(/^https:\/\/(?!cdnjs\.cloudflare\.com)/,r=>r.fulfill({status:404,body:''}));
     if(process.env.D3_LOCAL)await p.route('**/d3.min.js',r=>r.fulfill({body:fs.readFileSync(process.env.D3_LOCAL,'utf8'),contentType:'application/javascript'}));
-    await p.goto('http://localhost:8799/');if(mode==='conseil')await p.evaluate(()=>{localStorage.setItem('pf-mode:ci','conseil');localStorage.setItem('pf-vue','detail');});await p.reload();await p.waitForTimeout(1500);
+    await p.goto('http://localhost:8799/');if(mode==='conseil')await p.evaluate(()=>{localStorage.setItem('pf-pfa:ci','conseil');localStorage.setItem('pf-vue','detail');});await p.reload();await p.waitForTimeout(1500);
     const inp=await p.$('#pf-login input[name=p]');if(inp){await inp.fill('Ci');await p.click('#pf-login form button');}await p.waitForTimeout(5000);
     if(mode==='conseil'){const n=await p.evaluate(()=>document.querySelectorAll('#lignes .row').length);if(n<5)bad.push(mode+' '+w+' : '+n+' lignes seulement');}
     for(const t of ['repart','analyse','journal','suivre']){const tb=await p.$('#tab-'+t);if(tb&&await tb.isVisible()){await tb.click();await p.waitForTimeout(1200);}}
