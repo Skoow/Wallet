@@ -224,13 +224,13 @@ def derniers():
     sy = {maj.sym(c): c for c in cles if maj.sym(c)}
     q = yahoo.quotes(list(sy))
     out = {}
-    for s_, (p, t) in q.items():
+    for s_, (p, t, pc) in q.items():
         if s_ in sy:
-            out[sy[s_]] = [round(p, 4), dt.datetime.utcfromtimestamp(t).date().isoformat()]
+            out[sy[s_]] = [round(p, 4), dt.datetime.utcfromtimestamp(t).date().isoformat()] + ([round(pc, 4)] if pc else [])
     for s_, c in sy.items():  # repli un par un pour ceux que le lot n'a pas rendus
         if c in out: continue
         r = maj.quote(s_)
-        if r: out[c] = [r[0], r[1]]
+        if r: out[c] = [r[0], r[1]] + ([r[3]] if r[3] else [])
         time.sleep(0.1)
     json.dump({'at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'px': out},
               open(D + 'h/derniers.json', 'w', encoding='utf-8'), separators=(',', ':'))

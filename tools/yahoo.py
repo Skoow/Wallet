@@ -71,7 +71,7 @@ def summary(sym, modules='financialData,defaultKeyStatistics,summaryDetail,calen
 
 
 def quotes(syms):
-    """Cours de plusieurs symboles d'un coup (50 par appel) : {sym: (cours, horodatage)}."""
+    """Cours de plusieurs symboles d'un coup (50 par appel) : {sym: (cours, horodatage, clôture de la veille)}."""
     out = {}
     c = crumb()
     for i in range(0, len(syms), 50):
@@ -80,13 +80,14 @@ def quotes(syms):
         j = None
         for host in ('query1', 'query2'):
             try:
-                j = get(f'https://{host}.finance.yahoo.com/v7/finance/quote?symbols={q}&fields=regularMarketPrice,regularMarketTime' + (f'&crumb={urllib.parse.quote(c)}' if c else ''))
+                j = get(f'https://{host}.finance.yahoo.com/v7/finance/quote?symbols={q}&fields=regularMarketPrice,regularMarketTime,regularMarketPreviousClose' + (f'&crumb={urllib.parse.quote(c)}' if c else ''))
                 break
             except Exception:
                 continue
         for r in ((j or {}).get('quoteResponse') or {}).get('result') or []:
             if r.get('regularMarketPrice') and r.get('regularMarketTime'):
-                out[r['symbol']] = (float(r['regularMarketPrice']), int(r['regularMarketTime']))
+                pc = r.get('regularMarketPreviousClose')
+                out[r['symbol']] = (float(r['regularMarketPrice']), int(r['regularMarketTime']), float(pc) if pc else None)
         time.sleep(0.3)
     return out
 
