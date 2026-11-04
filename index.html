@@ -141,7 +141,7 @@ html,body{margin:0;background:var(--color-panel);color:var(--color-fg)}
   function emit(){subs.forEach(function(f){try{f();}catch(e){console.error(e);}});}
   function load(id){if(S[id])return;if(id==='journal'){S[id]={status:TX?'ok':'loading',data:TX||[]};return;}var u=FILES[id];if(!u){S[id]={status:'missing',data:[]};return;}S[id]={status:'loading',data:[]};
     fetch(u,{cache:'no-cache'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(function(j){var rows=Array.isArray(j)?j:(j.rows||j.data||j.results||[]);S[id]={status:'ok',data:rows};emit();}).catch(function(e){S[id]={status:'error',data:[],message:String(e)};emit();});}
-  var C=['#2f7fb8','#d1693f','#3d9a6e','#8e5bb8','#c29a2e','#3aa1b5','#c2507a','#6f7f8f'];
+  var C=['#2f7fb8','#d1693f','#8e5bb8','#3d9a6e','#b5861c','#1a9cb8','#c2507a','#6f7f8f'];
   window.dash={
     data:function(id){load(id);return S[id];},
     onData:function(f){subs.push(f);try{f();}catch(e){console.error(e);}},
@@ -1217,6 +1217,8 @@ body.pf-vide .pf #pf-day{display:none!important}
 @media (min-width:1400px){html:not(.pf-simple) .pf #v-suivre>#sec-equi,html:not(.pf-simple) .pf #v-suivre>#achat1,html:not(.pf-simple) .pf #v-suivre>#sec-earn{align-self:stretch!important}}
 
 @media (max-width:720px){.pf .dnote .br{grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:'l v' 'b b' 'd d';row-gap:5px}.pf .dnote .br>span:first-child{grid-area:l;font-weight:600}.pf .dnote .br>.v{grid-area:v}.pf .dnote .br>.bt{grid-area:b}.pf .dnote .br>.bd{grid-area:d;margin-top:0}}
+
+.pf .lv-leg{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:6px;font-size:.8rem;color:var(--muted)}.pf .lv-leg span{display:inline-flex;align-items:center;gap:7px}.pf .lv-leg[hidden]{display:none}
 </style>
 
 <div class="pf">
@@ -2130,7 +2132,7 @@ body.pf-vide .pf #pf-day{display:none!important}
    else if(!has)sec.appendChild(el('p','mu','Les dividendes de chaque action sont relevés chaque nuit ; ils apparaîtront ici automatiquement.'));
    else if(!(est>0))sec.appendChild(el('p','mu','Aucune de tes lignes n’a versé de dividende sur les 12 derniers mois.'));}
   /* Rendement annuel réel (TRI, pondéré par les dates des versements) */
-  function fillPerf(){const sec=document.getElementById('sec-live');if(!sec)return;let b=document.getElementById('lv-tri');const T=(JR||[]).filter(t=>t.date&&+t.montant_eur>0);
+  function fillPerf(){const sec=document.getElementById('sec-live');if(!sec)return;{const ch=document.getElementById('c-live');if(ch){const sv=ch.querySelector('svg');const has=c=>sv&&!!sv.querySelector('path[stroke="'+c+'"]');let lg=document.getElementById('lv-leg');if(!lg){lg=el('div','lv-leg');lg.id='lv-leg';lg.setAttribute('aria-label','Légende de la courbe');}if(ch.nextElementSibling!==lg)ch.after(lg);lg.textContent='';[['#2f7fb8','Mon portefeuille',''],['#e07b39','Le même argent sur le MSCI World',''],['#8b5cf6','Argent versé','5 4']].forEach(([c,t,d])=>{if(!has(c))return;const i=el('span','');i.innerHTML='<svg width="22" height="10" aria-hidden="true"><line x1="1" y1="5" x2="21" y2="5" stroke="'+c+'" stroke-width="2.5" stroke-linecap="round"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg>';i.append(t);lg.appendChild(i);});lg.hidden=!lg.children.length;}}let b=document.getElementById('lv-tri');const T=(JR||[]).filter(t=>t.date&&+t.montant_eur>0);
    let V=0;Object.entries(POS||{}).forEach(([k,p])=>{if(p&&p.qty>1e-9){const e=eurPx(k);V+=e?p.qty*e:(p.cost||0);}});
    if(!T.length||!(V>0)){if(b)b.remove();return;}
    const t0=new Date(T.map(t=>t.date).sort()[0]).getTime(),now=Date.now(),yr=d=>(new Date(d).getTime()-t0)/31557600000;
@@ -2396,7 +2398,7 @@ body.pf-vide .pf #pf-day{display:none!important}
     v.prepend(s);}
 
   // logo de la société devant son nom (image publique par ticker ; sinon pastille avec l'initiale)
-  const LOGOCOL=['#2f7fb8','#d1693f','#3d9a6e','#8e5bb8','#c29a2e','#3aa1b5','#c2507a','#6f7f8f'];
+  const LOGOCOL=['#2f7fb8','#d1693f','#8e5bb8','#3d9a6e','#b5861c','#1a9cb8','#c2507a','#6f7f8f'];
   const LOGO={};// ticker -> url qui marche ('' = aucune) ; évite de recharger (et de faire clignoter) à chaque mise à jour
   const LOGOEL={};// un seul élément par société, réutilisé d'un rendu à l'autre : rien ne se recharge, rien ne clignote
   function logoEl(u){const kk=String(u.cle);if(LOGOEL[kk]){const o=LOGOEL[kk];const pro=((window.PRO||{})[kk])||((window.PROX||{})[kk]);if(!(o.classList.contains('none')&&pro&&pro.profil&&pro.profil.site&&!o._site))return o;}const w=logoNew(u);{const pro=((window.PRO||{})[kk])||((window.PROX||{})[kk]);if(pro&&pro.profil&&pro.profil.site)w._site=1;}LOGOEL[kk]=w;return w;}
