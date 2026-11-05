@@ -1,12 +1,12 @@
 {
-  "name": "Cap · mon portefeuille",
-  "short_name": "Cap",
+  "name": "Azimut · mon portefeuille",
+  "short_name": "Azimut",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0d2a4a",
-  "theme_color": "#0d2a4a",
+  "background_color": "#0a2340",
+  "theme_color": "#0a2340",
   "icons": [
     {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
     {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
