@@ -22,6 +22,7 @@ jobs:
           python-version: '3.12'
       - run: python tools/nuit.py pro
         env:
+          SEC_EMAIL: ${{ secrets.SEC_EMAIL }}
           BUDGET_MIN: '120'
           PRO_FILS: '6'
       - run: python tools/notes.py

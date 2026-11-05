@@ -262,7 +262,7 @@ def _med(a):
     return a[m] if len(a) % 2 else (a[m - 1] + a[m]) / 2
 
 
-SEC_UA = 'Portefeuille-Wallet/1.0 (github.com/Skoow/Wallet)'
+SEC_UA = ('tothemoon ' + os.environ['SEC_EMAIL']) if os.environ.get('SEC_EMAIL') else 'tothemoon/1.0 (github.com/Skoow/Wallet)'  # la SEC exige un e-mail de contact (secret SEC_EMAIL)
 _CIK = None
 
 
