@@ -125,7 +125,10 @@ def live(cles=None):
             fx[pair] = r[0]
     if not px:
         print('aucun cours reçu, live.json inchangé'); return False
-    save('live.json', {'at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'px': px, 'heure': at, 'veille': vl, 'fx': fx})
+    out = {'at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'px': px, 'heure': at, 'veille': vl, 'fx': fx}
+    if old.get('hs'):
+        out['hs'] = old['hs']  # cours hors séance gardés entre deux relevés
+    save('live.json', out)
     print(len(px), 'cours')
     return True
 
