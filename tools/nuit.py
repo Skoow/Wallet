@@ -146,7 +146,7 @@ def histo(limite=None):
                    for x in ((m.get('events') or {}).get('splits') or {}).values() if x.get('denominator')]
             dvs = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(float(x['amount']), 6)]
                          for x in ((m.get('events') or {}).get('dividends') or {}).values() if x.get('amount'))[-60:]
-            o = {'cle': cle, 'ticker': t, 'nom': nom, 'splits': sorted(spl), 'divs': dvs, 'devise': (m.get('meta') or {}).get('currency') or DEV.get(ex, 'USD'),
+            o = {'cle': cle, 'ticker': t, 'nom': nom, 'splits': sorted(spl), 'divs': dvs, 'dv1': 1, 'devise': (m.get('meta') or {}).get('currency') or DEV.get(ex, 'USD'),
                  'debut': f'{k0 // 12}-{k0 % 12 + 1}', 'prix': pr, 'hdebut': weeks[0].isoformat(), 'hebdo': hb,
                  'maj': dt.date.today().isoformat()}
             json.dump(o, open(fichier(cle), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
@@ -465,15 +465,15 @@ def splits():
     out, DV = {}, {}
     for r in json.load(open(D + 'prix.json', encoding='utf-8')):
         s = maj.sym(r['cle'])
-        if not s or r['cle'][:2] in ('c/', 'm/', 'x/', 'e/'): continue
+        if not s or r['cle'][:2] in ('c/', 'm/', 'x/'): continue
         try:
-            m = yahoo.chart(s, '10y', '3mo')
+            m = yahoo.chart(s, '10y', '1mo')
             sp = ((m or {}).get('events') or {}).get('splits') or {}
             L = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(x['numerator'] / x['denominator'], 6)] for x in sp.values() if x.get('denominator'))
-            if L: out[r['cle']] = L
+            if L and r['cle'][:2] != 'e/': out[r['cle']] = L
             dv = ((m or {}).get('events') or {}).get('dividends') or {}
             Ld = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(float(x['amount']), 6)] for x in dv.values() if x.get('amount'))
-            if Ld: DV[r['cle']] = Ld[-40:]
+            if Ld: DV[r['cle']] = Ld[-60:]
         except Exception as e:
             print(r['cle'], 'splits', e)
         time.sleep(0.15)
@@ -492,13 +492,13 @@ def divh():
         if not os.path.exists(f): continue
         try: o = json.load(open(f, encoding='utf-8'))
         except Exception: continue
-        if 'divs' not in o: todo.append((r, f, o))
+        if o.get('dv1') != 1: todo.append((r, f, o))
     ok = 0
     for (t, nom, ex, *_), f, o in todo:
         if time.time() > t_fin:
             print('budget de temps atteint'); break
         try:
-            m = yahoo.chart(ysym(t, ex), '10y', '3mo')
+            m = yahoo.chart(ysym(t, ex), '10y', '1mo')  # barres mensuelles : en 3 mois Yahoo ne garde qu'un versement par barre
             if not m: continue
             ev = m.get('events') or {}
             o['divs'] = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(float(x['amount']), 6)]
@@ -506,6 +506,7 @@ def divh():
             if not o.get('splits'):
                 o['splits'] = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(x['numerator'] / x['denominator'], 6)]
                                      for x in (ev.get('splits') or {}).values() if x.get('denominator'))
+            o['dv1'] = 1
             json.dump(o, open(f, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
             ok += 1
         except Exception as e:
