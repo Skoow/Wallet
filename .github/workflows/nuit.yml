@@ -41,6 +41,7 @@ jobs:
           if [ "$Q" = "mois" ] || [ "$Q" = "semaine" ]; then BUDGET_MIN=230 python tools/nuit.py histo; fi
           python tools/nuit.py chiffres
           python tools/nuit.py splits || true
+          [ -d data/h ] && python tools/nuit.py divh || true
           python tools/alertes.py || true
           cp data/alertes.json "$RUNNER_TEMP/alertes.json" 2>/dev/null || true
           cp data/splits.json "$RUNNER_TEMP/splits.json" 2>/dev/null || true; cp data/divs.json "$RUNNER_TEMP/divs.json" 2>/dev/null || true

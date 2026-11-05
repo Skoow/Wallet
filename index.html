@@ -3626,5 +3626,10 @@ try{new MutationObserver(function(){t();}).observe(document.body,{childList:true
  document.documentElement.dataset.cur=g('pf-cur','EUR');setTimeout(conv,1500);
 })();
 </script>
+<script>
+/* a11y : en-têtes de tableau vides -> texte lu par les lecteurs d'écran */
+(function(){var q=0;function fix(){q=0;document.querySelectorAll('.pf table th').forEach(function(th,i){if(th.textContent.trim()||th.querySelector('.srx'))return;var s=document.createElement('span');s.className='srx';s.style.cssText='position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap';s.textContent=th.cellIndex===0?'Indicateur':'Actions';th.appendChild(s);});}
+new MutationObserver(function(){if(!q){q=1;setTimeout(fix,400);}}).observe(document.body,{childList:true,subtree:true});fix();})();
+</script>
 </body>
 </html>

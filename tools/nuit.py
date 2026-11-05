@@ -482,6 +482,38 @@ def splits():
     print(len(out), 'actions avec divisions,', len(DV), 'avec dividendes')
 
 
+def divh():
+    """Complète les dividendes et divisions des historiques data/h qui n'en ont pas encore (les plus grosses sociétés d'abord)."""
+    L = json.load(open(D + 'tickers.json', encoding='utf-8'))
+    t_fin = time.time() + float(os.environ.get('DIV_MIN', '40')) * 60
+    todo = []
+    for r in sorted(L, key=lambda r: -(r[4] or 0)):
+        c = cle_of(r[0], r[2]); f = fichier(c)
+        if not os.path.exists(f): continue
+        try: o = json.load(open(f, encoding='utf-8'))
+        except Exception: continue
+        if 'divs' not in o: todo.append((r, f, o))
+    ok = 0
+    for (t, nom, ex, *_), f, o in todo:
+        if time.time() > t_fin:
+            print('budget de temps atteint'); break
+        try:
+            m = yahoo.chart(ysym(t, ex), '10y', '3mo')
+            if not m: continue
+            ev = m.get('events') or {}
+            o['divs'] = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(float(x['amount']), 6)]
+                               for x in (ev.get('dividends') or {}).values() if x.get('amount'))[-60:]
+            if not o.get('splits'):
+                o['splits'] = sorted([dt.datetime.utcfromtimestamp(int(x['date'])).date().isoformat(), round(x['numerator'] / x['denominator'], 6)]
+                                     for x in (ev.get('splits') or {}).values() if x.get('denominator'))
+            json.dump(o, open(f, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+            ok += 1
+        except Exception as e:
+            print(t, 'divh', e)
+        time.sleep(0.15)
+    print(ok, 'historiques complétés (dividendes) sur', len(todo))
+
+
 if __name__ == '__main__':
     a = sys.argv[1]
     if a == 'tickers': tickers()
@@ -490,4 +522,5 @@ if __name__ == '__main__':
     elif a == 'derniers': derniers()
     elif a == 'appliquer': appliquer()
     elif a == 'splits': splits()
+    elif a == 'divh': divh()
     elif a == 'pro': pro(int(sys.argv[2]) if len(sys.argv) > 2 else None)
