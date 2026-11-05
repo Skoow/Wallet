@@ -80,14 +80,15 @@ def quotes(syms):
         j = None
         for host in ('query1', 'query2'):
             try:
-                j = get(f'https://{host}.finance.yahoo.com/v7/finance/quote?symbols={q}&fields=regularMarketPrice,regularMarketTime,regularMarketPreviousClose' + (f'&crumb={urllib.parse.quote(c)}' if c else ''))
+                j = get(f'https://{host}.finance.yahoo.com/v7/finance/quote?symbols={q}&fields=regularMarketPrice,regularMarketTime,regularMarketPreviousClose,earningsTimestampStart,earningsTimestamp' + (f'&crumb={urllib.parse.quote(c)}' if c else ''))
                 break
             except Exception:
                 continue
         for r in ((j or {}).get('quoteResponse') or {}).get('result') or []:
             if r.get('regularMarketPrice') and r.get('regularMarketTime'):
                 pc = r.get('regularMarketPreviousClose')
-                out[r['symbol']] = (float(r['regularMarketPrice']), int(r['regularMarketTime']), float(pc) if pc else None)
+                er = r.get('earningsTimestampStart') or r.get('earningsTimestamp')
+                out[r['symbol']] = (float(r['regularMarketPrice']), int(r['regularMarketTime']), float(pc) if pc else None, int(er) if er else None)
         time.sleep(0.3)
     return out
 

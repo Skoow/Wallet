@@ -224,9 +224,13 @@ def derniers():
     sy = {maj.sym(c): c for c in cles if maj.sym(c)}
     q = yahoo.quotes(list(sy))
     out = {}
-    for s_, (p, t, pc) in q.items():
+    now = time.time()
+    for s_, (p, t, pc, er) in q.items():
         if s_ in sy:
-            out[sy[s_]] = [maj.rp(p), dt.datetime.fromtimestamp(t, dt.timezone.utc).date().isoformat()] + ([maj.rp(pc)] if pc else [])
+            row = [maj.rp(p), dt.datetime.fromtimestamp(t, dt.timezone.utc).date().isoformat(), maj.rp(pc) if pc else None]
+            if er and er > now - 86400:  # prochains résultats (date), seulement s'ils sont à venir
+                row.append(dt.datetime.fromtimestamp(er, dt.timezone.utc).date().isoformat())
+            out[sy[s_]] = row
     for s_, c in sy.items():  # repli un par un pour ceux que le lot n'a pas rendus
         if c in out: continue
         r = maj.quote(s_)
