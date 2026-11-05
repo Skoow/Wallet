@@ -3394,8 +3394,8 @@ window.pfBackupAge=function(){try{var d=localStorage.getItem('pf-bk:'+(localStor
     /* décompte jusqu'à la prochaine mise à jour quand les cours bougent (relevé GitHub de moins de 5 min) ; sinon l'heure du dernier cours */
     let cd=document.getElementById('asof-cd');if(!cd){cd=document.createElement('span');cd.id='asof-cd';cd.className='asof-cd';cd.setAttribute('aria-live','off');e.after(cd);}
     const frais=LIVEAT&&Date.now()-new Date(LIVEAT).getTime()<8*60000;const r=Math.max(0,Math.ceil((NEXT-Date.now())/1000));const vis=SRC!=='direct'&&frais&&NEXT;
-    const rest=e.textContent.replace(/^(Derniers cours : [^·]*|En direct · [^·]*|Cours du [^·]*)(·\s*)?/,'').trim();
-    const txt=vis?rest:pre+(rest?' · '+rest:'');if(e.textContent!==txt)e.textContent=txt;
+    const rest=e.textContent.replace(/^(Derniers cours : [^·]*|En direct · [^·]*|Cours du [^·]*)(·\s*pas de connexion[^·]*)?(·\s*)?/,'').trim();
+    const txt=vis?rest:pre+(LIVEERR?' · pas de connexion aux cours, nouvel essai dans '+r+' s':'')+(rest?' · '+rest:'');if(e.textContent!==txt)e.textContent=txt;
     cd.hidden=!vis;if(vis){const pc=innerWidth>480;cd.textContent=(pc?'Mise à jour dans ':'Màj dans ')+(r>=60?'1:'+String(r-60).padStart(2,'0'):r+' s');cd.title='Cours relus automatiquement chaque minute (dernier cours : '+d+' à '+h.slice(0,5)+')';}}
   function tick(){if(!dirty)return label();if(busy())return;dirty=false;if(apply()){const m=window.__pfMemo;if(m)for(const k in m)delete m[k];dash._emit();}label();}
   setInterval(tick,1000);
@@ -3403,10 +3403,13 @@ window.pfBackupAge=function(){try{var d=localStorage.getItem('pf-bk:'+(localStor
   const REPO=(()=>{const h=location.hostname.match(/^([^.]+)\.github\.io$/);const p=location.pathname.split('/').filter(Boolean)[0];return h&&p?h[1]+'/'+p:'Skoow/Wallet';})();
   /* Source unique des cours : raw.githubusercontent.com (fichiers du dépôt, gratuit, sans limite de lectures, accepté par les navigateurs).
      GitHub y garde une copie 5 min au plus ; en cas d'échec (hors ligne), les derniers cours affichés sont conservés. */
-  async function getLive(){try{const r=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/data/live.json',{cache:'no-store'});return r.ok?await r.json():null;}catch(e){return null;}}
+  let LIVEERR=0;async function getLive(){const one=u=>fetch(u,{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+    /* deux copies du même fichier : GitHub (raw) et le site lui-même ; on garde la plus récente */
+    const [a,b]=await Promise.all([one('https://raw.githubusercontent.com/'+REPO+'/main/data/live.json'),one('data/live.json?t='+Date.now())]);
+    const ok=[a,b].filter(j=>j&&j.at);if(!ok.length){LIVEERR=Date.now();return null;}LIVEERR=0;return ok.sort((x,y)=>new Date(y.at)-new Date(x.at))[0];}
   let PT=null,NEXT=0,LIVEAT=null;const PAS=65000;function sched(){clearTimeout(PT);NEXT=Date.now()+PAS;PT=setTimeout(poll,PAS);}
   async function poll(){sched();if(document.hidden)return;try{const j=await getLive();if(!j)return;if(j.at)LIVEAT=j.at;if(j.veille)window.PFVEILLE=Object.assign(window.PFVEILLE||{},j.veille);if(j.hs)window.PFHS=j.hs;if(j.heure)window.PFHEURE=Object.assign(window.PFHEURE||{},j.heure);
-      if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}}catch(e){}}
+      if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}else{const hs=Object.values(j.heure||{}).filter(Boolean).sort();const t1=hs.length?hs[hs.length-1]:j.at;if(t1&&new Date(t1)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!fhSym(k))PX[k]=v;});AT=t1;dirty=true;}}}catch(e){}}
   poll();window.pfRefresh=()=>{dirty=true;return poll();};
   /* Dès que le portefeuille change (ligne ajoutée / retirée, achat, vente) ou qu'on revient sur l'app : cours relus tout de suite. */
   {let last=0;const now=()=>{dirty=true;if(Date.now()-last<8000)return;last=Date.now();poll();};
