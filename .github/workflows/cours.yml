@@ -6,6 +6,7 @@ on:
     - cron: '35 12 * * 1-5'   # 12h35 UTC : Europe l'après-midi + ouverture américaine -> ~18h25 UTC
     - cron: '20 18 * * 1-5'   # 18h20 UTC : jusqu'à la clôture américaine (arrêt à 21h20 UTC)
     - cron: '45 22 * * 1-5'   # le soir : clôtures -> prix, hebdo, changes
+    - cron: '17 7-20 * * 1-5' # filet de sécurité : GitHub saute parfois des déclenchements ; relance la boucle chaque heure (une seule à la fois)
   workflow_dispatch:
     inputs:
       mode:
