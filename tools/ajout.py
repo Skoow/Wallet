@@ -4,6 +4,13 @@ import json, os, sys, datetime as dt
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import yahoo, maj
 
+
+def _rp(v):
+    """Arrondi qui garde les tout petits cours (6 chiffres significatifs sous 1)."""
+    v = float(v)
+    return float(f"{v:.6g}") if abs(v) < 1 else round(v, 4)
+
+
 P, H = maj.load('prix.json'), maj.load('hebdo.json')
 d0 = dt.date.fromisoformat(H[0]['debut']); n = len(H[0]['prix'])
 weeks = [d0 + dt.timedelta(weeks=i) for i in range(n)]
@@ -21,9 +28,9 @@ for cle in [c.strip() for c in arg.split(',') if '/' in c]:
     mm = {}
     for ts, c in zip(m['timestamp'], m['indicators']['quote'][0]['close']):
         if c is None: continue
-        d = dt.datetime.utcfromtimestamp(ts + 43200); mm[d.year * 12 + d.month - 1] = round(c, 4)
+        d = dt.datetime.utcfromtimestamp(ts + 43200); mm[d.year * 12 + d.month - 1] = _rp(c)
     cm = dt.date.today().year * 12 + dt.date.today().month - 1
-    if last: mm[cm] = round(float(last), 4)
+    if last: mm[cm] = _rp(last)
     k0 = min(mm); pr = []; prev = None
     for k in range(k0, cm + 1):
         prev = mm.get(k, prev); pr.append(prev)
@@ -32,8 +39,8 @@ for cle in [c.strip() for c in arg.split(',') if '/' in c]:
     if w and w.get('timestamp'):
         for ts, c in zip(w['timestamp'], w['indicators']['quote'][0]['close']):
             if c is None: continue
-            d = dt.datetime.utcfromtimestamp(ts + 43200).date(); wk[d - dt.timedelta(days=d.weekday())] = round(c, 4)
-    if last: wk[weeks[-1]] = round(float(last), 4)
+            d = dt.datetime.utcfromtimestamp(ts + 43200).date(); wk[d - dt.timedelta(days=d.weekday())] = _rp(c)
+    if last: wk[weeks[-1]] = _rp(last)
     hb = []; prev = None
     for d in weeks:
         prev = wk.get(d, prev); hb.append(prev)

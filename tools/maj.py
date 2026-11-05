@@ -199,8 +199,20 @@ def git_push(msg, paths):
     if subprocess.run(['git', 'diff', '--cached', '--quiet']).returncode == 0:
         return
     subprocess.run(['git', 'commit', '-q', '-m', msg], check=False)
-    for _ in range(3):
-        subprocess.run(['git', 'pull', '-q', '--rebase', 'origin', 'main'], check=False)
+    for _ in range(4):
+        r = subprocess.run(['git', 'pull', '-q', '--rebase', 'origin', 'main'], check=False)
+        if r.returncode != 0:
+            # conflit : on annule le rebase, on repart du serveur et on réécrit nos fichiers
+            subprocess.run(['git', 'rebase', '--abort'], check=False)
+            keep = {p: open(p, 'rb').read() for p in paths if os.path.exists(p)}
+            subprocess.run(['git', 'fetch', '-q', 'origin', 'main'], check=False)
+            subprocess.run(['git', 'reset', '-q', '--hard', 'origin/main'], check=False)
+            for p, b in keep.items():
+                open(p, 'wb').write(b)
+            subprocess.run(['git', 'add'] + paths, check=False)
+            if subprocess.run(['git', 'diff', '--cached', '--quiet']).returncode == 0:
+                return
+            subprocess.run(['git', 'commit', '-q', '-m', msg], check=False)
         if subprocess.run(['git', 'push', '-q', 'origin', 'main']).returncode == 0:
             return
         time.sleep(3)

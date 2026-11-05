@@ -13,6 +13,13 @@ import csv, io, json, os, re, sys, time, datetime as dt, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import yahoo
 
+
+def _rp(v):
+    """Arrondi qui garde les tout petits cours (6 chiffres significatifs sous 1)."""
+    v = float(v)
+    return float(f"{v:.6g}") if abs(v) < 1 else round(v, 4)
+
+
 D = 'data/'
 SEC = {'Technology': 'Technologie', 'Health Care': 'Santé', 'Finance': 'Finance', 'Financials': 'Finance', 'Industrials': 'Industrie',
        'Consumer Discretionary': 'Consommation discrétionnaire', 'Consumer Staples': 'Consommation de base', 'Energy': 'Énergie',
@@ -117,10 +124,10 @@ def histo(limite=None):
             for ts, c in zip(m['timestamp'], m['indicators']['quote'][0]['close']):
                 if c is None: continue
                 d = dt.datetime.utcfromtimestamp(ts + 43200)
-                if d.year >= 2006: mm[d.year * 12 + d.month - 1] = round(c, 4)
+                if d.year >= 2006: mm[d.year * 12 + d.month - 1] = _rp(c)
             last = m['meta'].get('regularMarketPrice')
             if mm and last:
-                mm[max(mm)] = round(float(last), 4)
+                mm[max(mm)] = _rp(last)
             if not mm: continue
             k0, k1 = min(mm), max(mm); pr = []; prev = None
             for k in range(k0, k1 + 1):
@@ -130,8 +137,8 @@ def histo(limite=None):
                 for ts, c in zip(w['timestamp'], w['indicators']['quote'][0]['close']):
                     if c is None: continue
                     d = dt.datetime.utcfromtimestamp(ts + 43200).date()
-                    wk[d - dt.timedelta(days=d.weekday())] = round(c, 4)
-                if last: wk[weeks[-1]] = round(float(last), 4) if max(wk) <= weeks[-1] else wk[max(wk)]
+                    wk[d - dt.timedelta(days=d.weekday())] = _rp(c)
+                if last: wk[weeks[-1]] = _rp(last) if max(wk) <= weeks[-1] else wk[max(wk)]
             hb = []; prev = None
             for d in weeks:
                 prev = wk.get(d, prev); hb.append(prev)
