@@ -1,12 +1,12 @@
 {
-  "name": "Bastide · mon portefeuille",
-  "short_name": "Bastide",
+  "name": "Verger · mon portefeuille",
+  "short_name": "Verger",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0a2340",
-  "theme_color": "#0a2340",
+  "background_color": "#103d66",
+  "theme_color": "#103d66",
   "icons": [
     {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
     {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
