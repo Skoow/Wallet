@@ -1,4 +1,4 @@
-# Azimut — web app
+# Bastide — web app
 
 Application web installable (PWA) pour suivre le portefeuille : 10 actions + l'or, répartition, analyse, transactions, plan d'achat.
 
