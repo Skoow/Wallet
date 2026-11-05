@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0d2a4a">
+<meta name="theme-color" content="#0a2340">
 <meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1800,6 +1800,37 @@ html body #pf-login .pfl-art{display:none!important}
 .pf .sim-n{margin:6px 0 0;padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--acc) 8%,transparent);color:var(--color-fg-muted);font-size:.86rem;line-height:1.45}
 
 .tk-sheet .tsr.kb{background:color-mix(in srgb,var(--acc) 10%,transparent);border-radius:12px;outline:2px solid color-mix(in srgb,var(--acc) 40%,transparent)}
+
+/* ===================== v97 : troisième audit ===================== */
+/* sous 1300 px : nom puis variation/cours en dessous (le nom ne disparaît plus) */
+@media (min-width:721px) and (max-width:1299px){
+ .pf #lignes .rh .rt{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center;gap:4px!important}
+ .pf #lignes .rh .rt>.pxc{margin-left:0}
+ .pf #lignes.can-sort .rh .rt>.pxc{margin-left:24px}
+ .pf #lignes .rh .rt>.nm{max-width:100%}
+}
+@media (min-width:1300px){
+ .pf #lignes .rh .rt>.pxc>.inv.px{justify-self:end!important}
+ .pf #lignes .rh .rt .pxc{grid-template-columns:5.4rem 7.2rem}
+}
+/* Analyse : libellés du résumé */
+.pf #an-strip dt{white-space:normal!important;line-height:1.2}
+@media (max-width:480px){.pf #an-strip{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.pf #an-strip>div{border:0!important;padding:0!important}}
+.pf #sec-courbe .seg,.pf #rng-courbe{flex-wrap:nowrap!important}
+.pf #sec-courbe .seg button,.pf #rng-courbe button{white-space:nowrap}
+@media (min-width:1400px){.pf #v-analyse #g-risque>section{align-self:start!important;height:auto!important}}
+/* fiche mobile : position d'abord, puis secteur ; tuiles sur 2 colonnes */
+@media (max-width:720px){
+ .pf #lignes .rd.fx .pos2{order:0!important}
+ .pf #lignes .rd.fx>.fx-head{order:1!important}
+ .pf #lignes .rd.fx .kv{grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%}
+ .pf #lignes .rd.fx .txq{width:100%}
+}
+/* anneau de note : chiffres plus petits sur téléphone */
+@media (max-width:720px){.pf #lignes .rh .sc .rg b,.pf #lignes .rh .sc b{font-size:.78rem!important}}
+/* heure des cours : police de l'app */
+.pf #pf-maj span{font-family:var(--font-anthropic-sans)!important;font-variant-numeric:tabular-nums;letter-spacing:0}
+.tk-sheet .tsi-none{padding:18px 12px;color:var(--color-fg-muted);font-size:.92rem}
 </style>
 
 <div class="pf">
@@ -1894,7 +1925,7 @@ html body #pf-login .pfl-art{display:none!important}
   </div>
 
   <div class="view" id="v-repart" role="tabpanel" aria-labelledby="tab-repart" hidden>
-    <section id="sec-manque" data-source="univers lignes expo"><div class="sh"><h2>Ce qui nous manque</h2><p class="mu">Se met à jour dès qu’une ligne change</p></div><ul class="ck" id="rp-manque"></ul></section>
+    <section id="sec-manque" data-source="univers lignes expo"><div class="sh"><h2>Ce qui manque</h2><p class="mu">Se met à jour dès qu’une ligne change</p></div><ul class="ck" id="rp-manque"></ul></section>
     <section id="sec-vue" data-source="univers lignes expo"><div class="sh"><h2>D’un coup d’œil</h2><p class="mu">Chaque barre = tout le portefeuille</p></div><div class="rpg" id="rp-grid"></div></section>
     <section id="sec-metiers" data-source="lignes univers"><div class="sh"><h2>Secteurs et métiers</h2><p class="mu">Les 11 grands secteurs de la bourse</p></div><div class="tw"><table id="rp-sect"><thead><tr><th>Secteur</th><th>Nos sociétés · métier</th><th>Poids</th></tr></thead><tbody></tbody></table></div></section>
     <section id="sec-themes" data-source="expo"><div class="sh"><h2>Thèmes d’avenir</h2><p class="mu">Ceux qu’on a choisis</p></div><div class="tw"><table id="rp-th"><thead><tr><th>Thème</th><th>Lignes</th><th>État</th></tr></thead><tbody></tbody></table></div></section>
@@ -2132,7 +2163,7 @@ html body #pf-login .pfl-art{display:none!important}
   const OPEN=new Set();
   const TXOPEN=new Set();const TXMSG={};const TXV={},HOPEN={};
   function txForm(u,PP){const met=isMetal(u)||isCr(u)||isCom(u);const f=el('div','txq');const M0=TXMSG[u.cle];const eu=x=>Math.round(x).toLocaleString('fr-FR')+' €';
-    const iq=document.createElement('input');iq.type='number';iq.min='0';iq.step=met?'any':'1';iq.inputMode=met?'decimal':'numeric';iq.placeholder=met?'Montant en €':'Nombre d’actions';iq.setAttribute('aria-label',iq.placeholder);
+    const iq=document.createElement('input');iq.type='number';iq.min='0';iq.step=met?'any':'1';iq.inputMode=met?'decimal':'numeric';iq.placeholder=met?'Montant en €':(isCr(u)?'Quantité':'Nb d’actions');iq.setAttribute('aria-label',iq.placeholder);
     const ba=el('button','go','Acheter');ba.type='button';const bv=el('button','btn','Vendre');bv.type='button';if(!(PP&&PP.qty>1e-9))bv.disabled=true;const msg=el('span','tm mu','');
     const stp=el('div','stp');const mk=(t,d)=>{const b=el('button','sb',t);b.type='button';b.setAttribute('aria-label',d>0?'Plus':'Moins');b.addEventListener('click',()=>{const st=met?50:1;iq.value=String(Math.max(0,(+iq.value||0)+d*st));TXV[u.cle]=iq.value;est();});return b;};stp.append(mk('−',-1),iq,mk('+',1));
     const est=()=>{if(M0&&M0.until>Date.now()&&!iq.value)return;const v=+iq.value;msg.className='tm mu';if(!(v>0)){msg.textContent=met?'Montant en euros':'';return;}const L=lastM(),p=raw(u.cle,L),dv=CUR[u.cle]||u.devise||'USD',r0=fxRate(dv),pe=p&&r0?p/r0:null;msg.textContent=pe?(met?'≈ '+fr(String(Math.round(v/pe*1000)/1000))+' part'+(v/pe>1?'s':''):'≈ '+eu(v*pe)+' au cours actuel'):'';};iq.addEventListener('input',()=>{TXV[u.cle]=iq.value;est();});if(TXV[u.cle])iq.value=TXV[u.cle];
@@ -2242,7 +2273,7 @@ html body #pf-login .pfl-art{display:none!important}
     document.getElementById('coef-s').textContent=buy.length>1?'lignes à acheter au bon prix':buy.length===1?'ligne à acheter au bon prix':'rien à acheter au bon prix';
     if(buy.length)item('Acheter','go',buy.map(x=>x.u.nom).join(', ')+(buy.length>1?' : sous leur prix de bon moment.':' : sous son prix de bon moment.'));
     if(near.length)item('Presque','',near.map(x=>x.u.nom+' ('+fr(String(Math.round(x.s.gap*10)/10))+'\u00a0%)').join(', ')+' du prix de bon moment.');
-    if(wait.length)item('Attendre','wt',wait.map(x=>x.u.nom).join(', ')+(wait.length>1?' : chers, acheter par quarts.':' : cher, acheter par quarts.'));
+    if(wait.length)item('Attendre','wt',wait.map(x=>x.u.nom).join(', ')+(wait.length>1?' : trop chers pour l’instant, attendre le prix visé.':' : trop cher pour l’instant, attendre le prix visé.'));
     if(bad.length)item('Revoir','al',bad.map(x=>x.u.nom+' ('+x.s.rw+')').join(', ')+'.');
     if(ren.length)item('Renforcer','go',ren.map(x=>x.u.nom).join(', ')+(ren.length>1?' : saines, en forte baisse.':' : saine, en forte baisse.'));
     item('Règles',bad.length?'al':'',bad.length?bad.length+(bad.length>1?' règles de revente déclenchées.':' règle de revente déclenchée.'):'Aucune règle de revente déclenchée.');
@@ -2395,7 +2426,7 @@ html body #pf-login .pfl-art{display:none!important}
       const bar=el('div','rpb');rows.forEach((r,i)=>{const s=document.createElement('i');s.style.width=(r.v/tot*100)+'%';s.style.background=r.c||(r.last?'var(--rule)':COL[i%COL.length]);s.title=r.nom+' : '+Math.round(r.v/tot*100)+'\u00a0%';bar.appendChild(s);});p.appendChild(bar);
       const ul=el('ul','rpl');rows.forEach((r,i)=>{const li=el('li','');const sw=el('span','sw');sw.style.background=r.c||(r.last?'var(--rule)':COL[i%COL.length]);li.appendChild(sw);li.appendChild(el('b','',r.nom));li.appendChild(el('span','pc',Math.round(r.v/tot*100)+'\u00a0%'+(r.n!=null?' · '+r.n+(r.n>1?' lignes':' ligne'):'')));if(r.who&&r.who.length)li.appendChild(el('span','who',r.who.join(', ')));ul.appendChild(li);});p.appendChild(ul);
       if(opt.note)p.appendChild(el('p','mu rpn',opt.note));g.appendChild(p);return p;};
-    const hvR=it.some(x=>POS[x.u.cle]&&POS[x.u.cle].qty>1e-9);const wvR=x=>{if(!hvR)return 1;const p=POS[x.u.cle];if(!p||!(p.qty>1e-9))return 0;const e=eurPx(x.u.cle);return e?p.qty*e:p.cost;};{const sh=document.querySelector('#sec-vue>.sh>p.mu');if(sh)sh.textContent=hvR?'Chaque barre = la valeur de tes lignes achetées':'Chaque barre = tes lignes, à parts égales';}const grp=(f,list)=>{const o={};(list||it).forEach(x=>{const k=f(x);if(k==null)return;(o[k]=o[k]||{nom:k,v:0,n:0,who:[],c:/^Or /.test(k)?'var(--gold)':null});o[k].v+=wvR(x);o[k].n++;o[k].who.push(nm(x.u.nom));});return Object.values(o);};
+    const hvR=it.some(x=>POS[x.u.cle]&&POS[x.u.cle].qty>1e-9);const wvR=x=>{if(!hvR)return 1;const p=POS[x.u.cle];if(!p||!(p.qty>1e-9))return 0;const e=eurPx(x.u.cle);return e?p.qty*e:p.cost;};{const sh=document.querySelector('#sec-vue>.sh>p.mu');if(sh)sh.textContent=hvR?'Chaque barre = la valeur de tes lignes achetées':'Chaque barre = tes lignes, à parts égales';}const grp=(f,list)=>{const o={};(list||it).forEach(x=>{const k=f(x);if(k==null)return;(o[k]=o[k]||{nom:k,v:0,n:0,who:[],c:/^Or /.test(k)?'var(--gold)':null});{const w=wvR(x);o[k].v+=w;if(w>0){o[k].n++;o[k].who.push(nm(x.u.nom));}}});return Object.values(o);};
     // 1 secteurs
     const wmap=()=>{const SH={'États-Unis':[[[-124,48],[-95,49],[-83,46],[-67,45],[-70,41],[-76,35],[-81,31],[-80,25],[-83,29],[-90,29],[-97,26],[-104,29],[-111,31],[-117,32],[-121,35],[-124,40]],[[-168,66],[-141,69],[-141,60],[-150,59],[-165,60]]],'Canada':[[[-141,69],[-120,70],[-95,72],[-80,73],[-62,66],[-55,52],[-66,45],[-83,46],[-95,49],[-123,49],[-130,55],[-141,60]]],'Europe':[[[-10,36],[-9,43],[-2,44],[-5,48],[2,51],[8,54],[5,58],[5,62],[15,69],[28,71],[40,67],[40,55],[30,46],[28,41],[22,37],[15,38],[12,44],[5,43],[0,39]],[[-6,50],[2,51],[0,58],[-6,58]]],'Asie':[[[30,46],[40,55],[40,67],[60,70],[80,73],[110,77],[140,72],[180,68],[180,62],[160,58],[140,50],[135,43],[127,38],[122,30],[120,22],[108,21],[105,10],[100,13],[98,8],[92,22],[88,22],[80,8],[73,20],[66,25],[62,25],[60,37],[44,38],[36,37]],[[130,31],[141,36],[142,44],[140,41],[133,34]],[[95,5],[106,-6],[115,-8],[125,-9],[140,-3],[131,-1],[118,1],[110,2]],[[114,-22],[122,-18],[131,-12],[137,-12],[142,-11],[146,-19],[153,-28],[150,-37],[141,-38],[131,-31],[115,-34]]],'Autres':[[[-117,32],[-97,26],[-90,21],[-87,15],[-83,9],[-77,8],[-72,12],[-62,10],[-50,0],[-35,-6],[-40,-22],[-48,-28],[-58,-38],[-65,-55],[-73,-50],[-71,-30],[-70,-18],[-81,-5],[-80,1],[-78,7],[-85,11],[-92,15],[-105,20],[-110,24]],[[-17,21],[-6,36],[11,37],[32,31],[44,12],[51,11],[40,-10],[35,-25],[20,-35],[15,-25],[12,-5],[9,4],[-8,4],[-17,14]],[[35,32],[36,37],[44,38],[60,37],[62,25],[57,18],[45,12],[38,20]]],'_':[[[-55,60],[-42,60],[-20,70],[-20,82],[-60,82],[-73,78]],[[166,-46],[174,-41],[178,-38],[172,-34],[168,-44]],[[44,-25],[50,-16],[49,-12],[44,-17]]]};
     const LBL={'États-Unis':[-100,39],'Canada':[-102,60],'Europe':[14,52],'Asie':[95,48],'Autres':[-60,-15]};const LN={'Autres':'Amérique latine, Afrique, Moyen-Orient'};
@@ -2467,7 +2498,7 @@ html body #pf-login .pfl-art{display:none!important}
   function fillBilan0(X,R,LG){const ul=document.getElementById('l-bilan');if(!ul)return;ul.textContent='';
     const add=(st,lab,txt)=>{const li=el('li',st);const c=el('span','ci');c.appendChild(icon(st==='ok'?'ok':st==='info'?'info':'warn'));c.appendChild(el('span','sr',st==='ok'?'respecté':st==='info'?'information':'à corriger'));li.appendChild(c);li.appendChild(el('span','cl2',lab));li.appendChild(el('span','cd2',txt));ul.appendChild(li);};
     const nm=s=>String(s).replace(/ – iShares Physical \w+/,'');const lst=a=>a.map(x=>nm(x.u.nom)).join(', ');
-    const it=R.map((u,i)=>u?{u,l:(!isMetal(u)&&+u.ligne!==+LG[i].n?LG.find(z=>+z.n===+u.ligne):null)||LG[i]}:null).filter(Boolean);const st=it.filter(x=>!isMetal(x.u));const N=it.length;
+    const it=R.map((u,i)=>u?{u,l:(!isMetal(u)&&+u.ligne!==+LG[i].n?LG.find(z=>+z.n===+u.ligne):null)||LG[i]}:null).filter(Boolean);const st=it.filter(x=>!isMetal(x.u)&&!x.u.obligation&&!/^(m|c)\//.test(x.u.cle));const N=it.length;
     const seen=new Set(),dup=[];it.forEach(x=>{if(seen.has(x.u.cle))dup.push(x);seen.add(x.u.cle);});
     {const hasT=it.some(x=>POS[x.u.cle]&&POS[x.u.cle].qty>1e-9);const Nh=hasT?it.filter(x=>POS[x.u.cle]&&POS[x.u.cle].qty>1e-9).length:N;const mt=it.some(x=>isMetal(x.u));add(Nh===LG.length&&!dup.length?'ok':'warn','Parts égales',Nh+(Nh>1?' lignes achetées':' ligne achetée')+' sur '+LG.length+(dup.length?' · en double : '+lst(dup):'')+' · visé '+fr(String(Math.round(1000/(LG.length+(mt?1:0)))/10))+'\u00a0% par ligne'+(mt?', le double pour l’or':'')+'.');}
     const pc={};st.forEach(x=>pc[x.u.pays]=(pc[x.u.pays]||0)+1);const outP=Object.keys(pc).filter(q=>q!=='États-Unis'&&q!=='Canada');
@@ -2948,9 +2979,10 @@ html body #pf-login .pfl-art{display:none!important}
     {const mq=/^MATI|^MINER|^METAU|^MÉTAU|^COMMO/.test(raw);MP.forEach(m=>{if(!hasPx('m/'+m[0].toLowerCase()))return;if(mq||(raw.length>=2&&m[1].toUpperCase().startsWith(raw))||(raw.length>=3&&m[1].toUpperCase().includes(raw)))push(m[0]+'-MP',m[0],m[1]+' (par '+m[2]+')','Matière première',m[0]+'-MP');});}
     const crq=/^CRYPTO$|^CRYPTOS?$/.test(raw);CRYPTO.forEach(t=>{if(crq||t[0]===q||t[0]===q.replace(/-USD$|-CRYPTO$/,''))cr(t);});
     CRYPTO.forEach(t=>{if(raw.length>=3&&t[1].toUpperCase().startsWith(raw))cr(t);});A.forEach(t=>{if(t[0]===q)st(t);});CRYPTO.forEach(t=>{if(raw.length>=2&&t[1].toUpperCase().startsWith(raw))cr(t);});A.forEach(t=>{if(t[0].startsWith(q))st(t);});if(raw.length>=2){A.forEach(t=>{if(String(t[1]).toUpperCase().startsWith(raw))st(t);});A.forEach(t=>{if(String(t[1]).toUpperCase().includes(raw))st(t);});}
+    const NZ=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’'`.\-]/g,'').toUpperCase().replace(/\s+/g,' ').trim();const rawN=NZ(raw);{const toks=rawN.split(' ').filter(Boolean);if(toks.length&&rawN.length>=3){A.forEach(t=>{const n=NZ(t[1]);if(toks.every(w=>n.includes(w)))st(t);});}}
     if(/^CRYPTO|^MATI|^MINER|^METAU|^COMMO|^OBLI|^BOND/.test(raw))return out.slice(0,40);
     /* Ordre : ticker exact, actions dont le ticker commence par la saisie, autres actions, cryptos, puis les cryptos qui imitent une action (tokenized) */
-    const rk=o=>{if(String(o.nom).toUpperCase()===raw&&/-CG$|-CRYPTO$/.test(o.val))return -1;if(/-MP$/.test(o.val)&&String(o.nom).toUpperCase().startsWith(raw+' ('))return -1;if(/\bCDR\b|HEDGED|NEW YORK REGISTRY|\bADR\b/i.test(o.nom))return 2.5;const tok=/tokeni[sz]ed|xstock|bstocks?|\bondo\b|wrapped|backed/i.test(o.nom);const isC=/-CG$|-CRYPTO$/.test(o.val);if(/-OB$/.test(o.val))return o.tk===q?0:1;if(o.tk===q&&!tok)return 0;if(tok)return 9;if(!isC&&o.tk.startsWith(q))return 1;if(!isC)return 2;return o.tk===q?0:3;};
+    const rk=o=>{if(String(o.nom).toUpperCase()===raw&&/-CG$|-CRYPTO$/.test(o.val))return -1;if(rawN.length>=3&&rawN.includes(' ')&&NZ(o.nom).startsWith(rawN))return -0.5;if(/-MP$/.test(o.val)&&String(o.nom).toUpperCase().startsWith(raw+' ('))return -1;if(/\bCDR\b|HEDGED|NEW YORK REGISTRY|\bADR\b/i.test(o.nom))return 2.5;const tok=/tokeni[sz]ed|xstock|bstocks?|\bondo\b|wrapped|backed/i.test(o.nom);const isC=/-CG$|-CRYPTO$/.test(o.val);if(/-OB$/.test(o.val))return o.tk===q?0:1;if(o.tk===q&&!tok)return 0;if(tok)return 9;if(!isC&&o.tk.startsWith(q))return 1;if(!isC)return 2;return o.tk===q?0:3;};
     return out.map((o,i)=>[o,i]).sort((x,y)=>rk(x[0])-rk(y[0])||x[1]-y[1]).map(x=>x[0]).slice(0,40);}
   function tkSug(ti,pick,U){ti.removeAttribute('list');ti.setAttribute('autocomplete','off');ti.readOnly=true;ti.inputMode='none';ti.classList.add('tk-open');const go=ti.parentNode&&ti.parentNode.querySelector('.go');if(go&&go!==ti)go.style.display='none';const open=e=>{if(e)e.preventDefault();ti.blur();tkSheet(U||[]);};ti.addEventListener('click',open);ti.addEventListener('focus',open);}
   function tkSheet(U){let sh=document.getElementById('tk-sheet');if(sh)sh.remove();sh=el('div','tk-sheet');sh.id='tk-sheet';sh.setAttribute('role','dialog');sh.setAttribute('aria-modal','true');sh.setAttribute('aria-label','Ajouter une ligne');
@@ -3245,12 +3277,14 @@ try{new MutationObserver(function(){t();}).observe(document.body,{childList:true
  document.addEventListener('keydown',function(e){var sh=document.getElementById('tk-sheet');if(!sh||!sh.contains(document.activeElement))return;var rows=[].slice.call(sh.querySelectorAll('.tsr')).filter(function(r){return r.offsetParent;});if(!rows.length)return;var cur=sh.querySelector('.tsr.kb');var i=rows.indexOf(cur);
   if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();i=e.key==='ArrowDown'?Math.min(rows.length-1,i+1):Math.max(0,i-1);rows.forEach(function(r){r.classList.remove('kb');});rows[i].classList.add('kb');rows[i].scrollIntoView({block:'nearest'});}
   else if(e.key==='Enter'&&document.activeElement.tagName==='INPUT'){var r=cur||rows[0];var b=r.querySelector('.tsb.ad');if(b){e.preventDefault();b.click();}}});
+ function bil(){var lis=[].slice.call(document.querySelectorAll('#today li'));var li=lis.filter(function(l){var t=l.querySelector('.t');return t&&/Bilan/.test(t.textContent);})[0];var b=document.getElementById('l-bilan');if(!li||!b||!b.children.length)return;var n=b.querySelectorAll('li.warn').length;var x=li.querySelector('.x');var tx=n?n+(n>1?' points':' point')+' à revoir : Répartition › Bilan.':'Rien à revoir dans le bilan.';if(x&&x.textContent!==tx)x.textContent=tx;}
+ setInterval(function(){var sh=document.getElementById('tk-sheet');if(!sh)return;var i=sh.querySelector('input[type=search]');var q=i?i.value.trim():'';var vis=[].some.call(sh.querySelectorAll('.tsr'),function(r){return r.offsetParent;});var n=sh.querySelector('.tsi-none');if(q.length>=2&&!vis){if(!n){n=document.createElement('div');n.className='tsi-none';var h=sh.querySelector('.tsh');(h&&h.parentNode?h.parentNode:sh).insertBefore(n,h?h.nextSibling:null);}var t='Aucun résultat pour « '+q+' ». Essaie le ticker (ex. MC, AI) ou une partie du nom.';if(n.textContent!==t)n.textContent=t;}else if(n)n.remove();},400);
  function jr(){var t=document.getElementById('t-journal');if(!t)return;var cells=t.querySelectorAll('tbody td:nth-child(2)');var empty=[].every.call(cells,function(c){return !c.textContent.trim();});t.classList.toggle('noh',empty);}
- var q=0;function run(){if(q)return;q=1;requestAnimationFrame(function(){q=0;fix();jr();simn();});}
+ var q=0;function run(){if(q)return;q=1;requestAnimationFrame(function(){q=0;fix();jr();simn();bil();});}
  /* deux onglets ouverts : si l'autre enregistre, on recharge celui-ci pour ne pas écraser ses données */
  var stale=false;addEventListener('storage',function(e){if(!e.key||!/^pf-(db|pfs|pfa):/.test(e.key))return;if(document.hidden)stale=true;else location.reload();});document.addEventListener('visibilitychange',function(){if(!document.hidden&&stale)location.reload();});
- function ttl(){var n=document.querySelector('.tb-wn');var t=n&&n.textContent.trim();var w=(t?t+' · ':'')+'Azimut';if(document.title!==w)document.title=w;}setInterval(ttl,1500);
- function godet(){var v=document.getElementById('v-suivre');if(!v||document.querySelector('.pf-godet'))return;var d=document.createElement('div');d.className='pf-godet';var b=document.createElement('button');b.type='button';b.textContent='Voir le détail : lignes, répartition, analyse';b.onclick=function(){try{localStorage.setItem('pf-vue','detail');}catch(_){}window.dispatchEvent(new CustomEvent('pf-vue',{detail:'detail'}));setTimeout(function(){if(document.documentElement.classList.contains('pf-simple'))location.reload();},150);};d.appendChild(b);v.insertBefore(d,v.firstChild);}setTimeout(godet,500);
+ function ttl(){var n=document.querySelector('.tb-wn');var t=n&&n.textContent.trim();var w=(t&&t!=='Portefeuille'&&document.querySelector('.pf .tb-w')?t+' · ':'')+'Azimut';if(document.title!==w)document.title=w;}setInterval(ttl,1500);
+ function godet(){var v=document.getElementById('v-suivre');if(!v||document.querySelector('#sec-live .pf-godet'))return;var old=document.querySelector('.pf-godet');if(old)old.remove();var d=document.createElement('div');d.className='pf-godet';var b=document.createElement('button');b.type='button';b.textContent='Voir le détail : lignes, répartition, analyse';b.onclick=function(){try{localStorage.setItem('pf-vue','detail');}catch(_){}window.dispatchEvent(new CustomEvent('pf-vue',{detail:'detail'}));setTimeout(function(){if(document.documentElement.classList.contains('pf-simple'))location.reload();},150);};d.appendChild(b);var sl=document.getElementById('sec-live');(sl||v).appendChild(d);}setInterval(godet,1500);
  /* feuille de recherche : suivre le clavier (visualViewport) */
  if(window.visualViewport){var vvf=function(){var sh=document.querySelector('.tk-sheet');if(!sh)return;var h=visualViewport.height;if(h<innerHeight-80){sh.classList.add('vv');sh.style.height=h+'px';sh.style.top=visualViewport.offsetTop+'px';}else{sh.classList.remove('vv');sh.style.height='';sh.style.top='';}};visualViewport.addEventListener('resize',vvf);visualViewport.addEventListener('scroll',vvf);}
  function ph(){var i=document.querySelector('.tb-s input');if(i)i.placeholder=innerWidth<480?'Action, ETF, crypto, or…':'Ajouter une action, un ETF ou une crypto';}addEventListener('resize',ph);setTimeout(ph,300);
