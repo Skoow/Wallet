@@ -203,6 +203,48 @@ def git_push(msg, paths):
         time.sleep(3)
 
 
+def hors(cles=None):
+    """Cours hors séance (avant l'ouverture / après la clôture américaine) -> live.json « hs » : {clé: [cours, variation %, 'pre'|'post', heure ISO]}."""
+    cl = [c for c in (cles or suivis()) if c.startswith('s/') or c.startswith('e/')]
+    sy = {}
+    for c in cl:
+        s_ = sym(c)
+        if s_ and '.' not in s_ and '=' not in s_:
+            sy[s_] = c
+    try:
+        old = load('live.json')
+    except Exception:
+        return False
+    hs = {}
+    c_ = yahoo.crumb()
+    keys = list(sy)
+    for i in range(0, len(keys), 50):
+        part = keys[i:i + 50]
+        q = urllib.parse.quote(','.join(part))
+        j = None
+        for host in ('query1', 'query2'):
+            try:
+                j = yahoo.get(f'https://{host}.finance.yahoo.com/v7/finance/quote?symbols={q}&fields=marketState,preMarketPrice,preMarketChangePercent,preMarketTime,postMarketPrice,postMarketChangePercent,postMarketTime' + (f'&crumb={urllib.parse.quote(c_)}' if c_ else ''))
+                break
+            except Exception:
+                continue
+        for r in ((j or {}).get('quoteResponse') or {}).get('result') or []:
+            c = sy.get(r.get('symbol'))
+            if not c:
+                continue
+            st = str(r.get('marketState') or '')
+            for k, lab in (('postMarket', 'post'), ('preMarket', 'pre')):
+                p, pc, t = r.get(k + 'Price'), r.get(k + 'ChangePercent'), r.get(k + 'Time')
+                if p and pc is not None and t and (lab == 'pre' or st != 'PRE'):
+                    hs[c] = [rp(p), round(float(pc), 2), lab, dt.datetime.fromtimestamp(int(t), dt.timezone.utc).isoformat()]
+                    break
+        time.sleep(0.3)
+    old['hs'] = hs
+    save('live.json', old)
+    print(len(hs), 'cours hors séance')
+    return True
+
+
 def boucle(minutes=350, pas=60):
     """En séance : cours des lignes de base, indices et changes chaque minute ; toutes les actions toutes les 5 min."""
     fin = time.time() + minutes * 60
@@ -214,10 +256,15 @@ def boucle(minutes=350, pas=60):
         if h.hour * 60 + h.minute > 21 * 60 + 20:
             break
         live(None if i % 5 == 0 else base)
+        if i % 5 == 0 and (h.hour < 14 or (h.hour == 14 and h.minute < 30)):
+            try:
+                hors()
+            except Exception as e:
+                print('hors séance :', e)
         git_push('Cours ' + h.strftime('%H:%M'), ['data/live.json', 'data/prix.json', 'data/hebdo.json'])
         i += 1
         time.sleep(max(5, pas - (time.time() - t0)))
 
 
 if __name__ == '__main__':
-    {'live': live, 'close': close, 'boucle': boucle}[sys.argv[1]]()
+    {'live': live, 'close': close, 'boucle': boucle, 'hors': hors}[sys.argv[1]]()

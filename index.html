@@ -1904,6 +1904,11 @@ html body #pf-login .pfl-art{display:none!important}
 .pf #lv-tri,.pf .kpis.live-k+p,.pf #sec-live .tri{text-align:center}
 .pf .txq input.fr{min-width:9.5rem}
 .pf #sec-live :has(>#lv-tri){justify-content:center!important;text-align:center}
+
+.pf #lignes .rh .pxc>.hs{grid-column:1 / 3;grid-row:2;font-size:.72rem;font-weight:600;white-space:nowrap;opacity:.9;margin-top:2px;font-variant-numeric:tabular-nums}
+.pf #lignes .rh .pxc>.hs.ok{color:var(--color-ok)}.pf #lignes .rh .pxc>.hs.bad{color:var(--color-bad)}
+@media (min-width:1300px){.pf #lignes .rh .pxc>.hs{justify-self:end;grid-column:1 / 3}}
+@media (max-width:1299px){.pf #lignes .rh .pxc>.own{grid-column:1 / -1;grid-row:3;justify-self:start;margin-top:1px}.pf #lignes .rh .rt .pxc{grid-template-columns:5.2rem auto!important}}
 </style>
 
 <div class="pf">
@@ -2255,7 +2260,7 @@ html body #pf-login .pfl-art{display:none!important}
       const row=el('div','row'+(met?' metal'+(u.cle==='e/slv'?' agt':''):''));row.id='ligne'+l.n;
       const hd=el('button','rh');hd.type='button';const did='rd'+l.n;hd.setAttribute('aria-controls',did);const open=OPEN.has(l.n);hd.setAttribute('aria-expanded',open);
       hd.appendChild(el('span','rn',l.n));
-      const t=el('span','rt');{const nm=el('span','nm');if(u){const a=document.createElement('span');a.className='tv';a.append(window.PF_TOK(u.nom)?window.PF_CLEAN(u.nom):u.nom,el('span','tk',' ('+u.ticker+')'));nm.appendChild(logoEl(u));nm.appendChild(a);}else nm.textContent='—';if(u&&!met){const b=vbadge(u,u.verdict==='propre');b.classList.add('nb');nm.appendChild(b);}if(l.role)nm.appendChild(roleEl(l.role));if(u&&+MT[u.cle]>0){const a0=+MT[u.cle];const L1=lastM();const PP=POS[u.cle];const p1=eurPx(u.cle);const g0=p1?PP.qty*p1-PP.cost:0;const sg=g0>-0.5?'+':'−';}t.appendChild(nm);if(u){const de=dayEls(u);if(de.length){const pc=el('span','pxc');const ch=de.find(x=>x.classList.contains('ig'))||el('span','ig nul','—');const pr=de.find(x=>x.classList.contains('px'));pc.append(ch,pr);{const PPq=POS[u.cle];if(PPq&&PPq.qty>1e-9){const ep=eurPx(u.cle);const ow=el('span','own',(PPq.qty%1?fr(String(Math.round(PPq.qty*1e4)/1e4)):String(PPq.qty))+(isCr(u)?'':' act.')+(ep?' · '+eur(PPq.qty*ep):''));ow.title='Ce que tu détiens sur cette ligne';pc.appendChild(ow);}else pc.appendChild(el('span','own',''));}t.appendChild(pc);}}}
+      const t=el('span','rt');{const nm=el('span','nm');if(u){const a=document.createElement('span');a.className='tv';a.append(window.PF_TOK(u.nom)?window.PF_CLEAN(u.nom):u.nom,el('span','tk',' ('+u.ticker+')'));nm.appendChild(logoEl(u));nm.appendChild(a);}else nm.textContent='—';if(u&&!met){const b=vbadge(u,u.verdict==='propre');b.classList.add('nb');nm.appendChild(b);}if(l.role)nm.appendChild(roleEl(l.role));if(u&&+MT[u.cle]>0){const a0=+MT[u.cle];const L1=lastM();const PP=POS[u.cle];const p1=eurPx(u.cle);const g0=p1?PP.qty*p1-PP.cost:0;const sg=g0>-0.5?'+':'−';}t.appendChild(nm);if(u){const de=dayEls(u);if(de.length){const pc=el('span','pxc');const ch=de.find(x=>x.classList.contains('ig'))||el('span','ig nul','—');const pr=de.find(x=>x.classList.contains('px'));pc.append(ch,pr);{const H=window.PFHS&&window.PFHS[u.cle];if(H&&H[0]>0&&Date.now()-new Date(H[3]).getTime()<18*3600e3){const up=H[1]>=0;const hs=el('span','hs '+(up?'ok':'bad'),(H[2]==='pre'?'Avant ouverture ':'Après clôture ')+(up?'▲ +':'▼ −')+fr(String(Math.abs(H[1]).toFixed(1)))+'\u00a0% · '+H[0].toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}));hs.title=(H[2]==='pre'?'Cours avant l’ouverture de Wall Street':'Cours après la clôture de Wall Street')+', relevé à '+new Date(H[3]).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});pc.appendChild(hs);}}{const PPq=POS[u.cle];if(PPq&&PPq.qty>1e-9){const ep=eurPx(u.cle);const ow=el('span','own',(PPq.qty%1?fr(String(Math.round(PPq.qty*1e4)/1e4)):String(PPq.qty))+(isCr(u)?'':' act.')+(ep?' · '+eur(PPq.qty*ep):''));ow.title='Ce que tu détiens sur cette ligne';pc.appendChild(ow);}else pc.appendChild(el('span','own',''));}t.appendChild(pc);}}}
       if(u){const mb=el('span','mob');if(l.role)mb.appendChild(roleEl(l.role));mb.appendChild(el('span','mom '+(ki.entree==='Bon moment'?'low':ki.entree==='Attendre un repli'?'high':ki.entree==='En 2–3 fois'?'mid':''),ki.entree));t.querySelectorAll('.nm .inv,.nm .ig').forEach(x=>mb.appendChild(x.cloneNode(true)));t.appendChild(mb);}
       hd.appendChild(t);
       hd.appendChild(spark(u?u.cle:null,ki.ecart,ki.entree,true));
@@ -3182,7 +3187,7 @@ window.pfBackupAge=function(){try{var d=localStorage.getItem('pf-bk:'+(localStor
      GitHub y garde une copie 5 min au plus ; en cas d'échec (hors ligne), les derniers cours affichés sont conservés. */
   async function getLive(){try{const r=await fetch('https://raw.githubusercontent.com/'+REPO+'/main/data/live.json',{cache:'no-store'});return r.ok?await r.json():null;}catch(e){return null;}}
   let PT=null,NEXT=0,LIVEAT=null;const PAS=65000;function sched(){clearTimeout(PT);NEXT=Date.now()+PAS;PT=setTimeout(poll,PAS);}
-  async function poll(){sched();if(document.hidden)return;try{const j=await getLive();if(!j)return;if(j.at)LIVEAT=j.at;if(j.veille)window.PFVEILLE=Object.assign(window.PFVEILLE||{},j.veille);
+  async function poll(){sched();if(document.hidden)return;try{const j=await getLive();if(!j)return;if(j.at)LIVEAT=j.at;if(j.veille)window.PFVEILLE=Object.assign(window.PFVEILLE||{},j.veille);if(j.hs)window.PFHS=j.hs;
       if(!wsOK||!AT||new Date(j.at)>new Date(AT)){Object.entries(j.px||{}).forEach(([k,v])=>{if(!(wsOK&&fhSym(k)))PX[k]=v;});Object.assign(FX,j.fx||{});if(!wsOK){const hs=Object.values(j.heure||{}).filter(Boolean).sort();AT=hs.length?hs[hs.length-1]:j.at;SRC='live';}dirty=true;}}catch(e){}}
   poll();window.pfRefresh=()=>{dirty=true;return poll();};
   /* Dès que le portefeuille change (ligne ajoutée / retirée, achat, vente) ou qu'on revient sur l'app : cours relus tout de suite. */

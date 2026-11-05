@@ -41,6 +41,7 @@ jobs:
             esac
           fi
           python tools/maj.py "$MODE"
+          if [ "$MODE" = close ]; then python tools/maj.py hors || true; fi
       - name: Enregistrer
         run: |
           git add data
