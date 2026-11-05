@@ -2166,10 +2166,17 @@ html body #pf-login button[type=submit]:hover{background:#1b2d52!important}
 
 /* ordinateur : colonnes ramenées vers le centre (l'espace libre passe avant le bouton retirer), nombre détenu centré entre le nom et la colonne Jour */
 @media (min-width:1300px){
- .pf #lignes .rh{grid-template-columns:minmax(0,2.4fr) 8rem 8.4rem 4.4rem minmax(2rem,1fr) 1.25rem!important}
+ .pf #lignes .rh{grid-template-columns:minmax(0,3.8fr) minmax(7rem,1fr) minmax(7.6rem,1fr) minmax(4.4rem,.8fr) 2.2rem 1.25rem!important}
  .pf #lignes .rh>.rx{justify-self:end}
- .pf #lignes .rh .rt{grid-template-columns:minmax(0,1fr) auto!important;justify-content:stretch!important}
- .pf #lignes .rh .rt>.nm>.qty{margin-left:auto!important;margin-right:auto!important;padding:0 12px!important}
+ .pf #lignes#lignes .rh>.tide,.pf #lignes#lignes .rh>.st,.pf #lignes#lignes .rh>.sc{justify-self:center!important}
+ .pf #lignes .rh .rt{grid-template-columns:minmax(0,1.3fr) minmax(12rem,1fr)!important;justify-content:stretch!important}
+ body .pf #lignes#lignes .row .rh .rt .pxc{grid-template-columns:repeat(2,minmax(5.6rem,1fr))!important;justify-items:center!important;width:100%!important}
+ body .pf #lignes#lignes .row .rh .rt .pxc:has(.ig.pre[data-kind]){grid-template-columns:repeat(3,minmax(5.2rem,1fr))!important}
+ body .pf #lignes#lignes .row .rh .rt .pxc>*{justify-self:center!important}
+ .pf #lignes .rh .rt>.nm{position:relative}
+ .pf #lignes .rh .rt>.nm:has(>.qty){padding-right:6.2rem}
+ .pf #lignes .rh .rt>.nm>.qty{position:absolute!important;right:0;top:50%;transform:translateY(-50%);width:6.2rem;text-align:center;margin:0!important;padding:0!important}
+ .pf #lignes .rh>.tide{align-items:center!important;text-align:center}
 }
 
 .pf .nm .lg-a{display:inline-flex;flex:none;border-radius:6px;cursor:pointer}.pf .nm .lg-a:hover{outline:2px solid var(--sea);outline-offset:1px}.pf .nm .lg-a:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
