@@ -1692,6 +1692,51 @@ html body #pf-login .pfl-b .pfl-f svg{color:#9fd0f5!important}
 .pf #t-lignes td:first-child,.pf #t-lignes th:first-child{width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pf #sec-vue>.sh{padding:18px 20px 0!important}
 .pf #pf-topbar .tb-s:focus-within{border-color:var(--acc)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)!important}
+
+/* ===================== v95 : second audit mobile ===================== */
+.pf .a1l{grid-template-columns:minmax(0,1fr)!important}
+.pf .a1l li{min-width:0}
+body:has(#tab-suivre[aria-selected="false"]) #pf-day,body:has(#tab-suivre[aria-selected="false"]) .pf .day{display:none!important}
+@media (max-width:999px){
+ .pf #lignes .rh .rt .nm{flex-wrap:nowrap!important;min-width:0}
+ .pf #lignes .rh .rt .nm>*{flex:none}
+ .pf #lignes .rh .rt .nm>.tv{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .pf input,.pf select,.pf textarea{font-size:16px!important}
+ .pf #lignes .rh .grip{width:32px!important;height:44px!important;margin-left:-8px!important}
+ .pf .tabs button{font-size:12px!important}
+ .pf #pf-maj span{font-size:12px!important}
+ .pf #pf-maj{min-height:36px;display:inline-flex;align-items:center;gap:6px;padding:0 4px;cursor:pointer}
+}
+@media (max-width:600px){
+ .pf #sec-vue{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+ .pf #sec-vue>.sh{padding:0 4px 8px!important}
+ .pf #rp-map,.pf .wmap,.pf #sec-vue .wm{grid-template-columns:1fr!important}
+ .pf #sec-vue svg[viewBox]{width:100%!important;height:auto!important;min-height:150px}
+}
+@media (hover:none),(pointer:coarse){.pf #pf-topbar kbd{display:none!important}}
+.tk-sheet{padding-bottom:max(16px,env(safe-area-inset-bottom))!important}
+.tk-sheet.vv{inset:auto 0 auto 0!important;top:0!important}
+/* vue simple : bouton pour passer au détail */
+.pf-godet{display:none}
+@media (max-width:999px){html.pf-simple .pf-godet{display:flex;justify-content:center;margin:4px 0 8px}}
+.pf-godet button{min-height:44px;padding:0 20px;border-radius:999px;border:1px solid var(--color-border-line);background:var(--app-card);color:var(--color-fg);font:inherit;font-weight:600;cursor:pointer;box-shadow:var(--app-shadow)}
+
+@media (max-width:720px){
+ .pf #lignes .rd.fx{display:flex!important;flex-direction:column}
+ .pf #lignes .rd.fx[hidden]{display:none!important}
+ .pf #lignes .rd.fx>.fx-main{display:contents!important}
+ .pf #lignes .rd.fx>.fx-head{order:0}
+ .pf #lignes .rd.fx .pos2{order:1}
+ .pf #lignes .rd.fx>.fx-side{order:2}
+ .pf #lignes .rd.fx .txq{order:3}
+ .pf #lignes .rd.fx .hist{order:4}
+ .pf #lignes .rd.fx .kv{order:5}
+ .pf #lignes .rd.fx .fx-main>.dl,.pf #lignes .rd.fx .why{order:6}
+ .pf #lignes .rd.fx .dsrc{order:7}
+ .pf #lignes .rd.fx .fx-close{order:9}
+}
+.pf .fx-close{display:none}
+@media (max-width:720px){.pf .fx-close{display:block;width:100%;min-height:44px;margin-top:4px;border-radius:12px;border:1px solid var(--color-border-line);background:transparent;color:var(--color-fg);font:inherit;font-weight:600;cursor:pointer}}
 </style>
 
 <div class="pf">
@@ -1731,7 +1776,7 @@ html body #pf-login .pfl-b .pfl-f svg{color:#9fd0f5!important}
     
 
     <section id="sec-courbe" data-source="prix">
-      <dl class="an-strip" id="an-strip" aria-label="Résumé du portefeuille"><div><dt>Valeur</dt><dd id="as-v">—</dd></div><div><dt>Gain</dt><dd id="as-g">—</dd><dd class="as-s" id="as-gp"></dd></div><div><dt>Par an</dt><dd id="as-r">—</dd><dd class="as-s" id="as-sp"></dd></div><div><dt>Pire baisse</dt><dd id="as-b">—</dd></div></dl>
+      <dl class="an-strip" id="an-strip" aria-label="Résumé du portefeuille"><div><dt>Valeur</dt><dd id="as-v">—</dd></div><div><dt title="Gain réel depuis tes premiers achats, dividendes compris">Gain réel</dt><dd id="as-g">—</dd><dd class="as-s" id="as-gp"></dd></div><div><dt title="Simulation : tes lignes actuelles, à parts égales, sur tout l’historique disponible">Par an · simulé</dt><dd id="as-r">—</dd><dd class="as-s" id="as-sp"></dd></div><div><dt title="Simulation sur tout l’historique disponible">Pire baisse · simulée</dt><dd id="as-b">—</dd></div></dl>
       <div class="sh"><h2>Ce que ce portefeuille aurait donné</h2><p class="mu" id="periode">—</p></div>
       <p id="takeaway"></p>
       <dl class="kpis">
@@ -2118,7 +2163,7 @@ html body #pf-login .pfl-b .pfl-f svg{color:#9fd0f5!important}
         {let ob=document.getElementById('objectif');if(!ob){ob=el('div','achat1 objf');ob.id='objectif';}a1.after(ob);ob.textContent='';const O=dash.params().objectif||{};ob.appendChild(el('h3','','Mon objectif'));const f=el('div','obf');const inp=(k,lab,ph,step)=>{const l=el('label','');l.appendChild(el('span','k',lab));const i=document.createElement('input');i.type='number';i.min='0';i.step=step||'100';i.inputMode='decimal';i.placeholder=ph;if(O[k]!=null)i.value=O[k];i.addEventListener('change',()=>{dash.setParams({objectif:{...(dash.params().objectif||{}),[k]:+i.value||null}});});l.appendChild(i);f.appendChild(l);};inp('cible','Montant visé','ex. 100000');inp('annees','Dans combien d’années','ex. 15','1');inp('mensuel','Versement par mois','ex. 300','50');ob.appendChild(f);
           let now=0;Object.entries(POS).forEach(([k,p])=>{if(!(p.qty>1e-9))return;const e=eurPx(k);now+=e?p.qty*e:p.cost;});const yrs=+O.annees||0,mens=+O.mensuel||0,cib=+O.cible||0;const eX=v=>Math.round(v/100)*100<1000?Math.round(v).toLocaleString('fr-FR')+'\u00a0€':(Math.round(v/100)*100).toLocaleString('fr-FR')+'\u00a0€';const fv=(r,n)=>now*Math.pow(1+r,n)+(r>0?mens*12*(Math.pow(1+r,n)-1)/r:mens*12*n);
           if(yrs>0){const ul=el('ul','a1l');[['Prudent 5 %',.05],['Réaliste 7 %',.07],['Optimiste 9 %',.09]].forEach(([lab,r])=>{const v=fv(r,yrs);const li=el('li','');li.append(el('b','',lab),el('span','mu',' dans '+yrs+' an'+(yrs>1?'s':'')));li.appendChild(el('b','a1r '+(cib?(v>=cib?'ok':'bad'):''),eX(v)));ul.appendChild(li);});ob.appendChild(ul);if(cib){const need=(()=>{for(let n=1;n<=60;n++)if(fv(.07,n)>=cib)return n;return null;})();ob.appendChild(el('p','mu a1m',need?'À 7 % par an, '+eX(cib)+' serait atteint dans environ '+need+' an'+(need>1?'s':'')+(mens?' avec '+Math.round(mens)+' € par mois':'')+'.':'À 7 % par an, ce montant n’est pas atteint en 60 ans : augmente le versement mensuel.'));}}else ob.appendChild(el('p','mu a1m','Indique un montant, une durée et un versement : l’appli projette à 5, 7 et 9 % par an, à partir de ta valeur actuelle de '+eX(now)+'.'));}}else a1.remove();}
-    {const allH=R.filter(Boolean).length>0&&R.filter(Boolean).every(u=>POS[u.cle]&&POS[u.cle].qty>1e-9);let pv=null;try{pv=localStorage.getItem('pf-vue');}catch(_){}pfVue(pv||(allH?'simple':'detail'));}
+    {const allH=R.filter(Boolean).length>0&&R.filter(Boolean).every(u=>POS[u.cle]&&POS[u.cle].qty>1e-9);let pv=null;try{pv=localStorage.getItem('pf-vue');}catch(_){}if(!pv&&R.filter(Boolean).length){pv=allH?'simple':'detail';try{localStorage.setItem('pf-vue',pv);}catch(_){}}pfVue(pv||'detail');}
     {let s=document.getElementById('invt');if(!s){s=el('p','invt');s.id='invt';box.before(s);}s.textContent='';s.hidden=false;if(TOT>0){s.append(el('b','','Investi : '+eur(TOT)),NF<LG.length?' · '+NF+' ligne'+(NF>1?'s':'')+' sur '+LG.length+' remplie'+(NF>1?'s':''):' · parts égales = '+eur(TOT/LG.length)+' par ligne');}else s.hidden=true;}
     const tf=document.querySelector('#t-fond tbody');if(tf){tf.textContent='';
     R.filter(u=>u&&!isMetal(u)).forEach(r=>{const tr=document.createElement('tr');td(tr,r.ticker+' · '+r.nom);td(tr,num(r.capi_mds),'n');td(tr,pct(r.croissance_ca_5a),'n');td(tr,pct(r.marge_nette,false),'n');td(tr,pct(r.cash_libre,false),'n');td(tr,pct(r.roic,false),'n');td(tr,r.dette_ebitda==null?'—':num(r.dette_ebitda)+'×','n');td(tr,num(r.per_prevu),'n');td(tr,pct(r.actions_an),'n');td(tr,pct(r.marge_brute,false),'n');td(tr,pct(r.croissance_ca_1a),'n');td(tr,pct(r.croissance_bpa_5a),'n');td(tr,pct(r.roe,false),'n');td(tr,pct(r.rendement_cash,false),'n');tf.appendChild(tr);});}
@@ -2842,7 +2887,7 @@ html body #pf-login .pfl-b .pfl-f svg{color:#9fd0f5!important}
     CRYPTO.forEach(t=>{if(raw.length>=3&&t[1].toUpperCase().startsWith(raw))cr(t);});A.forEach(t=>{if(t[0]===q)st(t);});CRYPTO.forEach(t=>{if(raw.length>=2&&t[1].toUpperCase().startsWith(raw))cr(t);});A.forEach(t=>{if(t[0].startsWith(q))st(t);});if(raw.length>=2){A.forEach(t=>{if(String(t[1]).toUpperCase().startsWith(raw))st(t);});A.forEach(t=>{if(String(t[1]).toUpperCase().includes(raw))st(t);});}
     if(/^CRYPTO|^MATI|^MINER|^METAU|^COMMO|^OBLI|^BOND/.test(raw))return out.slice(0,40);
     /* Ordre : ticker exact, actions dont le ticker commence par la saisie, autres actions, cryptos, puis les cryptos qui imitent une action (tokenized) */
-    const rk=o=>{if(String(o.nom).toUpperCase()===raw&&/-CG$|-CRYPTO$/.test(o.val))return -1;if(/-MP$/.test(o.val)&&String(o.nom).toUpperCase().startsWith(raw+' ('))return -1;if(/\bCDR\b|HEDGED/i.test(o.nom)&&o.tk!==q)return 2.5;const tok=/tokeni[sz]ed|xstock|bstocks?|\bondo\b|wrapped|backed/i.test(o.nom);const isC=/-CG$|-CRYPTO$/.test(o.val);if(/-OB$/.test(o.val))return o.tk===q?0:1;if(o.tk===q&&!tok)return 0;if(tok)return 9;if(!isC&&o.tk.startsWith(q))return 1;if(!isC)return 2;return o.tk===q?0:3;};
+    const rk=o=>{if(String(o.nom).toUpperCase()===raw&&/-CG$|-CRYPTO$/.test(o.val))return -1;if(/-MP$/.test(o.val)&&String(o.nom).toUpperCase().startsWith(raw+' ('))return -1;if(/\bCDR\b|HEDGED|NEW YORK REGISTRY|\bADR\b/i.test(o.nom))return 2.5;const tok=/tokeni[sz]ed|xstock|bstocks?|\bondo\b|wrapped|backed/i.test(o.nom);const isC=/-CG$|-CRYPTO$/.test(o.val);if(/-OB$/.test(o.val))return o.tk===q?0:1;if(o.tk===q&&!tok)return 0;if(tok)return 9;if(!isC&&o.tk.startsWith(q))return 1;if(!isC)return 2;return o.tk===q?0:3;};
     return out.map((o,i)=>[o,i]).sort((x,y)=>rk(x[0])-rk(y[0])||x[1]-y[1]).map(x=>x[0]).slice(0,40);}
   function tkSug(ti,pick,U){ti.removeAttribute('list');ti.setAttribute('autocomplete','off');ti.readOnly=true;ti.inputMode='none';ti.classList.add('tk-open');const go=ti.parentNode&&ti.parentNode.querySelector('.go');if(go&&go!==ti)go.style.display='none';const open=e=>{if(e)e.preventDefault();ti.blur();tkSheet(U||[]);};ti.addEventListener('click',open);ti.addEventListener('focus',open);}
   function tkSheet(U){let sh=document.getElementById('tk-sheet');if(sh)sh.remove();sh=el('div','tk-sheet');sh.id='tk-sheet';sh.setAttribute('role','dialog');sh.setAttribute('aria-modal','true');sh.setAttribute('aria-label','Ajouter une ligne');
@@ -3114,7 +3159,7 @@ try{new MutationObserver(function(){t();}).observe(document.body,{childList:true
  function save(box){var d=window.dash;if(!d)return;var ch=(d.params().choix||[]).slice();var dom=rowsOf(box).map(function(r){return r.dataset.cle;}).filter(Boolean);var set={};dom.forEach(function(k){set[k]=1;});var q=dom.slice();var out=ch.map(function(k){return set[k]?q.shift():k;});if(JSON.stringify(out)!==JSON.stringify(ch))d.setParams({choix:out});}
  function grpOf(r){var e=r.previousElementSibling;while(e&&!e.classList.contains('grp'))e=e.previousElementSibling;return e;}
  function same(a,b){return a&&b&&b.classList.contains('row')&&grpOf(a)===grpOf(b);}
- function fix(){var box=document.getElementById('lignes');if(!box)return;var rows=rowsOf(box);[].forEach.call(box.querySelectorAll('.rh .tv'),function(t){if(!t.title)t.title=t.textContent.trim();});box.classList.toggle('can-sort',rows.length>1);
+ function fix(){var box=document.getElementById('lignes');if(!box)return;var rows=rowsOf(box);[].forEach.call(box.querySelectorAll('.rh .tv'),function(t){if(!t.title)t.title=t.textContent.trim();});[].forEach.call(box.querySelectorAll('.rd.fx'),function(rd){if(rd.querySelector(':scope>.fx-close'))return;var c=document.createElement('button');c.type='button';c.className='fx-close';c.textContent='Fermer';c.onclick=function(){var rh=rd.parentElement&&rd.parentElement.querySelector(':scope>.rh');if(rh){rh.click();rh.scrollIntoView({block:'nearest'});rh.focus({preventScroll:true});}};rd.appendChild(c);});box.classList.toggle('can-sort',rows.length>1);
   rows.forEach(function(r){var rh=r.querySelector(':scope>.rh');if(!rh)return;var x=r.querySelector('.rx');if(x){x.classList.add('rx-row');var last=rh.lastElementChild;if(x.parentElement!==rh||x.nextElementSibling!==last)rh.insertBefore(x,last);}
    if(!rh.querySelector('.grip')){var g=document.createElement('span');g.className='grip';g.setAttribute('role','button');g.tabIndex=0;g.title='Glisser pour changer l’ordre (ou flèches haut/bas)';g.setAttribute('aria-label','Déplacer la ligne');g.innerHTML=GRIP;var nm=rh.querySelector('.rt .nm')||rh.querySelector('.rt')||rh;nm.insertBefore(g,nm.firstChild);bind(g,r,box);}});
   if(!TH)TH=document.querySelector('.pf .th[aria-hidden]');var first=box.querySelector(':scope>.grp');if(TH&&first&&first.nextElementSibling!==TH)first.after(TH);
@@ -3137,6 +3182,9 @@ try{new MutationObserver(function(){t();}).observe(document.body,{childList:true
  /* deux onglets ouverts : si l'autre enregistre, on recharge celui-ci pour ne pas écraser ses données */
  var stale=false;addEventListener('storage',function(e){if(!e.key||!/^pf-(db|pfs|pfa):/.test(e.key))return;if(document.hidden)stale=true;else location.reload();});document.addEventListener('visibilitychange',function(){if(!document.hidden&&stale)location.reload();});
  function ttl(){var n=document.querySelector('.tb-wn');var t=n&&n.textContent.trim();var w=(t?t+' · ':'')+'Cap';if(document.title!==w)document.title=w;}setInterval(ttl,1500);
+ function godet(){var v=document.getElementById('v-suivre');if(!v||document.querySelector('.pf-godet'))return;var d=document.createElement('div');d.className='pf-godet';var b=document.createElement('button');b.type='button';b.textContent='Voir le détail : lignes, répartition, analyse';b.onclick=function(){try{localStorage.setItem('pf-vue','detail');}catch(_){}window.dispatchEvent(new CustomEvent('pf-vue',{detail:'detail'}));setTimeout(function(){if(document.documentElement.classList.contains('pf-simple'))location.reload();},150);};d.appendChild(b);v.insertBefore(d,v.firstChild);}setTimeout(godet,500);
+ /* feuille de recherche : suivre le clavier (visualViewport) */
+ if(window.visualViewport){var vvf=function(){var sh=document.querySelector('.tk-sheet');if(!sh)return;var h=visualViewport.height;if(h<innerHeight-80){sh.classList.add('vv');sh.style.height=h+'px';sh.style.top=visualViewport.offsetTop+'px';}else{sh.classList.remove('vv');sh.style.height='';sh.style.top='';}};visualViewport.addEventListener('resize',vvf);visualViewport.addEventListener('scroll',vvf);}
  function ph(){var i=document.querySelector('.tb-s input');if(i)i.placeholder=innerWidth<480?'Action, ETF, crypto, or…':'Ajouter une action, un ETF ou une crypto';}addEventListener('resize',ph);setTimeout(ph,300);
  new MutationObserver(run).observe(document.body,{childList:true,subtree:true});run();
 })();
