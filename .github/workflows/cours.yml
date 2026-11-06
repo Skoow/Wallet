@@ -1,21 +1,21 @@
 name: Cours
 on:
   schedule:
-    # Boucle « chaque minute » toute la journée de bourse, en 3 relais de ~6 h (une tâche GitHub dure 6 h au plus) :
-    - cron: '50 6 * * 1-5'    # 06h50 UTC : avant l'ouverture de Paris (9h l'hiver, 9h l'été = 7h UTC) -> ~12h40 UTC
-    - cron: '35 12 * * 1-5'   # 12h35 UTC : Europe l'après-midi + ouverture américaine -> ~18h25 UTC
-    - cron: '20 18 * * 1-5'   # 18h20 UTC : jusqu'à la clôture américaine (arrêt à 21h20 UTC)
-    - cron: '45 22 * * 1-5'   # le soir : clôtures -> prix, hebdo, changes
-    - cron: '17 7-20 * * 1-5' # filet de sécurité : GitHub saute parfois des déclenchements ; relance la boucle chaque heure (une seule à la fois)
+    # Les déclenchements planifiés de GitHub arrivent souvent avec des heures de retard : ils ne servent plus qu'à
+    # relancer la chaîne si elle s'est arrêtée. Le travail est fait par une tâche « relais » (~6 h) qui relance la suivante.
+    - cron: '50 6 * * *'
+    - cron: '35 12 * * *'
+    - cron: '20 18 * * *'
   workflow_dispatch:
     inputs:
       mode:
-        description: 'boucle, live ou close'
-        default: 'live'
+        description: 'relais, boucle, live, close ou hors'
+        default: 'relais'
 permissions:
   contents: write
+  actions: write   # pour relancer le relais suivant
 concurrency:
-  group: live   # cours en séance et ajouts : jamais bloqués par la nuit
+  group: live   # une seule tâche à la fois ; une seule en attente
   cancel-in-progress: false
 jobs:
   maj:
@@ -34,15 +34,8 @@ jobs:
         env:
           IN_MODE: ${{ github.event.inputs.mode }}
         run: |
-          MODE="$IN_MODE"
-          if [ -z "$MODE" ]; then
-            case "${{ github.event.schedule }}" in
-              "45 22 * * 1-5") MODE=close ;;
-              *) MODE=boucle ;;
-            esac
-          fi
-          python tools/maj.py "$MODE"
-          if [ "$MODE" = close ]; then python tools/maj.py hors || true; fi
+          MODE="${IN_MODE:-relais}"
+          timeout 350m python tools/maj.py "$MODE" || true
       - name: Enregistrer
         run: |
           git add data
@@ -53,3 +46,8 @@ jobs:
             git rebase --abort 2>/dev/null || true; sleep $((i * 5))
           done
           exit 1
+      - name: Relancer le relais suivant
+        if: ${{ !cancelled() && (github.event.inputs.mode == '' || github.event.inputs.mode == 'relais' || github.event_name == 'schedule') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cours.yml --repo "${{ github.repository }}" -f mode=relais

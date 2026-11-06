@@ -190,12 +190,16 @@ def close():
         if not q:
             continue
         d = dt.date.fromisoformat(q[1])
-        if d.year * 12 + d.month - 1 != mi(r['debut']) + len(r['prix']) - 1:
+        ix = d.year * 12 + d.month - 1 - mi(r['debut'])
+        if ix < 0 or ix >= len(r['prix']):
             continue
-        ref = r['prix'][-2] if len(r['prix']) > 1 else r['prix'][-1]
+        ref = r['prix'][ix - 1] if ix > 0 else r['prix'][ix]
         if ref and abs(q[0] / ref - 1) > 0.25:
             miss.append(r['cle'] + ' (saut > 25 %)'); continue
-        r['prix'][-1] = q[0]; got += 1
+        r['prix'][ix] = q[0]
+        for j in range(ix + 1, len(r['prix'])):  # mois déjà ouverts depuis : partent de cette clôture
+            r['prix'][j] = q[0]
+        got += 1
     for h in H:
         q = Q.get(h['cle'])
         if q and dt.date.fromisoformat(q[1]) >= cur_w:
@@ -256,7 +260,7 @@ def hors(cles=None):
         j = None
         for host in ('query1', 'query2'):
             try:
-                j = yahoo.get(f'https://{host}.finance.yahoo.com/v7/finance/quote?symbols={q}&fields=marketState,preMarketPrice,preMarketChangePercent,preMarketTime,postMarketPrice,postMarketChangePercent,postMarketTime' + (f'&crumb={urllib.parse.quote(c_)}' if c_ else ''))
+                j = yahoo.get(f'https://{host}.finance.yahoo.com/v7/finance/quote?symbols={q}&fields=marketState,regularMarketTime,preMarketPrice,preMarketChangePercent,preMarketTime,postMarketPrice,postMarketChangePercent,postMarketTime' + (f'&crumb={urllib.parse.quote(c_)}' if c_ else ''))
                 break
             except Exception:
                 continue
@@ -265,9 +269,16 @@ def hors(cles=None):
             if not c:
                 continue
             st = str(r.get('marketState') or '')
+            if st == 'REGULAR':
+                continue  # séance en cours : pas de cours hors séance à afficher
+            rt = int(r.get('regularMarketTime') or 0)
             for k, lab in (('postMarket', 'post'), ('preMarket', 'pre')):
                 p, pc, t = r.get(k + 'Price'), r.get(k + 'ChangePercent'), r.get(k + 'Time')
-                if p and pc is not None and t and (lab == 'pre' or st != 'PRE'):
+                if lab == 'pre' and st != 'PRE':
+                    continue
+                if lab == 'post' and (st == 'PRE' or not t or int(t) <= rt):
+                    continue
+                if p and pc is not None and t:
                     hs[c] = [rp(p), round(float(pc), 2), lab, dt.datetime.fromtimestamp(int(t), dt.timezone.utc).isoformat()]
                     break
         time.sleep(0.3)
@@ -304,10 +315,11 @@ def boucle(minutes=350, pas=60):
     while time.time() < fin:
         t0 = time.time()
         h = dt.datetime.now(dt.timezone.utc)
-        if h.hour * 60 + h.minute > 21 * 60 + 20:
+        m = h.hour * 60 + h.minute
+        if m > 21 * 60 + 20 or m < 6 * 60 + 45 or h.weekday() >= 5:
             break
         live(list(dict.fromkeys(suivis() + GR)) if i % 2 == 0 else base)
-        if i % 5 == 0 and (h.hour < 14 or (h.hour == 14 and h.minute < 30)):
+        if i % 5 == 0 and (m < 14 * 60 + 30 or m >= 20 * 60):
             try:
                 hors()
             except Exception as e:
@@ -317,5 +329,34 @@ def boucle(minutes=350, pas=60):
         time.sleep(max(5, pas - (time.time() - t0)))
 
 
+def relais(minutes=345):
+    """Tâche relais (~6 h), relancée par le workflow à sa fin : ne dépend plus des déclenchements planifiés de GitHub,
+    qui arrivent avec des heures de retard. En semaine 06:45-21:20 UTC : cours chaque minute ; 21:25 : clôtures ;
+    jusqu'à 01:00 UTC : cours après séance toutes les 15 min. Le reste du temps : attente."""
+    fin = time.time() + minutes * 60
+    fait = None
+    while time.time() < fin - 120:
+        h = dt.datetime.now(dt.timezone.utc)
+        m, wd = h.hour * 60 + h.minute, h.weekday()
+        if wd < 5 and 6 * 60 + 45 <= m <= 21 * 60 + 20:
+            boucle(max(1, int((fin - time.time()) / 60) - 2))
+            continue
+        if wd < 5 and m > 21 * 60 + 20 and fait != h.date():
+            try:
+                close(); hors()
+            except Exception as e:
+                print('clôture :', e)
+            git_push('Clôture ' + h.strftime('%Y-%m-%d'), ['data/live.json', 'data/prix.json', 'data/hebdo.json', 'data/fx.json'])
+            fait = h.date()
+            continue
+        apres = (wd < 5 and m > 21 * 60 + 20) or (m < 60 and (wd - 1) % 7 < 5)
+        if apres and m % 15 == 0:
+            try:
+                hors(); git_push('Après séance ' + h.strftime('%H:%M'), ['data/live.json'])
+            except Exception as e:
+                print('après séance :', e)
+        time.sleep(60)
+
+
 if __name__ == '__main__':
-    {'live': live, 'close': close, 'boucle': boucle, 'hors': hors}[sys.argv[1]]()
+    {'live': live, 'close': close, 'boucle': boucle, 'hors': hors, 'relais': relais}[sys.argv[1]]()
