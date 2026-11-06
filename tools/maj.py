@@ -111,10 +111,27 @@ def live(cles=None):
     except Exception:
         old = {}
     px, at, vl = dict(old.get('px', {})), dict(old.get('heure', {})), dict(old.get('veille', {}))
-    for c in (cles or suivis()):
+    cl = list(cles or suivis())
+    sy = {}
+    for c in cl:
         s = sym(c)
-        r = quote(s) if s else None
+        if s: sy[s] = c
+    got = set()
+    try:  # relevé groupé : 50 titres par appel (bien plus rapide qu'un par un)
+        import yahoo
+        for s_, (p, t, pc, er) in yahoo.quotes(list(sy)).items():
+            c = sy.get(s_)
+            if not c: continue
+            px[c], at[c] = rp(p), dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat(timespec='seconds')
+            if pc: vl[c] = rp(pc)
+            got.add(c)
+    except Exception as e:
+        print('relevé groupé :', e)
+    manq = [s_ for s_, c in sy.items() if c not in got]
+    for s_ in manq[:80]:  # repli un par un, borné pour tenir la minute
+        r = quote(s_)
         if r:
+            c = sy[s_]
             px[c], at[c] = r[0], r[2]
             if r[3]:
                 vl[c] = r[3]
@@ -260,17 +277,36 @@ def hors(cles=None):
     return True
 
 
+def grandes(cap=20):
+    """Sociétés de plus de `cap` Md$ (suivies dans data/h) : leurs cours en séance couvrent les lignes ajoutées par l'utilisateur."""
+    try:
+        import nuit
+        T = load('tickers.json')
+        out = []
+        for r in T:
+            if (r[4] or 0) >= cap:
+                c = nuit.cle_of(r[0], r[2])
+                if os.path.exists('data/h/' + c.replace('/', '_') + '.json'):
+                    out.append(c)
+        return out
+    except Exception as e:
+        print('grandes sociétés :', e)
+        return []
+
+
 def boucle(minutes=350, pas=60):
     """En séance : cours des lignes de base, indices et changes chaque minute ; toutes les actions toutes les 5 min."""
     fin = time.time() + minutes * 60
     base = list(dict.fromkeys(load('params.json').get('choix', []) + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/cac', 'e/fxe', 'e/fxc', 'e/fxf']))
+    GR = grandes()
+    print(len(GR), 'grandes sociétés suivies en séance')
     i = 0
     while time.time() < fin:
         t0 = time.time()
         h = dt.datetime.now(dt.timezone.utc)
         if h.hour * 60 + h.minute > 21 * 60 + 20:
             break
-        live(None if i % 5 == 0 else base)
+        live(list(dict.fromkeys(suivis() + GR)) if i % 2 == 0 else base)
         if i % 5 == 0 and (h.hour < 14 or (h.hour == 14 and h.minute < 30)):
             try:
                 hors()
