@@ -53,6 +53,51 @@ YSEC = {'Financial Services': 'Finance', 'Industrials': 'Industrie', 'Healthcare
         'Utilities': 'Services publics'}
 
 
+
+# classes d'actions d'une même société : le nom seul ne permet pas de les distinguer (« Quebecor » deux fois)
+CLASSES_US = {'GOOGL': 'A', 'GOOG': 'C', 'FOXA': 'A', 'FOX': 'B', 'NWSA': 'A', 'NWS': 'B', 'UAA': 'A', 'UA': 'C',
+              'BRK-A': 'A', 'BRK-B': 'B', 'BF-A': 'A', 'BF-B': 'B', 'LEN': 'A', 'LEN-B': 'B', 'HEI': 'commune', 'HEI-A': 'A',
+              'MOG-A': 'A', 'MOG-B': 'B', 'LBRDA': 'A', 'LBRDK': 'C', 'LSXMA': 'A', 'LSXMK': 'C', 'ZG': 'A', 'Z': 'C',
+              'DISCA': 'A', 'DISCK': 'C', 'VIA': 'A', 'PARAA': 'A', 'PARA': 'B', 'CMCSA': 'A', 'RUSHA': 'A', 'RUSHB': 'B',
+              'GEF': 'A', 'GEF-B': 'B', 'HVT': 'commune', 'HVT-A': 'A', 'MKC': 'sans vote', 'MKC-V': 'avec vote'}
+
+
+def classes(L):
+    """Ajoute « · classe X » au nom quand une société a plusieurs classes d'actions cotées."""
+    import re as _re
+    n = 0
+    for r in L:
+        t, ex, nm = r[0], r[2], r[1]
+        if ' · classe ' in nm:
+            continue
+        k = None
+        if ex == 'US' and t in CLASSES_US:
+            k = CLASSES_US[t]
+        else:
+            m = _re.search(r'[.\-]([A-C])$', t)
+            if m: k = m.group(1)
+        if k:
+            nm = _re.sub(r'\s*(Inc\.?\s*)?(Class [A-C]|Cl [A-C]|Cl\.? ?[A-C]|Class [A-C] Capital Stock| Inc A| A)$', '', nm).strip()
+            r[1] = nm + ' · classe ' + k; n += 1
+    print(n, 'classes d’actions précisées')
+
+_FX = {}
+
+
+def taux_change(de, vers):
+    """Combien d'unités de `vers` pour 1 unité de `de` (ex. USD -> CNY ≈ 7,1), d'après Yahoo ; mis en cache."""
+    k = (de, vers)
+    if k not in _FX:
+        _FX[k] = None
+        try:
+            import maj
+            r = maj.quote(de + vers + '=X')
+            if r and r[0] > 0: _FX[k] = r[0]
+        except Exception:
+            pass
+    return _FX[k]
+
+
 def secteurs_yahoo(L):
     """Les listes de bourse classent mal près d'une société sur quatre (Visa en « consommation », Netflix en « consommation »…).
        Le secteur de la fiche Yahoo (classification internationale standard), quand on l'a, prend le dessus."""
@@ -94,6 +139,7 @@ def tickers():
         out[ex + ':' + t] = [t, clean(x['name']), ex, SEC.get(x['stock_sector'], ''), None, None, x['country'] or '']
     L = sorted(out.values(), key=lambda r: (-(r[4] or 0), r[0]))
     secteurs_yahoo(L)
+    classes(L)
     if len(L) > 3000:
         json.dump(L, open(D + 'tickers.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     print(len(L), 'tickers')
@@ -207,6 +253,11 @@ def chiffres():
         if cap: ch['capi_mds'] = round(cap / 1e9, 2)
         fpe = v(r, 'defaultKeyStatistics', 'forwardPE') or v(r, 'summaryDetail', 'forwardPE')
         if fpe and fpe > 0: ch['per_prevu'] = round(fpe, 1)
+        fin, cur_ = (r.get('financialData') or {}).get('financialCurrency'), (r.get('price') or {}).get('currency')
+        if ch.get('per_prevu') and fin and cur_ and fin != cur_ and cur_ != 'GBp':  # cours et comptes dans deux monnaies
+            k = taux_change(cur_, fin); pe0 = ch['per_prevu']
+            if pe0 < 4 and k and k > 1.5 and 4 <= pe0 * k <= 120: ch['per_prevu'] = round(pe0 * k, 1)
+            elif pe0 < 1: ch.pop('per_prevu')
         ed = (r.get('calendarEvents') or {}).get('earnings', {}).get('earningsDate') or []
         if ed and isinstance(ed[0], dict) and ed[0].get('raw'):
             ch['prochains_resultats'] = dt.datetime.utcfromtimestamp(ed[0]['raw']).date().isoformat()
@@ -417,6 +468,24 @@ def pro_un(s, us_ticker=None):
         if de is not None and ca_ is not None and eb and eb > 0: rat['dette_ebitda'] = round((de - ca_) / eb, 2)
         fpe = v(ks, 'forwardPE') or v(sd, 'forwardPE')
         if fpe and fpe > 0: rat['per_prevu'] = round(fpe, 1)
+        # sociétés étrangères cotées à New York : cours en dollars, comptes en monnaie locale (yuan, real, yen…).
+        # Yahoo divise l'un par l'autre sans convertir : PER de 1 au lieu de 8, rendement du cash libre gonflé. On convertit.
+        fin, cur_ = fd.get('financialCurrency'), prc.get('currency')
+        if fin and cur_ and fin != cur_ and cur_ not in ('GBp',):
+            o['devise_comptes'] = fin
+            k = taux_change(cur_, fin)  # unités de la monnaie des comptes pour 1 unité de la monnaie du cours
+            # Yahoo n'est pas constant : parfois le bénéfice est déjà en dollars (TSMC), parfois en monnaie locale (PDD).
+            # On ne convertit que si le chiffre brut est impossible et que le chiffre converti devient plausible.
+            pe0 = rat.get('per_prevu')
+            if pe0 is not None:
+                if pe0 < 4 and k and k > 1.5 and 4 <= pe0 * k <= 120:
+                    rat['per_prevu'] = round(pe0 * k, 1)
+                    if fcf and cap: rat['rendement_cash'] = round(fcf / k / cap * 100, 1)
+                elif pe0 < 1:
+                    rat.pop('per_prevu', None)  # mieux vaut rien qu'un chiffre faux
+            rc = rat.get('rendement_cash')
+            if rc is not None and rc > 40 and k and k > 1.5 and rc / k <= 40:
+                rat['rendement_cash'] = round(rc / k, 1)
         if rat: o['ratios'] = rat
     if us_ticker:
         sc = sec_comptes(us_ticker)
@@ -547,6 +616,6 @@ if __name__ == '__main__':
     elif a == 'splits': splits()
     elif a == 'divh': divh()
     elif a == 'secteurs':
-        L = json.load(open(D + 'tickers.json', encoding='utf-8')); secteurs_yahoo(L)
+        L = json.load(open(D + 'tickers.json', encoding='utf-8')); secteurs_yahoo(L); classes(L)
         json.dump(L, open(D + 'tickers.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     elif a == 'pro': pro(int(sys.argv[2]) if len(sys.argv) > 2 else None)
