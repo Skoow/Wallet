@@ -540,7 +540,15 @@ def pro(limite=None):
         c = cle_of(r[0], r[2])
         try:
             o = pro_un(ysym(r[0], r[2]), r[0] if r[2] == 'US' else None)
-            json.dump(o or {'maj': dt.date.today().isoformat(), 'vide': True}, open(D + 'p/' + c.replace('/', '_') + '.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+            f = D + 'p/' + c.replace('/', '_') + '.json'
+            if not (o and o.get('ratios')):  # réponse incomplète (Yahoo limite parfois les requêtes) : on garde la fiche complète existante
+                try:
+                    old = json.load(open(f, encoding='utf-8'))
+                    if old.get('ratios'):
+                        return
+                except Exception:
+                    pass
+            json.dump(o or {'maj': dt.date.today().isoformat(), 'vide': True}, open(f, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
             with lock: cpt[0] += 1
         except Exception as e:
             print(c, 'pro', e)
