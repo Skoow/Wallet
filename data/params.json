@@ -5,7 +5,6 @@
   "s/tdy",
   "a/tsx-tih",
   "s/tmus",
-  "s/vrtx",
   "s/psa",
   "s/pg",
   "s/tjx",
@@ -15,7 +14,7 @@
   "e/gld"
  ],
  "cmp": 1,
- "v": 3,
+ "v": 4,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -40,14 +39,6 @@
    "devise": "USD",
    "secteur": "Communication",
    "metier": "Opérateur mobile (et satellite avec SpaceX)"
-  },
-  "s/vrtx": {
-   "ticker": "VRTX",
-   "nom": "Vertex Pharmaceuticals",
-   "pays": "États-Unis",
-   "devise": "USD",
-   "secteur": "Santé",
-   "metier": "Biotech : mucoviscidose et maladies rares"
   },
   "a/tsx-ifc": {
    "ticker": "IFC",
