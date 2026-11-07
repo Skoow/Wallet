@@ -13,7 +13,7 @@
   "e/gld"
  ],
  "cmp": 1,
- "v": 7,
+ "v": 8,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -45,7 +45,8 @@
    "pays": "Canada",
    "devise": "CAD",
    "secteur": "Finance",
-   "metier": "Assurance dommages (auto, habitation)"
+   "metier": "Assurance dommages (auto, habitation)",
+   "role": "Défensive"
   },
   "s/amgn": {
    "ticker": "AMGN",
