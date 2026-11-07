@@ -1,1 +1,77 @@
-{"choix":["s/expo","s/cdns","s/lly","s/msft","a/tsx-l","s/pwr","e/gld","s/tdy","s/isrg","s/pg","s/lng"],"cmp":1}
+{
+ "choix": [
+  "s/cdns",
+  "s/anet",
+  "s/tdy",
+  "a/tsx-tih",
+  "s/tmus",
+  "s/vrtx",
+  "s/adc",
+  "s/pg",
+  "s/tjx",
+  "a/tsx-ifc",
+  "s/lng",
+  "s/ati",
+  "e/gld"
+ ],
+ "cmp": 1,
+ "v": 2,
+ "extra": {
+  "s/anet": {
+   "ticker": "ANET",
+   "nom": "Arista Networks",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Technologie",
+   "metier": "Réseaux des centres de données (commutateurs)"
+  },
+  "a/tsx-tih": {
+   "ticker": "TIH",
+   "nom": "Toromont Industries",
+   "pays": "Canada",
+   "devise": "CAD",
+   "secteur": "Industrie",
+   "metier": "Engins Caterpillar : vente, location, entretien"
+  },
+  "s/tmus": {
+   "ticker": "TMUS",
+   "nom": "T-Mobile US",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Communication",
+   "metier": "Opérateur mobile (et satellite avec SpaceX)"
+  },
+  "s/vrtx": {
+   "ticker": "VRTX",
+   "nom": "Vertex Pharmaceuticals",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Santé",
+   "metier": "Biotech : mucoviscidose et maladies rares"
+  },
+  "s/adc": {
+   "ticker": "ADC",
+   "nom": "Agree Realty",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Immobilier",
+   "metier": "Foncière : magasins loués à long terme"
+  },
+  "a/tsx-ifc": {
+   "ticker": "IFC",
+   "nom": "Intact Financial",
+   "pays": "Canada",
+   "devise": "CAD",
+   "secteur": "Finance",
+   "metier": "Assurance dommages (auto, habitation)"
+  },
+  "s/ati": {
+   "ticker": "ATI",
+   "nom": "ATI",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Matériaux",
+   "metier": "Titane et alliages pour l’aviation et la défense"
+  }
+ }
+}

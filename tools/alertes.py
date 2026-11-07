@@ -40,11 +40,12 @@ def main():
     U = {u['cle']: u for u in load('univers.json', [])}
     PRO = load('pro.json', {}); PRIX = load('prix.json', [])
     choix = [c for c in (load('params.json', {}) or {}).get('choix', []) if c and not c.startswith('e/')]
+    EXN = {k: (x or {}).get('nom') for k, x in ((load('params.json', {}) or {}).get('extra') or {}).items()}  # noms des lignes hors liste de base
     old = load('alertes.json', {}) or {}
     etat_old = old.get('etat', {})
     today = dt.date.today(); out = []; etat = {}
     for c in choix:
-        u = U.get(c) or {}; nom = u.get('nom', c)
+        u = U.get(c) or {}; nom = u.get('nom') or EXN.get(c) or c
         e = entree(c, u, PRO.get(c), PRIX)
         n = u.get('note'); v = u.get('verdict')
         etat[c] = {'entree': e, 'note': n, 'verdict': v}
@@ -59,7 +60,7 @@ def main():
         if n is not None and was.get('note') is not None and n <= was['note'] - 8: out.append(['note', nom, 'note en baisse : %s → %s' % (was['note'], n)])
         if v == 'drapeau rouge' and was.get('verdict') != 'drapeau rouge': out.append(['rouge', nom, 'drapeau rouge : ' + (u.get('raison_verif') or 'voir la fiche')])
         elif v == 'à surveiller' and was.get('verdict') not in (None, 'à surveiller', 'drapeau rouge'): out.append(['surveiller', nom, 'à surveiller : ' + (u.get('raison_verif') or 'voir la fiche')])
-    bon = [U.get(c, {}).get('nom', c) for c, x in etat.items() if x['entree'] == 'Bon moment']
+    bon = [U.get(c, {}).get('nom') or EXN.get(c) or c for c, x in etat.items() if x['entree'] == 'Bon moment']
     json.dump({'maj': today.isoformat(), 'alertes': out, 'bon_moment': bon, 'etat': etat},
               open(D + 'alertes.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     print(len(out), 'alertes ;', len(bon), 'au bon moment')
