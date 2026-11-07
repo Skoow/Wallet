@@ -7,13 +7,13 @@
   "s/tmus",
   "s/amgn",
   "s/pg",
-  "s/tjx",
+  "a/tsx-cco",
   "a/tsx-ifc",
   "s/lng",
   "e/gld"
  ],
  "cmp": 1,
- "v": 6,
+ "v": 7,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -54,6 +54,14 @@
    "devise": "USD",
    "secteur": "Santé",
    "metier": "Biotech établie : os, cœur, cancer, inflammation"
+  },
+  "a/tsx-cco": {
+   "ticker": "CCO",
+   "nom": "Cameco",
+   "pays": "Canada",
+   "devise": "CAD",
+   "secteur": "Énergie",
+   "metier": "Uranium : mines et combustible pour centrales nucléaires"
   }
  }
 }
