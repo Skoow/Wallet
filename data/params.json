@@ -10,11 +10,10 @@
   "s/tjx",
   "a/tsx-ifc",
   "s/lng",
-  "s/ati",
   "e/gld"
  ],
  "cmp": 1,
- "v": 4,
+ "v": 5,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -47,14 +46,6 @@
    "devise": "CAD",
    "secteur": "Finance",
    "metier": "Assurance dommages (auto, habitation)"
-  },
-  "s/ati": {
-   "ticker": "ATI",
-   "nom": "ATI",
-   "pays": "États-Unis",
-   "devise": "USD",
-   "secteur": "Matériaux",
-   "metier": "Titane et alliages pour l’aviation et la défense"
   },
   "s/psa": {
    "ticker": "PSA",
