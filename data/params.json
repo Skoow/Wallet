@@ -6,7 +6,7 @@
   "a/tsx-tih",
   "s/tmus",
   "s/vrtx",
-  "s/adc",
+  "s/psa",
   "s/pg",
   "s/tjx",
   "a/tsx-ifc",
@@ -15,7 +15,7 @@
   "e/gld"
  ],
  "cmp": 1,
- "v": 2,
+ "v": 3,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -49,14 +49,6 @@
    "secteur": "Santé",
    "metier": "Biotech : mucoviscidose et maladies rares"
   },
-  "s/adc": {
-   "ticker": "ADC",
-   "nom": "Agree Realty",
-   "pays": "États-Unis",
-   "devise": "USD",
-   "secteur": "Immobilier",
-   "metier": "Foncière : magasins loués à long terme"
-  },
   "a/tsx-ifc": {
    "ticker": "IFC",
    "nom": "Intact Financial",
@@ -72,6 +64,14 @@
    "devise": "USD",
    "secteur": "Matériaux",
    "metier": "Titane et alliages pour l’aviation et la défense"
+  },
+  "s/psa": {
+   "ticker": "PSA",
+   "nom": "Public Storage",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Immobilier",
+   "metier": "Foncière : garde-meubles en libre-service"
   }
  }
 }
