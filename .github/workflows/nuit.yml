@@ -40,6 +40,7 @@ jobs:
           if [ "$Q" = "mois" ]; then python tools/nuit.py tickers; fi
           if [ "$Q" = "mois" ] || [ "$Q" = "semaine" ]; then BUDGET_MIN=230 python tools/nuit.py histo; fi
           python tools/nuit.py chiffres
+          python tools/nuit.py secteurs || true
           python tools/nuit.py splits || true
           [ -d data/h ] && python tools/nuit.py divh || true
           python tools/alertes.py || true
@@ -49,7 +50,7 @@ jobs:
           # on met de côté le travail : l'enregistrement repart de la dernière version du dépôt
           mkdir -p "$RUNNER_TEMP/out"
           [ -d data/h ] && cp -r data/h "$RUNNER_TEMP/out/" || true
-          [ "$Q" = "mois" ] && cp data/tickers.json "$RUNNER_TEMP/out/" || true
+          cp data/tickers.json "$RUNNER_TEMP/out/" || true
       - name: Enregistrer
         run: |
           git config user.name "github-actions[bot]"

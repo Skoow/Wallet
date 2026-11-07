@@ -47,6 +47,27 @@ def clean(n):
     return n.strip(' ,')
 
 
+YSEC = {'Financial Services': 'Finance', 'Industrials': 'Industrie', 'Healthcare': 'Santé', 'Technology': 'Technologie',
+        'Consumer Cyclical': 'Consommation discrétionnaire', 'Basic Materials': 'Matériaux', 'Real Estate': 'Immobilier',
+        'Communication Services': 'Communication', 'Consumer Defensive': 'Consommation de base', 'Energy': 'Énergie',
+        'Utilities': 'Services publics'}
+
+
+def secteurs_yahoo(L):
+    """Les listes de bourse classent mal près d'une société sur quatre (Visa en « consommation », Netflix en « consommation »…).
+       Le secteur de la fiche Yahoo (classification internationale standard), quand on l'a, prend le dessus."""
+    n = 0
+    for r in L:
+        try:
+            pf = json.load(open(D + 'p/' + cle_of(r[0], r[2]).replace('/', '_') + '.json', encoding='utf-8')).get('profil') or {}
+        except Exception:
+            continue
+        y = YSEC.get(pf.get('secteur'))
+        if y and y != r[3]:
+            r[3] = y; n += 1
+    print(n, 'secteurs corrigés d’après Yahoo')
+
+
 def tickers():
     out = {}
     base = 'https://raw.githubusercontent.com/rreichel3/US-Stock-Symbols/main/'
@@ -72,6 +93,7 @@ def tickers():
             continue
         out[ex + ':' + t] = [t, clean(x['name']), ex, SEC.get(x['stock_sector'], ''), None, None, x['country'] or '']
     L = sorted(out.values(), key=lambda r: (-(r[4] or 0), r[0]))
+    secteurs_yahoo(L)
     if len(L) > 3000:
         json.dump(L, open(D + 'tickers.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     print(len(L), 'tickers')
@@ -524,4 +546,7 @@ if __name__ == '__main__':
     elif a == 'appliquer': appliquer()
     elif a == 'splits': splits()
     elif a == 'divh': divh()
+    elif a == 'secteurs':
+        L = json.load(open(D + 'tickers.json', encoding='utf-8')); secteurs_yahoo(L)
+        json.dump(L, open(D + 'tickers.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     elif a == 'pro': pro(int(sys.argv[2]) if len(sys.argv) > 2 else None)
