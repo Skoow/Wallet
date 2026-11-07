@@ -5,7 +5,7 @@
   "s/tdy",
   "a/tsx-tih",
   "s/tmus",
-  "s/psa",
+  "s/amgn",
   "s/pg",
   "s/tjx",
   "a/tsx-ifc",
@@ -13,7 +13,7 @@
   "e/gld"
  ],
  "cmp": 1,
- "v": 5,
+ "v": 6,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -47,13 +47,13 @@
    "secteur": "Finance",
    "metier": "Assurance dommages (auto, habitation)"
   },
-  "s/psa": {
-   "ticker": "PSA",
-   "nom": "Public Storage",
+  "s/amgn": {
+   "ticker": "AMGN",
+   "nom": "Amgen",
    "pays": "États-Unis",
    "devise": "USD",
-   "secteur": "Immobilier",
-   "metier": "Foncière : garde-meubles en libre-service"
+   "secteur": "Santé",
+   "metier": "Biotech établie : os, cœur, cancer, inflammation"
   }
  }
 }
