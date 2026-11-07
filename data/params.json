@@ -2,7 +2,7 @@
  "choix": [
   "s/cdns",
   "s/anet",
-  "s/tdy",
+  "s/hei",
   "a/tsx-tih",
   "s/tmus",
   "s/amgn",
@@ -13,7 +13,7 @@
   "e/gld"
  ],
  "cmp": 1,
- "v": 8,
+ "v": 9,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -63,6 +63,14 @@
    "devise": "CAD",
    "secteur": "Énergie",
    "metier": "Uranium : mines et combustible pour centrales nucléaires"
+  },
+  "s/hei": {
+   "ticker": "HEI",
+   "nom": "HEICO",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Industrie",
+   "metier": "Pièces de rechange d’avion et électronique de défense"
   }
  }
 }
