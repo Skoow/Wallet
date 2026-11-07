@@ -13,7 +13,7 @@
   "e/gld"
  ],
  "cmp": 1,
- "v": 9,
+ "v": 10,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -72,5 +72,161 @@
    "secteur": "Industrie",
    "metier": "Pièces de rechange d’avion et électronique de défense"
   }
- }
+ },
+ "tx": [
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "s/cdns",
+   "ticker": "CDNS",
+   "nom": "Cadence",
+   "quantite": 1,
+   "prix": 319.92,
+   "devise": "USD",
+   "montant_eur": 287.1,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "s/anet",
+   "ticker": "ANET",
+   "nom": "Arista Networks",
+   "quantite": 1,
+   "prix": 166.61,
+   "devise": "USD",
+   "montant_eur": 149.52,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "s/hei",
+   "ticker": "HEI",
+   "nom": "HEICO",
+   "quantite": 1,
+   "prix": 335.59,
+   "devise": "USD",
+   "montant_eur": 301.17,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "a/tsx-tih",
+   "ticker": "TIH",
+   "nom": "Toromont Industries",
+   "quantite": 1,
+   "prix": 192.69,
+   "devise": "CAD",
+   "montant_eur": 122.41,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "s/tmus",
+   "ticker": "TMUS",
+   "nom": "T-Mobile US",
+   "quantite": 1,
+   "prix": 158.54,
+   "devise": "USD",
+   "montant_eur": 142.28,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "s/amgn",
+   "ticker": "AMGN",
+   "nom": "Amgen",
+   "quantite": 1,
+   "prix": 465.9,
+   "devise": "USD",
+   "montant_eur": 418.11,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "s/pg",
+   "ticker": "PG",
+   "nom": "Procter & Gamble",
+   "quantite": 1,
+   "prix": 165.4,
+   "devise": "USD",
+   "montant_eur": 148.43,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "a/tsx-cco",
+   "ticker": "CCO",
+   "nom": "Cameco",
+   "quantite": 1,
+   "prix": 105.03,
+   "devise": "CAD",
+   "montant_eur": 66.72,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "a/tsx-ifc",
+   "ticker": "IFC",
+   "nom": "Intact Financial",
+   "quantite": 1,
+   "prix": 265.63,
+   "devise": "CAD",
+   "montant_eur": 168.75,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "s/lng",
+   "ticker": "LNG",
+   "nom": "Cheniere Energy",
+   "quantite": 1,
+   "prix": 277.95,
+   "devise": "USD",
+   "montant_eur": 249.44,
+   "frais_eur": 0,
+   "conseil": true
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "",
+   "sens": "achat",
+   "cle": "e/gld",
+   "ticker": "SLGN",
+   "nom": "Or – iShares Physical Gold",
+   "quantite": 1,
+   "prix": 372.52,
+   "devise": "USD",
+   "montant_eur": 334.31,
+   "frais_eur": 0,
+   "conseil": true
+  }
+ ]
 }
