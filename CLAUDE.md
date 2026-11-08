@@ -13,7 +13,7 @@ Pour chaque action ajoutée à `data/params.json` (`choix`), faire dans le même
 4. **Vérification (3 sources)** : pour une action hors `univers.json`, ajouter `fiche` dans son entrée `data/expo.json` : `verdict` (propre / à surveiller / drapeau rouge), `verifie` (jj/mm/aaaa), `raison_verif`, `sources_verif`, `risque`, `strategie`, `prochains_resultats`.
 5. **Achat conseillé** : régénérer `params.tx` (1 action par ligne au dernier cours) et augmenter `params.v`.
 
-Les données de nuit (cours, ratios, dividendes) se mettent à jour seules. Les ventes par pays et la vérification ne peuvent pas être automatiques : la SEC exige un e-mail de contact et aucune clé n'est fournie. Elles se font donc à chaque ajout, et le test bloque la publication si elles manquent.
+Les données de nuit (cours, ratios, dividendes) se mettent à jour seules. `tools/fiches.py` prépare aussi, pour les 11 000 actions de `data/tickers.json`, une fiche automatique `data/f/<cle>.json` (ventes par pays extraites du rapport annuel SEC via Yahoo, actualité, gouvernance, dépôts officiels), refaite tous les 3 jours : toute action ajoutée dans n'importe quel portefeuille a donc déjà ses données. L'automatique ne met jamais de drapeau rouge (il signale des titres à lire). Les fiches faites à la main (`univers.json`, `expo.json`) restent prioritaires. Les ventes par pays et la vérification ne peuvent pas être automatiques : la SEC exige un e-mail de contact et aucune clé n'est fournie. Elles se font donc à chaque ajout, et le test bloque la publication si elles manquent.
 
 ## Ne pas faire
 

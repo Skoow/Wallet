@@ -44,6 +44,8 @@ jobs:
           python tools/nuit.py splits || true
           [ -d data/h ] && python tools/nuit.py divh || true
           python tools/alertes.py || true
+          # fiches automatiques (ventes par pays du rapport annuel, actualité, gouvernance) : toutes les actions par roulement, chacune refaite tous les 3 jours
+          timeout 80m python tools/fiches.py 75 || true
           cp data/alertes.json "$RUNNER_TEMP/alertes.json" 2>/dev/null || true
           cp data/splits.json "$RUNNER_TEMP/splits.json" 2>/dev/null || true; cp data/divs.json "$RUNNER_TEMP/divs.json" 2>/dev/null || true
           if [ -d data/h ]; then python tools/nuit.py derniers; fi
@@ -51,6 +53,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/out"
           [ -d data/h ] && cp -r data/h "$RUNNER_TEMP/out/" || true
           cp data/tickers.json "$RUNNER_TEMP/out/" || true
+          [ -d data/f ] && cp -r data/f "$RUNNER_TEMP/out/" || true
       - name: Enregistrer
         run: |
           git config user.name "github-actions[bot]"
@@ -59,6 +62,7 @@ jobs:
             git fetch -q origin main && git reset -q --hard origin/main
             [ -d "$RUNNER_TEMP/out/h" ] && mkdir -p data/h && cp -r "$RUNNER_TEMP/out/h/." data/h/
             [ -f "$RUNNER_TEMP/out/tickers.json" ] && cp "$RUNNER_TEMP/out/tickers.json" data/
+            [ -d "$RUNNER_TEMP/out/f" ] && mkdir -p data/f && cp -r "$RUNNER_TEMP/out/f/." data/f/
             [ -f "$RUNNER_TEMP/splits.json" ] && cp "$RUNNER_TEMP/splits.json" data/
             [ -f "$RUNNER_TEMP/divs.json" ] && cp "$RUNNER_TEMP/divs.json" data/
             [ -f "$RUNNER_TEMP/alertes.json" ] && cp "$RUNNER_TEMP/alertes.json" data/
