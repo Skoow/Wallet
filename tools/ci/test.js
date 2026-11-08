@@ -2,7 +2,16 @@
 const {chromium}=require('playwright');const http=require('http'),fs=require('fs'),path=require('path');
 const root=path.resolve(process.argv[2]||'.');
 const srv=http.createServer((q,s)=>{const u=decodeURIComponent(q.url.split('?')[0]);const f=path.join(root,u==='/'?'index.html':u);fs.readFile(f,(e,d)=>{if(e){s.writeHead(404);s.end();return;}const ty=f.endsWith('.json')?'application/json':f.endsWith('.js')?'application/javascript':f.endsWith('.png')?'image/png':'text/html; charset=utf-8';s.writeHead(200,{'Content-Type':ty});s.end(d);});}).listen(8799,async()=>{
-  let bad=[];const b=await chromium.launch();
+  let bad=[];
+  // Données : chaque action du portefeuille conseillé doit avoir cours, chiffres, ventes par pays et vérification (voir CLAUDE.md)
+  try{const J=f=>JSON.parse(fs.readFileSync(path.join(root,'data',f),'utf8'));const PA=J('params.json'),UV=J('univers.json'),EX=J('expo.json'),PR=J('prix.json');
+   const UU=Object.fromEntries((Array.isArray(UV)?UV:UV.data).map(u=>[u.cle,u])),EE=Object.fromEntries(EX.map(e=>[e.cle,e])),PP=new Set(PR.map(r=>r.cle));const D='données conseillé : ';
+   (PA.choix||[]).filter(c=>!/^(e|m|c)\//.test(c)).forEach(c=>{const nm=(UU[c]||(PA.extra||{})[c]||{}).nom||c;
+    if(!PP.has(c)&&!fs.existsSync(path.join(root,'data','h',c.replace('/','_')+'.json')))bad.push(D+nm+' sans historique de cours (tools/ajout.py)');
+    if(!UU[c]){if(!(PA.extra||{})[c])bad.push(D+nm+' absent de params.extra');let pf=null;try{pf=JSON.parse(fs.readFileSync(path.join(root,'data','p',c.replace('/','_')+'.json'),'utf8'));}catch(_){}if(!pf||!pf.ratios||Object.keys(pf.ratios).length<5)bad.push(D+nm+' sans ratios (data/p, nuit.py pro)');}
+    const e=EE[c];if(!e||!e.geo)bad.push(D+nm+' sans ventes par pays (data/expo.json)');
+    const vf=(UU[c]&&UU[c].verifie)||(e&&e.fiche&&e.fiche.verifie);if(!vf)console.warn('ATTENTION '+D+nm+' non vérifiée (fiche dans data/expo.json)');});}catch(e){bad.push('données : lecture impossible '+e.message);}
+  const b=await chromium.launch();
   for(const [mode,w] of [['vide',390],['conseil',390],['conseil',1300]]){
     const p=await b.newPage({viewport:{width:w,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
     await p.route(/^https:\/\/(?!cdnjs\.cloudflare\.com)/,r=>r.fulfill({status:404,body:''}));
