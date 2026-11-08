@@ -7,13 +7,13 @@
   "s/tmus",
   "s/amgn",
   "s/pg",
-  "a/tsx-cco",
+  "s/pwr",
   "a/tsx-ifc",
   "s/lng",
   "e/gld"
  ],
  "cmp": 1,
- "v": 10,
+ "v": 11,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -56,14 +56,6 @@
    "secteur": "Santé",
    "metier": "Biotech établie : os, cœur, cancer, inflammation"
   },
-  "a/tsx-cco": {
-   "ticker": "CCO",
-   "nom": "Cameco",
-   "pays": "Canada",
-   "devise": "CAD",
-   "secteur": "Énergie",
-   "metier": "Uranium : mines et combustible pour centrales nucléaires"
-  },
   "s/hei": {
    "ticker": "HEI",
    "nom": "HEICO",
@@ -75,7 +67,7 @@
  },
  "tx": [
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "s/cdns",
@@ -89,7 +81,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "s/anet",
@@ -103,7 +95,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "s/hei",
@@ -117,7 +109,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "a/tsx-tih",
@@ -131,7 +123,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "s/tmus",
@@ -145,7 +137,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "s/amgn",
@@ -159,7 +151,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "s/pg",
@@ -173,21 +165,21 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
-   "cle": "a/tsx-cco",
-   "ticker": "CCO",
-   "nom": "Cameco",
+   "cle": "s/pwr",
+   "ticker": "PWR",
+   "nom": "Quanta Services",
    "quantite": 1,
-   "prix": 105.03,
-   "devise": "CAD",
-   "montant_eur": 66.72,
+   "prix": 540.9,
+   "devise": "USD",
+   "montant_eur": 485.42,
    "frais_eur": 0,
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "a/tsx-ifc",
@@ -201,7 +193,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "s/lng",
@@ -215,7 +207,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-07",
+   "date": "2026-11-08",
    "heure": "",
    "sens": "achat",
    "cle": "e/gld",
