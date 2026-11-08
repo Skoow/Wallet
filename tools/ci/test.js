@@ -10,7 +10,7 @@ const srv=http.createServer((q,s)=>{const u=decodeURIComponent(q.url.split('?')[
     if(!PP.has(c)&&!fs.existsSync(path.join(root,'data','h',c.replace('/','_')+'.json')))bad.push(D+nm+' sans historique de cours (tools/ajout.py)');
     if(!UU[c]){if(!(PA.extra||{})[c])bad.push(D+nm+' absent de params.extra');let pf=null;try{pf=JSON.parse(fs.readFileSync(path.join(root,'data','p',c.replace('/','_')+'.json'),'utf8'));}catch(_){}if(!pf||!pf.ratios||Object.keys(pf.ratios).length<5)bad.push(D+nm+' sans ratios (data/p, nuit.py pro)');}
     const e=EE[c];if(!e||!e.geo)bad.push(D+nm+' sans ventes par pays (data/expo.json)');
-    const vf=(UU[c]&&UU[c].verifie)||(e&&e.fiche&&e.fiche.verifie);if(!vf)console.warn('ATTENTION '+D+nm+' non vérifiée (fiche dans data/expo.json)');});}catch(e){bad.push('données : lecture impossible '+e.message);}
+    const vf=(UU[c]&&UU[c].verifie)||(e&&e.fiche&&e.fiche.verifie);if(!vf)bad.push(D+nm+' non vérifiée (fiche dans data/expo.json)');});}catch(e){bad.push('données : lecture impossible '+e.message);}
   const b=await chromium.launch();
   for(const [mode,w] of [['vide',390],['conseil',390],['conseil',1300]]){
     const p=await b.newPage({viewport:{width:w,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
