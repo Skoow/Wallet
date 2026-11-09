@@ -2,13 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#0F1C33">
 <meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="tothemoon">
 <script>/* App installable seulement sur mobile ; sur ordinateur, page web classique */window.PF_MOBILE=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));if(window.PF_MOBILE){var m=document.createElement('link');m.rel='manifest';m.href='manifest.webmanifest';document.head.appendChild(m);}</script>
+<script>/* Pas de zoom au pincement ni au double appui (iOS ignore user-scalable=no) */(function(){var no=function(e){e.preventDefault();};["gesturestart","gesturechange","gestureend"].forEach(function(t){document.addEventListener(t,no,{passive:false});});document.addEventListener("touchmove",function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});
+/* Logos blancs (invisibles sur fond blanc) : fond sombre */var LC={};document.addEventListener("load",function(e){var im=e.target;if(!im||im.tagName!=="IMG")return;var w=im.parentElement;if(!w||!w.classList||!w.classList.contains("lg"))return;var src=im.currentSrc||im.src;if(!/^https:\/\/financialmodelingprep\.com\//.test(src))return;var set=function(v){if(v)w.classList.add("clair");else w.classList.remove("clair");};if(src in LC){set(LC[src]);return;}LC[src]=false;var t=new Image();t.crossOrigin="anonymous";t.referrerPolicy="no-referrer";t.onload=function(){try{var n=24,c=document.createElement("canvas");c.width=n;c.height=n;var x=c.getContext("2d",{willReadFrequently:true});x.drawImage(t,0,0,n,n);var d=x.getImageData(0,0,n,n).data,op=0,lum=0;for(var i=0;i<d.length;i+=4){if(d[i+3]>40){op++;lum+=(0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2])/255;}}var v=op>8&&lum/op>0.86&&op<n*n*0.9;LC[src]=v;if((w.querySelector("img")||{}).src===src)set(v);}catch(_){}};t.src=src;},true);})();</script>
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <title>tothemoon · mon portefeuille</title>
@@ -719,7 +721,7 @@ html.pf-simple .pf .rh{grid-template-columns:minmax(0,1fr) auto!important}
 html.pf-simple .pf .rh .ch{grid-column:auto!important}
 html.pf-simple .pf .rh .nm .ig,html.pf-simple .pf .rh .mob .ig{font-size:.9rem!important}
 
-html.pf-simple .pf .hd .tabs,html.pf-simple #pf-tabwrap .tabs,html.pf-simple .pf .hd [role=tablist]{display:none!important}
+
 html.pf-simple .pf .view:not(#v-suivre){display:none!important}
 html.pf-simple #v-suivre{display:block!important}
 html.pf-simple #v-suivre>*:not(#sec-live){display:none!important}
@@ -885,7 +887,7 @@ html,body{background:var(--color-bg)}
  html body .pf .tabs button[aria-selected=true]{color:var(--acc)!important}
  html body .pf .tabs button[aria-selected=true] .tb-i{background:color-mix(in srgb,var(--acc) 14%,transparent)}
  html body .pf .tabs .tb-i{width:44px;height:28px;border-radius:999px}
- html.pf-simple body .pf .tabs{display:none!important}
+ 
  .pf .view>section,.pf .view>.achat1,.pf .view>#objectif,.pf .view>#pf-backup,.pf .view>#sec-fisc,.pf .grid2>section{padding:16px;border-radius:16px}
  .pf .view{gap:16px!important}
 }
@@ -1625,7 +1627,7 @@ html.pf-ld #lv1,html.pf-ld #lv2,html.pf-ld #lv3,html.pf-ld #lv-tri,html.pf-ld #a
 }
 .pf .tabs button{font-size:max(.75rem,12px)}
 @media (max-height:500px) and (orientation:landscape) and (max-width:999px){.pf>.hd #pf-top{display:none!important}}
-html.pf-simple #dash-root{padding-bottom:calc(24px + env(safe-area-inset-bottom))!important}
+
 @media (max-width:999px){.pf .tabs{padding-left:max(6px,env(safe-area-inset-left))!important;padding-right:max(6px,env(safe-area-inset-right))!important}}
 
 @media (max-width:720px){
@@ -2208,6 +2210,32 @@ html body #pf-login button[type=submit]:hover{background:#1b2d52!important}
 .pf .pill.nil{color:var(--muted);border-color:var(--rule)}
 .pf .tl{list-style:none;margin:0;padding:0;display:grid;gap:12px}.pf .tl li{display:grid;gap:4px}.pf .tlh{display:flex;align-items:baseline;gap:8px}.pf .tlh .tlp{margin-left:auto}.pf .tlb{height:8px;border-radius:4px;background:color-mix(in srgb,var(--color-fg) 8%,transparent);overflow:hidden}.pf .tlb i{display:block;height:100%;background:var(--acc);border-radius:4px}.pf .tl li.tl0{opacity:.6}
 .pf #c-corr .cseg.l2 i.on{background:var(--muted)}.pf #c-corr .c-ko{color:var(--warn);font-weight:600}
+
+/* v-mobile : audit d'affichage téléphone (marges égales, périodes sur une ligne, boutons nets) */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.pf .lg.clair,.lg.clair,.pf .lg.clair img,.lg.clair img{background:#1d2738!important;border-color:#1d2738!important}
+@media (max-width:999px){
+ .pf .view>section:not(#sec-vue),.pf .view>.achat1,.pf .grid2>section,.pf .rpg>.rp{padding:16px!important}
+ .pf .seg.rng{display:flex!important;flex-wrap:nowrap!important;width:100%;box-sizing:border-box;overflow-x:auto;scrollbar-width:none}
+ .pf .seg.rng::-webkit-scrollbar{display:none}
+ .pf .seg.rng>button{flex:1 1 auto;min-width:0;padding:6px 2px!important;white-space:nowrap}
+ html body .pf #rng-live#rng-live,html body .pf #rng-courbe#rng-courbe{flex-wrap:nowrap!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;justify-content:stretch!important}
+ html body .pf #rng-live#rng-live>button,html body .pf #rng-courbe#rng-courbe>button{flex:1 1 auto!important;min-width:0!important;padding:6px 2px!important}
+ .pf #lv-bar{flex-wrap:wrap!important;justify-content:flex-end;row-gap:8px}
+ .pf #lv-bar>.seg.rng{flex:1 1 100%}
+ #t-journal td:last-child{white-space:nowrap}
+ #t-journal td:last-child .btn{min-width:36px;min-height:36px;justify-content:center;align-items:center}
+ #t-journal td:last-child .btn.jr-ed::after{content:none!important}
+ #rp-strat tr{display:grid!important;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:4px;align-items:start}
+ #rp-strat td{display:block!important;padding:0!important;border:0!important}
+ #rp-strat td:nth-child(1){grid-column:1;grid-row:1}
+ #rp-strat td:nth-child(3){grid-column:2;grid-row:1;text-align:right}
+ #rp-strat td:nth-child(2){grid-column:1/-1;grid-row:2;display:flex!important;flex-wrap:wrap;gap:2px 0}
+ #rp-strat td:nth-child(2)>div:not(:last-child)::after{content:"·";margin:0 6px;color:var(--muted);font-weight:400}
+ #rp-strat td:nth-child(2):empty{display:none!important}
+ .pf #lignes .rh[data-open="true"] .rx.rx-row:not(.arm){right:20px!important;width:36px!important;min-width:36px!important;height:36px!important;background:var(--color-panel)!important}
+ .pf #lignes .rh[data-open="true"] .sc{visibility:hidden}
+}
 </style>
 
 <div class="pf">
@@ -2557,7 +2585,7 @@ html body #pf-login button[type=submit]:hover{background:#1b2d52!important}
   const PLAN={'Bon moment':'Acheter maintenant, en 1 ou 2 fois','En 2–3 fois':'Par tiers : maintenant, dans 3 mois, dans 6 mois','Attendre un repli':'Par quarts tous les 3 mois, ou attendre le prix'};
   // ---------- onglets ----------
   const TABS=['suivre','repart','analyse','journal'];let TAB='suivre';try{const t=localStorage.getItem('pf-tab');if(TABS.includes(t))TAB=t;}catch(_){}
-  function showTab(t,focus){TAB=t;try{localStorage.setItem('pf-tab',t);}catch(_){}TABS.forEach(k=>{const b=document.getElementById('tab-'+k),v=document.getElementById('v-'+k);const on=k===t;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;v.hidden=!on;});if(focus)document.getElementById('tab-'+t).focus();if(window.__pfTab0&&window.__pfTab0!==t){const vv=document.getElementById('v-'+t);const top=vv?vv.getBoundingClientRect().top+scrollY-80:0;if(scrollY>top)scrollTo({top:Math.max(0,top),behavior:'instant'});}window.__pfTab0=t;{const dy=document.querySelector('.hd .day');if(dy)dy.style.display=t==='suivre'?'':'none';}setTimeout(()=>{const X=window.__X;if(!X)return;try{if(t==='analyse'){drawCourbe(X.courbe);drawBaisses(X.baisses);}if(t==='suivre'&&REDRAW.live)REDRAW.live();}catch(e){console.error(e);}},0);}
+  function showTab(t,focus){if(t!=='suivre'&&document.documentElement.classList.contains('pf-simple')){try{localStorage.setItem('pf-vue','detail');}catch(_){}window.dispatchEvent(new CustomEvent('pf-vue',{detail:'detail'}));}TAB=t;try{localStorage.setItem('pf-tab',t);}catch(_){}TABS.forEach(k=>{const b=document.getElementById('tab-'+k),v=document.getElementById('v-'+k);const on=k===t;b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;v.hidden=!on;});if(focus)document.getElementById('tab-'+t).focus();if(window.__pfTab0&&window.__pfTab0!==t){const vv=document.getElementById('v-'+t);const top=vv?vv.getBoundingClientRect().top+scrollY-80:0;if(scrollY>top)scrollTo({top:Math.max(0,top),behavior:'instant'});}window.__pfTab0=t;{const dy=document.querySelector('.hd .day');if(dy)dy.style.display=t==='suivre'?'':'none';}setTimeout(()=>{const X=window.__X;if(!X)return;try{if(t==='analyse'){drawCourbe(X.courbe);drawBaisses(X.baisses);}if(t==='suivre'&&REDRAW.live)REDRAW.live();}catch(e){console.error(e);}},0);}
   TABS.forEach((k,i)=>{const b=document.getElementById('tab-'+k);b.addEventListener('click',()=>showTab(k));b.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const j=(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length;showTab(TABS[j],true);}});});
   showTab(TAB);
   function goChoose(n){dash.setParams({cmp:+n});showTab('choisir');const t=document.getElementById('v-choisir');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}
@@ -2859,10 +2887,8 @@ html body #pf-login button[type=submit]:hover{background:#1b2d52!important}
       panel('Qui paie','clients directs, moyenne des '+st.length+' actions (hors or, obligations et crypto)',rows,{note:'Particuliers = dépenses des ménages, entreprises = budgets d’investissement, États = budgets publics (défense). Sous chaque type : les sociétés qui en tirent plus de la moitié de leurs ventes.'});}
     // 5 monnaies
     panel('Monnaies','cotation',grp(x=>isMetal(x.u)?'Or (suit le dollar)':x.u.devise==='USD'?'Dollar US':x.u.devise==='CAD'?'Dollar canadien':x.u.devise==='EUR'?'Euro':x.u.devise==='CHF'?'Franc suisse':x.u.devise));
-    // 6 tailles
-    {const T={'Méga cap':'Géantes (plus de 200 Md$)','Large cap':'Grandes (10 à 200 Md$)','Mid cap':'Moyennes (2 à 10 Md$)','Small cap':'Petites (moins de 2 Md$)','Micro cap':'Petites (moins de 2 Md$)'};const rows=grp(x=>T[taille(x.u.capi_mds)]||'Inconnue',st);
-      panel('Tailles',st.length+' actions',rows,{note:'Visé : au moins 1 moyenne, aucune petite.'});}
-    // 7 rôle
+    // 6 tailles : déjà dans « Tailles des sociétés » en haut de l'onglet
+     // 7 rôle
     {const SD={'Pelles et pioches':'vend les outils d’une tendance (machines, réseaux, logiciels)','Péage / monopole':'passage obligé, encaisse à chaque utilisation','Qualité / composeur':'réinvestit ses profits avec une forte rentabilité','Anti-crise':'on en achète même en récession','Actifs réels':'or, matières premières, redevances','Mégatendance':'porté par un mouvement de fond sur 10 ans','Croissance à prix raisonnable':'croît vite sans être payée trop cher','Dividendes croissants':'augmente son dividende chaque année','Valeur décotée':'achetée sous ce qu’elle vaut','Retournement':'société en difficulté qui se redresse','Petites pépites':'petite capitalisation à fort potentiel','Momentum':'suit les actions qui montent déjà','Actif numérique':'crypto : très volatile, pari de long terme sur un réseau','Obligations':'amortit les baisses des actions et verse des intérêts','Cannibales':'rachète ses propres actions chaque année : ta part de la société grossit sans rien faire','Fondateur aux commandes':'dirigée par son fondateur ou sa famille, avec une vision de long terme','Faible volatilité':'bouge peu, amortit les chutes du marché','Formule magique':'très rentable ET peu chère à la fois (méthode de Joel Greenblatt)','Rendement élevé':'dividende de 4 % ou plus : un revenu régulier','Cœur indiciel':'un ETF large (monde, S&P 500) comme socle du portefeuille','Dirigeants acheteurs':'les dirigeants achètent leurs propres actions avec leur argent','Révisions en hausse':'les analystes relèvent leurs prévisions de bénéfices','Cyclique en bas de cycle':'secteur cyclique acheté quand son cycle est au plus bas'};const stAuto=stAutoG;const rows=grp(x=>stAuto(x.u));const used=new Set(rows.map(r=>r.nom));{let ss=document.getElementById('sec-strat');if(!ss){ss=document.createElement('section');ss.id='sec-strat';ss.innerHTML='<div class="sh"><h2>Stratégies</h2><p class="mu">Une ligne peut en suivre plusieurs · en gras : sa stratégie principale · poids = part de tes lignes concernées</p></div><div class="tw"><table id="rp-strat"><thead><tr><th>Stratégie</th><th>Nos sociétés</th><th>Poids</th></tr></thead><tbody></tbody></table></div><p class="stn">Une ligne peut suivre plusieurs stratégies. En gras : sa stratégie principale ; en gris : celles qu’elle remplit aussi. Poids = part de tes lignes concernées.</p>';const sm=document.getElementById('sec-metiers');if(sm)sm.before(ss);else{const g1=document.getElementById('rp-grid');if(g1)g1.after(ss);}}
       const tb=ss.querySelector('tbody');tb.textContent='';const by={};it.forEach(x=>{let L0=[stAuto(x.u)];try{L0=stratsAll(x.u);}catch(_){}L0.forEach((k,j)=>{(by[k]=by[k]||[]).push({...x,prim:j===0});});});const NT=it.length||1;
       /* ordre d'importance pour un investisseur de long terme ; les stratégies utilisées d'abord (les plus présentes en tête), les vides en dessous */
@@ -3749,7 +3775,7 @@ try{new MutationObserver(function(){t();}).observe(document.body,{childList:true
  /* deux onglets ouverts : si l'autre enregistre, on recharge celui-ci pour ne pas écraser ses données */
  /* (plus de rechargement complet : les données de l'autre onglet sont reprises en place) */
  function ttl(){var n=document.querySelector('.tb-wn');var t=n&&n.textContent.trim();var w=(t&&t!=='Portefeuille'&&document.querySelector('.pf .tb-w')?t+' · ':'')+'tothemoon';if(document.title!==w)document.title=w;}setInterval(ttl,1500);
- function godet(){var v=document.getElementById('v-suivre');if(!v||document.querySelector('#sec-live .pf-godet'))return;var old=document.querySelector('.pf-godet');if(old)old.remove();var d=document.createElement('div');d.className='pf-godet';var b=document.createElement('button');b.type='button';b.textContent='Voir le détail : lignes, répartition, analyse';b.onclick=function(){try{localStorage.setItem('pf-vue','detail');}catch(_){}window.dispatchEvent(new CustomEvent('pf-vue',{detail:'detail'}));setTimeout(function(){if(document.documentElement.classList.contains('pf-simple'))location.reload();},150);};d.appendChild(b);var sl=document.getElementById('sec-live');(sl||v).appendChild(d);}setInterval(godet,1500);
+ function godet(){var v=document.getElementById('v-suivre');if(!v||document.querySelector('#sec-live .pf-godet'))return;var old=document.querySelector('.pf-godet');if(old)old.remove();var d=document.createElement('div');d.className='pf-godet';var b=document.createElement('button');b.type='button';b.textContent='Voir tout le détail';b.onclick=function(){try{localStorage.setItem('pf-vue','detail');}catch(_){}window.dispatchEvent(new CustomEvent('pf-vue',{detail:'detail'}));setTimeout(function(){if(document.documentElement.classList.contains('pf-simple'))location.reload();},150);};d.appendChild(b);var sl=document.getElementById('sec-live');(sl||v).appendChild(d);}setInterval(godet,1500);
  /* feuille de recherche : suivre le clavier (visualViewport) */
  if(window.visualViewport){var vvf=function(){var sh=document.querySelector('.tk-sheet');if(!sh)return;var h=visualViewport.height;if(h<innerHeight-80){sh.classList.add('vv');sh.style.height=h+'px';sh.style.top=visualViewport.offsetTop+'px';}else{sh.classList.remove('vv');sh.style.height='';sh.style.top='';}};visualViewport.addEventListener('resize',vvf);visualViewport.addEventListener('scroll',vvf);}
  function ph(){var i=document.querySelector('.tb-s input');if(i)i.placeholder=innerWidth<480?'Action, ETF, crypto, or…':'Ajouter une action, un ETF ou une crypto';}addEventListener('resize',ph);setTimeout(ph,300);
