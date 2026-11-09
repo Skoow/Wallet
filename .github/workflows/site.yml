@@ -15,7 +15,7 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false  # une publication en cours va au bout ; la suivante attend (et reprend la dernière version)
 jobs:
   deploy:
     runs-on: ubuntu-latest
