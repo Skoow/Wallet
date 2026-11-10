@@ -117,12 +117,74 @@ ROUGE = r'\bfraud|indict|charged by (the )?sec|sec charges|accounting irregular|
 ORANGE = r'\binvestigat|\bprobe\b|subpoena|lawsuit|\bsued\b|\bsues\b|class action|recall|antitrust|\bfined?\b|penalt|cuts? (its )?(guidance|outlook|forecast)|lowers? (guidance|outlook)|(ceo|chief executive|cfo).{0,30}(resign|steps? down|depart|ousted|fired)|data breach|cyberattack|warning letter|downgrade'
 
 
+# ---------- actualité importante (positive ou négative) ----------
+# (motif, résumé en français, ton) : le premier qui correspond au titre donne le résumé affiché dans les alertes.
+ACTU = [
+    (r'\bfraud|ponzi|embezzl|accounting irregular|hindenburg|muddy waters|spruce point|wolfpack|grizzly research|short[- ]seller report', 'Soupçon de fraude ou rapport de vendeurs à découvert', 'rouge'),
+    (r'bankrupt|chapter 11|going concern', 'Risque de faillite', 'rouge'),
+    (r'indict|charged by (the )?sec|sec charges', 'Poursuites des autorités', 'rouge'),
+    (r'restat(e|ement)s? (its|financial)|delist', 'Comptes corrigés ou retrait de la cote', 'rouge'),
+    (r'\binvestigat|\bprobe\b|subpoena', 'Enquête en cours', 'orange'),
+    (r'antitrust', 'Enquête de concurrence (antitrust)', 'orange'),
+    (r'lawsuit|\bsued\b|\bsues\b|class action', 'Procès ou plainte', 'orange'),
+    (r'recall', 'Rappel de produits', 'orange'),
+    (r'data breach|cyberattack|hack(ed|ers?)\b', 'Cyberattaque ou fuite de données', 'orange'),
+    (r'\bfined?\b|penalt', 'Amende', 'orange'),
+    (r'(ceo|chief executive|cfo).{0,30}(resign|steps? down|depart|ousted|fired|retire)', 'Départ d’un dirigeant', 'orange'),
+    (r'(cuts?|lowers?|slashes?|trims?|reduces?) (its |full[- ]year |annual )?(guidance|outlook|forecast)|guidance cut|weak (guidance|outlook|forecast)', 'Prévisions abaissées', 'orange'),
+    (r'(cuts?|suspends?|slashes?|eliminates?) (its )?(quarterly )?dividend', 'Dividende réduit ou suspendu', 'orange'),
+    (r'miss(es|ed)? (on )?(estimates|expectations|forecasts|consensus)|falls? short|below (estimates|expectations)', 'Résultats moins bons que prévu', 'orange'),
+    (r'layoffs?|job cuts|cut(s|ting)? (\d[\d,]* )?jobs', 'Licenciements annoncés', 'orange'),
+    (r'downgrade', 'Un analyste abaisse sa recommandation', 'orange'),
+    (r'warning letter', 'Avertissement d’une autorité de contrôle', 'orange'),
+    (r'(beats?|tops?|surpass(es)?|exceeds?) (on )?(\w+ )?(estimates|expectations|forecasts|consensus|views)|better[- ]than[- ]expected', 'Résultats meilleurs que prévu', 'vert'),
+    (r'(raises?|lifts?|boosts?|hikes?|ups) (its |full[- ]year |annual )?(guidance|outlook|forecast)', 'Prévisions relevées', 'vert'),
+    (r'(raises?|boosts?|hikes?|increases?|lifts?) (its )?(quarterly )?dividend|dividend (increase|hike)', 'Dividende augmenté', 'vert'),
+    (r'buyback|share repurchase|repurchase program', 'Rachat d’actions annoncé', 'vert'),
+    (r'record (revenue|sales|profit|earnings|quarter|results|backlog)', 'Chiffres record', 'vert'),
+    (r'fda (approv|clear)|(wins|receives|gets) (fda )?approval', 'Autorisation de mise sur le marché obtenue', 'vert'),
+    (r'(wins?|awarded|secures?|lands?) .{0,40}(contract|deal|order)', 'Gros contrat remporté', 'vert'),
+    (r'(join|added to|to join|set to join) (the )?s&p 500', 'Entre dans l’indice S&P 500', 'vert'),
+    (r'upgrade', 'Un analyste relève sa recommandation', 'vert'),
+]
+
+
+def actu_de(sym, nom, items, prev):
+    """Garde les titres importants (positifs ou négatifs) qui parlent vraiment de la société, 45 jours, 10 au plus."""
+    base = sym.split('.')[0].upper()
+    STOP = {'the', 'inc', 'corp', 'corporation', 'company', 'co', 'group', 'holdings', 'ltd', 'plc', 'sa', 'se', 'ag', 'nv', 'class', 'and', 'de', 'la', 'le', 'international', 'american', 'national', 'first', 'global', 'energy', 'financial', 'systems', 'technologies'}
+    w = [x for x in re.split(r'[^\w&-]+', (nom or '').split(' · ')[0]) if x and x.lower() not in STOP and len(x) > 2]
+    mots = ([w[0]] if w else []) + [base]
+    lim = (AUJ - dt.timedelta(days=45)).isoformat()
+    out = [a for a in (prev.get('actu') or []) if a.get('d', '') >= lim]
+    vus = {a['l'] for a in out}
+    for it in items or []:
+        rel = [x.upper() for x in it.get('relatedTickers') or []]
+        if sym.upper() not in rel and base not in rel: continue
+        if len(rel) > 2: continue
+        t = it.get('title') or ''; l = it.get('link') or ''
+        if not l or l in vus: continue
+        if mots and not any(re.search(r'\b' + re.escape(m) + r'\b', t, re.I) for m in mots): continue
+        for motif, resume, ton in ACTU:
+            if re.search(motif, t, re.I):
+                d = dt.datetime.fromtimestamp(it.get('providerPublishTime') or time.time(), dt.timezone.utc).date().isoformat()
+                if d >= lim:
+                    out.append({'d': d, 'r': resume, 'n': ton, 't': t[:200], 'l': l, 'src': it.get('publisher')}); vus.add(l)
+                break
+    out.sort(key=lambda a: a['d'], reverse=True)
+    return out[:10]
+
+
+def nouvelles(sym):
+    try:
+        return (yahoo.get('https://query1.finance.yahoo.com/v1/finance/search?q=' + urllib.parse.quote(sym) + '&quotesCount=0&newsCount=20') or {}).get('news') or []
+    except Exception:
+        return []
+
+
 def verif(sym, prev, nom=''):
     s = yahoo.summary(sym, 'assetProfile,secFilings,netSharePurchaseActivity,calendarEvents') or {}
-    try:
-        n = yahoo.get('https://query1.finance.yahoo.com/v1/finance/search?q=' + urllib.parse.quote(sym) + '&quotesCount=0&newsCount=20') or {}
-    except Exception:
-        n = {}
+    n = {'news': nouvelles(sym)}
     base = sym.split('.')[0].upper()
     STOP = {'the', 'inc', 'corp', 'corporation', 'company', 'co', 'group', 'holdings', 'ltd', 'plc', 'sa', 'se', 'ag', 'nv', 'class', 'and', 'de', 'la', 'le', 'international', 'american', 'national', 'first', 'global', 'energy', 'financial', 'systems', 'technologies'}
     w = [x for x in re.split(r'[^\w&-]+', (nom or '').split(' · ')[0]) if x and x.lower() not in STOP and len(x) > 2]
@@ -161,7 +223,7 @@ def verif(sym, prev, nom=''):
     src = [f['l'] for f in old[:4]] + [x['edgarUrl'] for x in fil[:2] if x.get('edgarUrl')] + ['https://finance.yahoo.com/quote/' + sym + '/news/']
     return s, {'verdict': verdict, 'verifie': AUJ.strftime('%d/%m/%Y'), 'auto': True,
                'raison_verif': 'Vérification automatique : ' + ' ; '.join(raisons) + '.', 'alertes': old, 'gouvernance': gv, 'initiés': ini,
-               'sources_verif': src, 'prochains_resultats': pr}, fil, ap
+               'sources_verif': src, 'prochains_resultats': pr, 'actu': actu_de(sym, nom, n.get('news'), prev)}, fil, ap
 
 
 def rapport(fil):

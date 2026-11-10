@@ -47,6 +47,8 @@ jobs:
           [ -d data/h ] && python tools/nuit.py divh || true
           python tools/alertes.py || true
           # fiches automatiques (ventes par pays du rapport annuel, actualité, gouvernance) : toutes les actions par roulement, chacune refaite tous les 3 jours
+          # actualité importante (positive ou négative) des actions suivies en priorité, chaque soir
+          timeout 15m python tools/actu.py || true
           timeout 80m python tools/fiches.py 75 || true
           cp data/alertes.json "$RUNNER_TEMP/alertes.json" 2>/dev/null || true
           cp data/splits.json "$RUNNER_TEMP/splits.json" 2>/dev/null || true; cp data/divs.json "$RUNNER_TEMP/divs.json" 2>/dev/null || true
