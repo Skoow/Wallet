@@ -39,6 +39,8 @@ jobs:
           # liste des tickers le 1er dimanche du mois ; historiques chaque dimanche, par roulement (les plus anciens d'abord)
           if [ "$Q" = "mois" ]; then python tools/nuit.py tickers; fi
           if [ "$Q" = "mois" ] || [ "$Q" = "semaine" ]; then BUDGET_MIN=230 python tools/nuit.py histo; fi
+          # logos analysés une fois par semaine (blanc -> fond sombre, en toutes lettres -> initiale, absent -> source suivante)
+          if [ "$Q" = "mois" ] || [ "$Q" = "semaine" ]; then pip install -q pillow && timeout 20m python tools/logos.py || true; fi
           python tools/nuit.py chiffres
           python tools/nuit.py secteurs || true
           python tools/nuit.py splits || true
@@ -53,6 +55,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/out"
           [ -d data/h ] && cp -r data/h "$RUNNER_TEMP/out/" || true
           cp data/tickers.json "$RUNNER_TEMP/out/" || true
+          cp data/logos.json "$RUNNER_TEMP/out/" 2>/dev/null || true
           [ -d data/f ] && cp -r data/f "$RUNNER_TEMP/out/" || true
       - name: Enregistrer
         run: |
@@ -62,6 +65,7 @@ jobs:
             git fetch -q origin main && git reset -q --hard origin/main
             [ -d "$RUNNER_TEMP/out/h" ] && mkdir -p data/h && cp -r "$RUNNER_TEMP/out/h/." data/h/
             [ -f "$RUNNER_TEMP/out/tickers.json" ] && cp "$RUNNER_TEMP/out/tickers.json" data/
+            [ -f "$RUNNER_TEMP/out/logos.json" ] && cp "$RUNNER_TEMP/out/logos.json" data/
             [ -d "$RUNNER_TEMP/out/f" ] && mkdir -p data/f && cp -r "$RUNNER_TEMP/out/f/." data/f/
             [ -f "$RUNNER_TEMP/splits.json" ] && cp "$RUNNER_TEMP/splits.json" data/
             [ -f "$RUNNER_TEMP/divs.json" ] && cp "$RUNNER_TEMP/divs.json" data/
