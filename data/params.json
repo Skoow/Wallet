@@ -3,7 +3,7 @@
   "s/klac",
   "s/anet",
   "s/cw",
-  "a/tsx-tih",
+  "s/tt",
   "s/tmus",
   "s/ste",
   "s/pg",
@@ -13,7 +13,7 @@
   "e/gld"
  ],
  "cmp": 1,
- "v": 21,
+ "v": 22,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -120,6 +120,14 @@
    "devise": "USD",
    "secteur": "Technologie",
    "metier": "Données, IA et gestion déléguée pour assureurs et banques"
+  },
+  "s/tt": {
+   "ticker": "TT",
+   "nom": "Trane Technologies",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Industrie",
+   "metier": "Climatisation et refroidissement : bâtiments, centres de données, transport"
   }
  },
  "tx": [
@@ -169,13 +177,13 @@
    "date": "2026-11-10",
    "heure": "",
    "sens": "achat",
-   "cle": "a/tsx-tih",
-   "ticker": "TIH",
-   "nom": "Toromont Industries",
+   "cle": "s/tt",
+   "ticker": "TT",
+   "nom": "Trane Technologies",
    "quantite": 1,
-   "prix": 192.28,
-   "devise": "CAD",
-   "montant_eur": 121.3,
+   "prix": 420.82,
+   "devise": "USD",
+   "montant_eur": 375.26,
    "frais_eur": 0,
    "conseil": true
   },
