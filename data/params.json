@@ -8,12 +8,12 @@
   "s/ste",
   "s/pg",
   "s/pri",
-  "s/dci",
+  "s/exls",
   "a/tsx-dol",
   "e/gld"
  ],
  "cmp": 1,
- "v": 18,
+ "v": 19,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -112,6 +112,14 @@
    "devise": "USD",
    "secteur": "Industrie",
    "metier": "Filtres industriels : engins, moteurs, turbines, puces, centres de données"
+  },
+  "s/exls": {
+   "ticker": "EXLS",
+   "nom": "ExlService",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Technologie",
+   "metier": "Données, IA et gestion déléguée pour assureurs et banques"
   }
  },
  "tx": [
@@ -123,9 +131,9 @@
    "ticker": "KLAC",
    "nom": "KLA",
    "quantite": 1,
-   "prix": 152.13,
+   "prix": 152.99,
    "devise": "USD",
-   "montant_eur": 135.92,
+   "montant_eur": 136.68,
    "frais_eur": 0,
    "conseil": true
   },
@@ -137,9 +145,9 @@
    "ticker": "ANET",
    "nom": "Arista Networks",
    "quantite": 1,
-   "prix": 185.78,
+   "prix": 185.12,
    "devise": "USD",
-   "montant_eur": 165.98,
+   "montant_eur": 165.39,
    "frais_eur": 0,
    "conseil": true
   },
@@ -151,9 +159,9 @@
    "ticker": "CW",
    "nom": "Curtiss-Wright",
    "quantite": 1,
-   "prix": 478.55,
+   "prix": 477.71,
    "devise": "USD",
-   "montant_eur": 427.54,
+   "montant_eur": 426.79,
    "frais_eur": 0,
    "conseil": true
   },
@@ -165,9 +173,9 @@
    "ticker": "TIH",
    "nom": "Toromont Industries",
    "quantite": 1,
-   "prix": 192.54,
+   "prix": 192.28,
    "devise": "CAD",
-   "montant_eur": 121.98,
+   "montant_eur": 121.81,
    "frais_eur": 0,
    "conseil": true
   },
@@ -179,9 +187,9 @@
    "ticker": "TMUS",
    "nom": "T-Mobile US",
    "quantite": 1,
-   "prix": 168.39,
+   "prix": 169.08,
    "devise": "USD",
-   "montant_eur": 150.44,
+   "montant_eur": 151.06,
    "frais_eur": 0,
    "conseil": true
   },
@@ -193,9 +201,9 @@
    "ticker": "STE",
    "nom": "STERIS",
    "quantite": 1,
-   "prix": 257.12,
+   "prix": 257.04,
    "devise": "USD",
-   "montant_eur": 229.71,
+   "montant_eur": 229.64,
    "frais_eur": 0,
    "conseil": true
   },
@@ -207,9 +215,9 @@
    "ticker": "PG",
    "nom": "Procter & Gamble",
    "quantite": 1,
-   "prix": 169.04,
+   "prix": 168.6,
    "devise": "USD",
-   "montant_eur": 151.02,
+   "montant_eur": 150.63,
    "frais_eur": 0,
    "conseil": true
   },
@@ -221,9 +229,9 @@
    "ticker": "PRI",
    "nom": "Primerica",
    "quantite": 1,
-   "prix": 306.8,
+   "prix": 304.41,
    "devise": "USD",
-   "montant_eur": 274.1,
+   "montant_eur": 271.96,
    "frais_eur": 0,
    "conseil": true
   },
@@ -231,13 +239,13 @@
    "date": "2026-11-10",
    "heure": "",
    "sens": "achat",
-   "cle": "s/dci",
-   "ticker": "DCI",
-   "nom": "Donaldson",
+   "cle": "s/exls",
+   "ticker": "EXLS",
+   "nom": "ExlService",
    "quantite": 1,
-   "prix": 87.65,
+   "prix": 44.3,
    "devise": "USD",
-   "montant_eur": 78.31,
+   "montant_eur": 39.58,
    "frais_eur": 0,
    "conseil": true
   },
@@ -249,9 +257,9 @@
    "ticker": "DOL",
    "nom": "Dollarama",
    "quantite": 1,
-   "prix": 215.98,
+   "prix": 216.0,
    "devise": "CAD",
-   "montant_eur": 136.83,
+   "montant_eur": 136.84,
    "frais_eur": 0,
    "conseil": true
   },
@@ -263,9 +271,9 @@
    "ticker": "GLD",
    "nom": "Or – SPDR Gold Shares",
    "quantite": 1,
-   "prix": 369.07,
+   "prix": 369.4,
    "devise": "USD",
-   "montant_eur": 329.73,
+   "montant_eur": 330.03,
    "frais_eur": 0,
    "conseil": true
   }
