@@ -1,8 +1,8 @@
 {
  "choix": [
-  "s/cdns",
+  "s/klac",
   "s/anet",
-  "s/hei",
+  "s/cw",
   "a/tsx-tih",
   "s/tmus",
   "s/bx",
@@ -13,7 +13,7 @@
   "e/gld"
  ],
  "cmp": 1,
- "v": 14,
+ "v": 15,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -71,6 +71,14 @@
    "devise": "USD",
    "secteur": "Finance",
    "metier": "Gestion d’actifs : rachat de sociétés, immobilier, crédit pour assureurs vie"
+  },
+  "s/klac": {
+   "ticker": "KLAC",
+   "nom": "KLA",
+   "pays": "États-Unis",
+   "devise": "USD",
+   "secteur": "Technologie",
+   "metier": "Machines de contrôle et d'inspection pour la fabrication des puces"
   }
  },
  "tx": [
@@ -78,13 +86,13 @@
    "date": "2026-11-10",
    "heure": "",
    "sens": "achat",
-   "cle": "s/cdns",
-   "ticker": "CDNS",
-   "nom": "Cadence",
+   "cle": "s/klac",
+   "ticker": "KLAC",
+   "nom": "KLA",
    "quantite": 1,
-   "prix": 331.1,
+   "prix": 150.81,
    "devise": "USD",
-   "montant_eur": 295.81,
+   "montant_eur": 134.74,
    "frais_eur": 0,
    "conseil": true
   },
@@ -96,9 +104,9 @@
    "ticker": "ANET",
    "nom": "Arista Networks",
    "quantite": 1,
-   "prix": 190.3,
+   "prix": 182.4,
    "devise": "USD",
-   "montant_eur": 170.02,
+   "montant_eur": 162.96,
    "frais_eur": 0,
    "conseil": true
   },
@@ -106,13 +114,13 @@
    "date": "2026-11-10",
    "heure": "",
    "sens": "achat",
-   "cle": "s/hei",
-   "ticker": "HEI",
-   "nom": "HEICO",
+   "cle": "s/cw",
+   "ticker": "CW",
+   "nom": "Curtiss-Wright",
    "quantite": 1,
-   "prix": 342.78,
+   "prix": 481.91,
    "devise": "USD",
-   "montant_eur": 306.24,
+   "montant_eur": 430.55,
    "frais_eur": 0,
    "conseil": true
   },
@@ -124,9 +132,9 @@
    "ticker": "TIH",
    "nom": "Toromont Industries",
    "quantite": 1,
-   "prix": 193.85,
+   "prix": 191.33,
    "devise": "CAD",
-   "montant_eur": 122.81,
+   "montant_eur": 121.21,
    "frais_eur": 0,
    "conseil": true
   },
@@ -138,9 +146,9 @@
    "ticker": "TMUS",
    "nom": "T-Mobile US",
    "quantite": 1,
-   "prix": 166.78,
+   "prix": 168.32,
    "devise": "USD",
-   "montant_eur": 149.0,
+   "montant_eur": 150.38,
    "frais_eur": 0,
    "conseil": true
   },
@@ -152,9 +160,9 @@
    "ticker": "BX",
    "nom": "Blackstone",
    "quantite": 1,
-   "prix": 121.85,
+   "prix": 122.62,
    "devise": "USD",
-   "montant_eur": 108.86,
+   "montant_eur": 109.56,
    "frais_eur": 0,
    "conseil": true
   },
@@ -166,9 +174,9 @@
    "ticker": "PG",
    "nom": "Procter & Gamble",
    "quantite": 1,
-   "prix": 168.41,
+   "prix": 169.65,
    "devise": "USD",
-   "montant_eur": 150.46,
+   "montant_eur": 151.57,
    "frais_eur": 0,
    "conseil": true
   },
@@ -180,9 +188,9 @@
    "ticker": "PWR",
    "nom": "Quanta Services",
    "quantite": 1,
-   "prix": 590.53,
+   "prix": 576.75,
    "devise": "USD",
-   "montant_eur": 527.59,
+   "montant_eur": 515.28,
    "frais_eur": 0,
    "conseil": true
   },
@@ -194,9 +202,9 @@
    "ticker": "IFC",
    "nom": "Intact Financial",
    "quantite": 1,
-   "prix": 275.4,
+   "prix": 277.69,
    "devise": "CAD",
-   "montant_eur": 174.47,
+   "montant_eur": 175.92,
    "frais_eur": 0,
    "conseil": true
   },
@@ -208,9 +216,9 @@
    "ticker": "DOL",
    "nom": "Dollarama",
    "quantite": 1,
-   "prix": 214.46,
+   "prix": 216.13,
    "devise": "CAD",
-   "montant_eur": 135.86,
+   "montant_eur": 136.92,
    "frais_eur": 0,
    "conseil": true
   },
@@ -222,9 +230,9 @@
    "ticker": "GLD",
    "nom": "Or – SPDR Gold Shares",
    "quantite": 1,
-   "prix": 371.05,
+   "prix": 368.44,
    "devise": "USD",
-   "montant_eur": 331.5,
+   "montant_eur": 329.17,
    "frais_eur": 0,
    "conseil": true
   }
