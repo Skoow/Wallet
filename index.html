@@ -2237,6 +2237,41 @@ html:not(.pf-tabin) .pf .view:not([hidden])>*{animation:none!important}
 .pf #sec-taille.rp-taille .tl{gap:8px}.pf #sec-taille.rp-taille .tl li{gap:4px}.pf #sec-taille.rp-taille .tlh{font-size:.86rem}.pf #sec-taille.rp-taille .tlh .mu{font-size:.74rem}
 .pf #sec-taille.rp-taille .tl small{font-size:.74rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.pf #sec-taille.rp-taille .tl li.tl0 small{display:none}
 .pf #sec-taille.rp-taille>p.mu{font-size:.74rem;margin:8px 0 0}
+/* Répartition alignée : carte du monde en entier, Secteurs à gauche sur deux rangées, petites cartes en grille de même hauteur ; Thèmes et Bilan côte à côte */
+@media (min-width:1000px){
+ html body .pf #rp-grid.rpg{grid-auto-rows:auto!important;grid-auto-flow:row dense!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:stretch!important;row-gap:24px!important;column-gap:24px!important}
+ html body .pf #rp-grid>*{grid-row-end:auto!important;align-self:stretch!important;margin:0!important;align-content:start}
+ html body .pf #rp-grid>.rp.wm{grid-column:1/-1!important}
+ html body .pf #rp-grid>.rp.wm+.rp{grid-row:span 2!important}
+ html body .pf #v-repart:not([hidden]){grid-template-columns:repeat(2,minmax(0,1fr))!important;align-items:stretch}
+ html body .pf #v-repart>#sec-vue{grid-column:1/-1!important;grid-row:1!important}
+ html body .pf #v-repart>#sec-themes{grid-column:1/-1!important;grid-row:2!important}
+ html body .pf #v-repart>#sec-equilibre{grid-column:1/-1!important;grid-row:3!important}
+ html body .pf #v-repart>#sec-strat{grid-column:1/-1!important;grid-row:4!important}
+ html body .pf #v-repart>#sec-metiers{grid-column:1/-1!important}
+}
+@media (min-width:1400px){html body .pf #rp-grid.rpg{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+/* Stratégies : noms des sociétés à la suite (moins haut, plus lisible) */
+html body .pf #rp-strat td:nth-child(2){line-height:1.5}
+html body .pf #rp-strat td:nth-child(2)>div{display:inline}
+html body .pf #rp-strat td:nth-child(2)>div:not(:last-child)::after{content:" · ";color:var(--muted);font-weight:400}
+/* Analyse et Transactions alignées : cartes d'une même rangée de même hauteur */
+@media (min-width:1000px){
+ html body .pf #v-analyse #g-risque{align-items:stretch!important}
+ html body .pf #v-analyse #g-risque>section{align-self:stretch!important;height:auto!important}
+ html body .pf #v-analyse>#sec-courbe,html body .pf #v-analyse>#sec-chiffres{align-self:stretch!important}
+}
+@media (min-width:1800px){
+ html body .pf #v-journal:not([hidden]){align-items:stretch!important}
+ html body .pf #v-journal>#sec-journal{grid-row:1 / span 2!important;align-self:stretch!important}
+ html body .pf #v-journal>#sec-div{grid-row:1!important;align-self:stretch!important}
+ html body .pf #v-journal>#sec-fisc{grid-row:2!important;align-self:stretch!important}
+}
+@media (min-width:1000px) and (max-width:1399px){
+ html body .pf #v-journal>#sec-div,html body .pf #v-journal>#sec-fisc{align-self:stretch!important}
+ html:not(.pf-simple) body .pf #v-suivre>#sec-equi{align-self:stretch!important}
+}
+@media (min-width:1000px) and (max-width:1799px){html body .pf #v-journal>#sec-journal,html body .pf #v-journal>#sec-div,html body .pf #v-journal>#sec-fisc{grid-column:1/-1!important;grid-row:auto!important}}
 /* v-mobile : audit d'affichage téléphone (marges égales, périodes sur une ligne, boutons nets) */
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .pf .lg.clair,.lg.clair,.pf .lg.clair img,.lg.clair img{background:#1d2738!important;border-color:#1d2738!important}
