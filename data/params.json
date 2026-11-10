@@ -8,12 +8,12 @@
   "s/ste",
   "s/pg",
   "s/pri",
-  "s/musa",
+  "s/pgr",
   "a/tsx-dol",
   "e/gld"
  ],
  "cmp": 1,
- "v": 20,
+ "v": 21,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -239,13 +239,13 @@
    "date": "2026-11-10",
    "heure": "",
    "sens": "achat",
-   "cle": "s/musa",
-   "ticker": "MUSA",
-   "nom": "Murphy USA",
+   "cle": "s/pgr",
+   "ticker": "PGR",
+   "nom": "Progressive",
    "quantite": 1,
-   "prix": 519.44,
+   "prix": 231.75,
    "devise": "USD",
-   "montant_eur": 463.21,
+   "montant_eur": 206.66,
    "frais_eur": 0,
    "conseil": true
   },
