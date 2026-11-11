@@ -2774,7 +2774,7 @@ html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:10
         const hero=el('div','a1t a1one a13');const has=B.filter(x=>qOf(x.u)>=1);const sm=L=>L.reduce((a,x)=>a+x.b.e1,0);const nl=n=>n+' ligne'+(n>1?'s':'');
         const g=el('div','a13g');const col=(lab,v,sub,cl)=>{const c=el('div','a13c');c.append(el('span','k',lab),el('b',cl||'',eX(v)),el('small','mu',sub));return c;};
         const paid=B.reduce((a,x)=>{const p=POS[x.u.cle];return a+(p&&p.qty>1e-9?(p.cost||0):0);},0);const val=B.reduce((a,x)=>{const p=POS[x.u.cle];if(!(p&&p.qty>1e-9))return a;const e=eurPx(x.u.cle);return a+(e?p.qty*e:(p.cost||0));},0);const nb=B.reduce((a,x)=>a+qOf(x.u),0);
-        g.append(col('Déjà investi',paid,has.length?nl(has.length)+' · '+(Math.round(nb*100)/100).toLocaleString('fr-FR')+(nb>1?' actions':' action')+(val>0?' · vaut '+eX(val):''):'aucune ligne','a13d'),col('1 action de chaque',one,'au prix d’aujourd’hui'),col('Reste à investir',sm(miss),miss.length?nl(miss.length)+' sans action':'tout est acheté','a13r'));hero.appendChild(g);
+        g.append(col('Déjà investi',paid,'','a13d'),col('1 action de chaque',one,'au prix d’aujourd’hui'),col('Reste à investir',sm(miss),miss.length?nl(miss.length)+' sans action':'tout est acheté','a13r'));hero.appendChild(g);
         const ft=el('div','a13f');ft.appendChild(el('small','mu','Déjà investi : ce que tu as réellement payé, frais compris. Les autres montants : prix d’une action aujourd’hui.'));hero.appendChild(ft);
         a1.appendChild(hero);
         const TAG={'Bon moment':['bon prix','ok'],'En 2–3 fois':['en 3 fois','mu'],'Attendre un repli':['cher : attendre','warn']};
