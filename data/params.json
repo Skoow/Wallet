@@ -4,16 +4,16 @@
   "s/anet",
   "s/cw",
   "s/tt",
-  "s/tmus",
+  "a/tsx-qbr-b",
   "s/ste",
-  "s/pg",
+  "a/tsx-sii",
   "s/pri",
   "s/pgr",
   "a/tsx-dol",
   "e/gld"
  ],
  "cmp": 1,
- "v": 22,
+ "v": 23,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -128,11 +128,28 @@
    "devise": "USD",
    "secteur": "Industrie",
    "metier": "Climatisation et refroidissement : bâtiments, centres de données, transport"
+  },
+  "a/tsx-qbr-b": {
+   "ticker": "QBR.B",
+   "nom": "Québecor",
+   "pays": "Canada",
+   "devise": "CAD",
+   "secteur": "Communication",
+   "metier": "Télécoms : Vidéotron, Freedom Mobile, Fizz",
+   "role": "Défensive"
+  },
+  "a/tsx-sii": {
+   "ticker": "SII",
+   "nom": "Sprott",
+   "pays": "Canada",
+   "devise": "CAD",
+   "secteur": "Finance",
+   "metier": "Gestion de fonds d'or, d'argent et d'uranium physiques"
   }
  },
  "tx": [
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "s/klac",
@@ -146,7 +163,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "s/anet",
@@ -160,7 +177,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "s/cw",
@@ -174,7 +191,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "s/tt",
@@ -188,21 +205,21 @@
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
-   "cle": "s/tmus",
-   "ticker": "TMUS",
-   "nom": "T-Mobile US",
+   "cle": "a/tsx-qbr-b",
+   "ticker": "QBR.B",
+   "nom": "Québecor",
    "quantite": 1,
-   "prix": 169.08,
-   "devise": "USD",
-   "montant_eur": 150.78,
+   "prix": 76.62,
+   "devise": "CAD",
+   "montant_eur": 48.33,
    "frais_eur": 0,
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "s/ste",
@@ -216,21 +233,21 @@
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
-   "cle": "s/pg",
-   "ticker": "PG",
-   "nom": "Procter & Gamble",
+   "cle": "a/tsx-sii",
+   "ticker": "SII",
+   "nom": "Sprott",
    "quantite": 1,
-   "prix": 168.66,
-   "devise": "USD",
-   "montant_eur": 150.4,
+   "prix": 163.55,
+   "devise": "CAD",
+   "montant_eur": 103.17,
    "frais_eur": 0,
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "s/pri",
@@ -244,7 +261,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "s/pgr",
@@ -258,7 +275,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "a/tsx-dol",
@@ -272,7 +289,7 @@
    "conseil": true
   },
   {
-   "date": "2026-11-10",
+   "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
    "cle": "e/gld",
