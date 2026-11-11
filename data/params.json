@@ -6,14 +6,14 @@
   "s/tt",
   "a/tsx-qbr-b",
   "s/ste",
-  "a/tsx-sii",
+  "a/tsx-x",
   "s/pri",
   "s/pgr",
   "a/tsx-dol",
   "e/gld"
  ],
  "cmp": 1,
- "v": 23,
+ "v": 24,
  "extra": {
   "s/anet": {
    "ticker": "ANET",
@@ -145,6 +145,14 @@
    "devise": "CAD",
    "secteur": "Finance",
    "metier": "Gestion de fonds d'or, d'argent et d'uranium physiques"
+  },
+  "a/tsx-x": {
+   "ticker": "X",
+   "nom": "TMX Group",
+   "pays": "Canada",
+   "devise": "CAD",
+   "secteur": "Finance",
+   "metier": "Bourse de Toronto, compensation et données de marché"
   }
  },
  "tx": [
@@ -236,13 +244,13 @@
    "date": "2026-11-11",
    "heure": "",
    "sens": "achat",
-   "cle": "a/tsx-sii",
-   "ticker": "SII",
-   "nom": "Sprott",
+   "cle": "a/tsx-x",
+   "ticker": "X",
+   "nom": "TMX Group",
    "quantite": 1,
-   "prix": 163.55,
+   "prix": 62.64,
    "devise": "CAD",
-   "montant_eur": 103.17,
+   "montant_eur": 39.52,
    "frais_eur": 0,
    "conseil": true
   },
