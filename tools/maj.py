@@ -305,12 +305,62 @@ def grandes(cap=20):
         return []
 
 
+def petites(cap=0.3):
+    """Toutes les sociétés de plus de `cap` Md$ (États-Unis, Toronto) avec un historique : couvrent les lignes ajoutées par chacun."""
+    try:
+        import nuit
+        out = []
+        for r in load('tickers.json'):
+            if r[2] in ('US', 'TSX') and (r[4] or 0) >= cap:
+                c = nuit.cle_of(r[0], r[2])
+                if os.path.exists('data/h/' + c.replace('/', '_') + '.json'):
+                    out.append(c)
+        return out
+    except Exception as e:
+        print('petites sociétés :', e)
+        return []
+
+
+def live2(cles, deja=()):
+    """data/live2.json : {cle: [cours, clôture de la veille, horodatage (s)]} pour les sociétés hors relevé minute. Écriture atomique."""
+    dj = set(deja)
+    sy = {}
+    for c in cles:
+        if c in dj:
+            continue
+        s_ = sym(c)
+        if s_:
+            sy[s_] = c
+    try:
+        old = load('live2.json').get('q', {})
+    except Exception:
+        old = {}
+    q = dict(old)
+    try:
+        for s_, (p, t, pc, er) in yahoo.quotes(list(sy)).items():
+            c = sy.get(s_)
+            if c:
+                q[c] = [rp(p), rp(pc) if pc else None, int(t)]
+    except Exception as e:
+        print('live2 :', e)
+        return False
+    tmp = D + 'live2.json.tmp'
+    json.dump({'at': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'), 'q': q}, open(tmp, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    os.replace(tmp, D + 'live2.json')
+    print(len(q), 'cours (live2)')
+    return True
+
+
 def boucle(minutes=350, pas=60):
     """En séance : cours des lignes de base, indices et changes chaque minute ; toutes les actions toutes les 5 min."""
     fin = time.time() + minutes * 60
     base = list(dict.fromkeys(load('params.json').get('choix', []) + ['e/gld', 'e/spy', 'e/urth', 'e/qqq', 'e/cac', 'e/fxe', 'e/fxc', 'e/fxf']))
     GR = grandes()
     print(len(GR), 'grandes sociétés suivies en séance')
+    PE = petites()
+    print(len(PE), 'autres sociétés suivies toutes les 5 min (live2)')
+    import threading
+    th = None
     i = 0
     while time.time() < fin:
         t0 = time.time()
@@ -319,12 +369,15 @@ def boucle(minutes=350, pas=60):
         if m > 21 * 60 + 20 or m < 6 * 60 + 45 or h.weekday() >= 5:
             break
         live(list(dict.fromkeys(suivis() + GR)) if i % 2 == 0 else base)
+        if i % 5 == 0 and PE and (th is None or not th.is_alive()):
+            th = threading.Thread(target=live2, args=(PE, set(suivis()) | set(GR)), daemon=True)
+            th.start()
         if i % 5 == 0 and (m < 14 * 60 + 30 or m >= 20 * 60):
             try:
                 hors()
             except Exception as e:
                 print('hors séance :', e)
-        git_push('Cours ' + h.strftime('%H:%M'), ['data/live.json', 'data/prix.json', 'data/hebdo.json'])
+        git_push('Cours ' + h.strftime('%H:%M'), ['data/live.json', 'data/prix.json', 'data/hebdo.json'] + (['data/live2.json'] if os.path.exists(D + 'live2.json') else []))
         i += 1
         time.sleep(max(5, pas - (time.time() - t0)))
 
