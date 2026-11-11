@@ -33,7 +33,7 @@ jobs:
       - name: Préparer (page allégée)
         run: |
           mkdir -p "$RUNNER_TEMP/ci" && cd "$RUNNER_TEMP/ci" && npm init -y >/dev/null && npm i -s playwright@1.48.2 html-minifier-terser@7.2.0 >/dev/null
-          npx playwright install --with-deps chromium >/dev/null
+          (npx playwright install --with-deps chromium || npx playwright install chromium) >/dev/null
           cd "$GITHUB_WORKSPACE"
           mkdir -p _site && for f in $(ls -A | grep -v -E '^(\.git|tools|_site)$'); do cp -r "$f" _site/; done
           node -e "
